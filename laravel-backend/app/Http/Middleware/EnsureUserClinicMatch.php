@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Support\CurrentClinic;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureUserClinicMatch
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  Closure(Request): (Response)  $next
+     */
+    public function handle(Request $request, Closure $next, ?string $mode = null): Response
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // A clinic selector is available only to the super administrator.
+        $clinicId = $request->header('X-Clinic-ID')
+                    ?? $request->input('clinic_id')
+                    ?? $user->clinic_id;
+
+        if ($user->role && $user->role->name === 'SUPER_ADMIN') {
+            if ($clinicId !== null && !\App\Models\Clinic::whereKey($clinicId)->exists()) {
+                return response()->json(['message' => 'Clinic not found'], 404);
+            }
+            $request->attributes->add(['clinic_id' => $clinicId]);
+            CurrentClinic::set($clinicId === null ? null : (int) $clinicId);
+            return $next($request);
+        }
+
+        // A suspended clinic keeps access to its subscription pages only, so that it can pay and be reactivated.
+        if ($user->clinic && $user->clinic->status !== 'ACTIVE' && $mode !== 'allow-suspended') {
+            return response()->json(['message' => 'Votre clinique est suspendue ou inactive. Contactez l’administrateur de la plateforme.'], 403);
+        }
+
+        // Other users can only access their own clinic
+        if ($clinicId && $clinicId != $user->clinic_id) {
+            \Illuminate\Support\Facades\Log::warning("Clinic access denied: User {$user->id} tried to access clinic {$clinicId}");
+            return response()->json(['message' => 'Access to this clinic denied'], 403);
+        }
+
+        $request->attributes->add(['clinic_id' => $user->clinic_id]);
+        CurrentClinic::set($user->clinic_id === null ? null : (int) $user->clinic_id);
+
+        return $next($request);
+    }
+
+    public function terminate(Request $request, Response $response): void
+    {
+        CurrentClinic::clear();
+    }
+}
