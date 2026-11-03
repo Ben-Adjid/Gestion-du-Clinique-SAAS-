@@ -12,6 +12,7 @@ class SaasPayment extends Model
     protected $fillable = [
         'clinic_id',
         'saas_invoice_id',
+        'flutterwave_transaction_id',
         'amount',
         'method',
         'reference',

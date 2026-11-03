@@ -19,7 +19,7 @@ class RolePermissionSeeder extends Seeder
             'ADMIN_CLINIC' => [
                 'manage:users', 'manage:roles', 'view:reports', 'view:audit_logs', 'manage:exams',
                 'view:subscription', 'declare:subscription_payment',
-                'create:patient', 'read:patient', 'update:patient', 'delete:patient',
+                'create:patient', 'read:patient', 'update:patient', 'delete:patient', 'import:patients',
                 'create:appointment', 'read:appointment', 'update:appointment', 'cancel:appointment',
                 'read:invoice', 'create:invoice', 'update:invoice', 'manage:payment', 'manage:tariffs',
                 'read:lab_request', 'read:imaging',

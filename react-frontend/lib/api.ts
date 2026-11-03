@@ -6,12 +6,38 @@ export function clinicScopeHeader(): Record<string, string> {
   return clinicId ? { 'X-Clinic-ID': clinicId } : {};
 }
 
+export const SUBSCRIPTION_BLOCKED_EVENT = 'clinic:subscription-blocked';
+
+export type SubscriptionBlockedDetail = {
+  message: string;
+  subscription_status?: string | null;
+  can_pay: boolean;
+};
+
+/** Broadcasts a 403 SUBSCRIPTION_EXPIRED response so the app shell can show the blocking screen. */
+export function reportSubscriptionBlocked(status: number, body: unknown): void {
+  if (status !== 403 || typeof window === 'undefined') return;
+  const payload = body as { code?: string; message?: string; subscription_status?: string | null; can_pay?: boolean } | null;
+  if (payload?.code !== 'SUBSCRIPTION_EXPIRED') return;
+  window.dispatchEvent(new CustomEvent<SubscriptionBlockedDetail>(SUBSCRIPTION_BLOCKED_EVENT, {
+    detail: {
+      message: payload.message || 'L’abonnement de la clinique n’est plus actif.',
+      subscription_status: payload.subscription_status ?? null,
+      can_pay: Boolean(payload.can_pay),
+    },
+  }));
+}
+
 export async function clinicScopedFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
   for (const [name, value] of Object.entries(clinicScopeHeader())) {
     headers.set(name, value);
   }
-  return fetch(input, { ...init, headers });
+  const response = await fetch(input, { ...init, headers });
+  if (response.status === 403) {
+    response.clone().json().then((body) => reportSubscriptionBlocked(403, body)).catch(() => undefined);
+  }
+  return response;
 }
 
 export async function apiRequest<T>(
@@ -47,6 +73,7 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    reportSubscriptionBlocked(response.status, data);
     const payload = data as { message?: string; errors?: Record<string, string[]> } | null;
     const validationMessage = payload?.errors
       ? Object.values(payload.errors).flat().join(' ')

@@ -22,14 +22,14 @@ final class PlanLimits
         }
     }
 
-    public static function assertCanAddPatient(?int $clinicId): void
+    public static function assertCanAddPatient(?int $clinicId, int $count = 1): void
     {
         $plan = self::plan($clinicId);
         if ($plan?->max_patients === null) {
             return;
         }
         $patients = Patient::query()->withoutGlobalScopes()->where('clinic_id', $clinicId)->whereNull('deleted_at')->count();
-        if ($patients >= $plan->max_patients) {
+        if ($patients + $count > $plan->max_patients) {
             throw ValidationException::withMessages([
                 'first_name' => "La formule {$plan->name} est limitée à {$plan->max_patients} dossiers patients. Contactez Clinique+ pour changer de formule.",
             ]);

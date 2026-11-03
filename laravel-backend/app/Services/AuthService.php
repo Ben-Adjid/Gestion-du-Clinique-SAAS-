@@ -32,9 +32,10 @@ class AuthService
         if ($user->status !== 'ACTIVE') {
             throw new \RuntimeException('Account inactive', 403);
         }
-        $canSettleSubscription = $user->clinic?->status === 'SUSPENDED' && $user->role?->name === 'ADMIN_CLINIC';
+        // The director of a suspended or expired clinic can still sign in, to pay the subscription.
+        $canSettleSubscription = in_array($user->clinic?->status, ['SUSPENDED', 'INACTIVE'], true) && $user->role?->name === 'ADMIN_CLINIC';
         if ($user->clinic && $user->clinic->status !== 'ACTIVE' && !$canSettleSubscription) {
-            throw new \RuntimeException('Votre clinique est suspendue ou inactive.', 403);
+            throw new \App\Exceptions\SubscriptionBlockedException();
         }
 
         if ($user->totp_enabled) {

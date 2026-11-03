@@ -28,6 +28,21 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+     * Flutterwave v3: online payment of clinic subscriptions (Mobile Money, Wave,
+     * M-Pesa, Visa/Mastercard). The secret hash is the value configured in the
+     * Flutterwave dashboard and sent back in the "verif-hash" header of webhooks.
+     */
+    'flutterwave' => [
+        'public_key' => env('FLUTTERWAVE_PUBLIC_KEY'),
+        'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),
+        'secret_hash' => env('FLUTTERWAVE_SECRET_HASH'),
+        'base_url' => env('FLUTTERWAVE_BASE_URL', 'https://api.flutterwave.com/v3'),
+        'payment_options' => env('FLUTTERWAVE_PAYMENT_OPTIONS', 'card,mobilemoneyfranco,mobilemoneyghana,mobilemoneyuganda,mobilemoneyrwanda,mobilemoneyzambia,mobilemoneytanzania,mpesa,ussd,banktransfer'),
+        'timeout' => (int) env('FLUTTERWAVE_TIMEOUT', 20),
+        'logo_url' => env('FLUTTERWAVE_LOGO_URL'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

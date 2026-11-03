@@ -28,6 +28,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'read:patient_clinical_profile', 'resource' => 'patient', 'action' => 'read_clinical_profile'],
             ['name' => 'update:patient_clinical_profile', 'resource' => 'patient', 'action' => 'update_clinical_profile'],
             ['name' => 'delete:patient', 'resource' => 'patient', 'action' => 'delete'],
+            ['name' => 'import:patients', 'resource' => 'patient', 'action' => 'import'],
 
             // DPE (Medical Record)
             ['name' => 'read:dpe', 'resource' => 'dpe', 'action' => 'read'],

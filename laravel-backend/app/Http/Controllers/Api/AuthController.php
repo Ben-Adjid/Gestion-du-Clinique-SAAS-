@@ -34,6 +34,8 @@ class AuthController extends Controller
                 'message' => 'Login successful',
                 ...$result,
             ]);
+        } catch (\App\Exceptions\SubscriptionBlockedException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'SUBSCRIPTION_EXPIRED', 'can_pay' => false], 403);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getCode());
         }

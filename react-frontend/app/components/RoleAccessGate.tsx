@@ -4,7 +4,49 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
+import { SUBSCRIPTION_BLOCKED_EVENT, type SubscriptionBlockedDetail } from '@/lib/api';
 import RoleSidebar from './RoleSidebar';
+
+const STATUS_LABELS: Record<string, string> = {
+  PAST_DUE: 'Paiement en retard',
+  SUSPENDED: 'Compte suspendu',
+  CANCELLED: 'Abonnement résilié',
+  EXPIRED: 'Période terminée',
+};
+
+function SubscriptionBlockedScreen({ detail, onPay, onLogout }: { detail: SubscriptionBlockedDetail; onPay: () => void; onLogout: () => void }) {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
+      <div role="alertdialog" aria-labelledby="blocked-title" className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <svg aria-hidden viewBox="0 0 40 40" className="h-10 w-10 text-zinc-400">
+          <rect x="9" y="18" width="22" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M14 18v-4a6 6 0 0 1 12 0v4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <circle cx="20" cy="25.5" r="1.8" fill="currentColor" />
+        </svg>
+        {detail.subscription_status && (
+          <p className="mt-5 text-xs font-medium uppercase tracking-wide text-zinc-500">{STATUS_LABELS[detail.subscription_status] ?? detail.subscription_status}</p>
+        )}
+        <h1 id="blocked-title" className="mt-1 text-lg font-semibold tracking-tight text-zinc-900">Accès à l’espace clinique interrompu</h1>
+        <p className="mt-2 text-sm leading-6 text-zinc-600">{detail.message}</p>
+        <p className="mt-2 text-sm leading-6 text-zinc-600">
+          {detail.can_pay
+            ? 'Les données sont conservées. Réglez la facture en attente ou renouvelez la formule pour rétablir l’accès de toute l’équipe.'
+            : 'Les données sont conservées. Contactez la direction de la clinique pour régulariser l’abonnement.'}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {detail.can_pay && (
+            <button type="button" onClick={onPay} className="inline-flex h-9 items-center rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900">
+              Régulariser le paiement
+            </button>
+          )}
+          <button type="button" onClick={onLogout} className="inline-flex h-9 items-center rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+            Se déconnecter
+          </button>
+        </div>
+      </div>
+    </main>
+  );
+}
 
 const PUBLIC_PATHS = ['/', '/login', '/forgot-password', '/reset-password'];
 
@@ -12,10 +54,14 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const { loading, isAuthenticated, modules, user, selectedClinicId } = useAuth();
+  const [blocked, setBlocked] = useState<SubscriptionBlockedDetail | null>(null);
+  const { loading, isAuthenticated, modules, user, selectedClinicId, logout } = useAuth();
 
   useEffect(() => {
     setMounted(true);
+    const onBlocked = (event: Event) => setBlocked((event as CustomEvent<SubscriptionBlockedDetail>).detail);
+    window.addEventListener(SUBSCRIPTION_BLOCKED_EVENT, onBlocked);
+    return () => window.removeEventListener(SUBSCRIPTION_BLOCKED_EVENT, onBlocked);
   }, []);
   const pathModule = pathname.split('/').filter(Boolean)[0] || '';
   const isPublic = PUBLIC_PATHS.includes(pathname);
@@ -54,6 +100,17 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-center">
         <p className="text-sm font-medium text-slate-600">Chargement de votre espace…</p>
       </div>
+    );
+  }
+
+  // The subscription page stays reachable so the director can settle the account.
+  if (blocked && isAuthenticated && !isPublic && pathModule !== 'subscription') {
+    return (
+      <SubscriptionBlockedScreen
+        detail={blocked}
+        onPay={() => { setBlocked(null); router.push('/subscription'); }}
+        onLogout={() => { setBlocked(null); logout(); }}
+      />
     );
   }
 

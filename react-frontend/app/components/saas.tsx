@@ -17,7 +17,8 @@ export function PaymentDialog({ invoice, token, mode, onClose, onDone }: {
   onDone: (message: string) => void;
 }) {
   const titleId = useId();
-  const methods = mode === 'declare' ? DECLARABLE : (Object.keys(PAYMENT_METHODS) as PaymentMethod[]);
+  // Online payments are recorded by the Flutterwave webhook only, never by hand.
+  const methods = mode === 'declare' ? DECLARABLE : (Object.keys(PAYMENT_METHODS) as PaymentMethod[]).filter((method) => method !== 'FLUTTERWAVE');
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({ amount: '', method: 'ORANGE_MONEY' as PaymentMethod, reference: '', paid_on: today, notes: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});

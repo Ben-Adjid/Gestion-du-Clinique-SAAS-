@@ -22,6 +22,10 @@ use App\Http\Controllers\Api\V1\PerformanceController;
 |--------------------------------------------------------------------------
 */
 
+// Flutterwave webhook: authenticated by the "verif-hash" signature, outside the API version.
+Route::post('/webhooks/flutterwave', \App\Http\Controllers\Api\Webhooks\FlutterwaveWebhookController::class)
+    ->middleware('throttle:120,1');
+
 Route::prefix('v1')->group(function () {
     // Auth routes (public)
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
@@ -46,6 +50,12 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:view:subscription');
             Route::post('/subscription/payments', [\App\Http\Controllers\Api\MySubscriptionController::class, 'declarePayment'])
                 ->middleware(['permission:declare:subscription_payment', 'audit']);
+            Route::get('/subscription/plans', [\App\Http\Controllers\Api\SubscriptionController::class, 'plans'])
+                ->middleware('permission:view:subscription');
+            Route::post('/subscription/checkout', [\App\Http\Controllers\Api\SubscriptionController::class, 'checkout'])
+                ->middleware(['permission:declare:subscription_payment', 'audit', 'throttle:10,1']);
+            Route::get('/subscription/checkout/verify', [\App\Http\Controllers\Api\SubscriptionController::class, 'verify'])
+                ->middleware(['permission:declare:subscription_payment', 'throttle:30,1']);
         });
 
         // SaaS platform (super administrator), outside any clinic context
@@ -88,8 +98,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware(['permission:manage:subscriptions', 'audit']);
         });
 
-        // Clinic routes (with isolation middleware)
-        Route::middleware(['clinic.ensure', 'totp.enrolled'])->group(function () {
+        // Clinic routes: tenant isolation, 2FA and an active subscription
+        Route::middleware(['clinic.ensure', 'totp.enrolled', 'subscription.active'])->group(function () {
             Route::apiResource('clinics', ClinicController::class, ['only' => ['index', 'store', 'show', 'update']]);
             Route::get('/audit-logs', [AuditLogController::class, 'index'])
                 ->middleware('permission:view:audit_logs');
@@ -104,6 +114,12 @@ Route::prefix('v1')->group(function () {
                 ->middleware(['permission:manage:users', 'audit']);
 
             // Patients
+            Route::get('/imports/patients/template', [\App\Http\Controllers\Api\DataImportController::class, 'template'])
+                ->middleware('permission:import:patients');
+            Route::post('/imports/patients/preview', [\App\Http\Controllers\Api\DataImportController::class, 'preview'])
+                ->middleware(['permission:import:patients', 'throttle:20,1']);
+            Route::post('/imports/patients/commit', [\App\Http\Controllers\Api\DataImportController::class, 'commit'])
+                ->middleware(['permission:import:patients', 'audit', 'throttle:120,1']);
             Route::get('/patients/duplicates', [PatientController::class, 'duplicates'])
                 ->middleware('permission:create:patient');
             Route::post('/patients/{patient}/photo', [PatientController::class, 'uploadPhoto'])

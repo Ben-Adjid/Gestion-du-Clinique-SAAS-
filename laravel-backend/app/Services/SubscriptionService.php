@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Clinic;
 use App\Models\ClinicSubscription;
+use App\Models\FlutterwaveTransaction;
 use App\Models\Patient;
 use App\Models\SaasInvoice;
 use App\Models\SaasPayment;
@@ -53,13 +54,11 @@ class SubscriptionService
     public function issueInvoice(ClinicSubscription $subscription, Carbon $periodStart, Carbon $periodEnd): SaasInvoice
     {
         $subscription->loadMissing('plan', 'clinic');
-        $year = $periodStart->year;
-        $sequence = SaasInvoice::query()->where('number', 'like', "SAAS-{$year}-%")->lockForUpdate()->count() + 1;
 
         $invoice = SaasInvoice::create([
             'clinic_id' => $subscription->clinic_id,
             'subscription_id' => $subscription->id,
-            'number' => sprintf('SAAS-%d-%06d', $year, $sequence),
+            'number' => $this->nextInvoiceNumber($periodStart->year),
             'plan_code' => $subscription->plan->code,
             'billing_cycle' => $subscription->billing_cycle,
             'period_start' => $periodStart,
@@ -210,11 +209,11 @@ class SubscriptionService
         return $payment->fresh();
     }
 
-    public function changePlan(ClinicSubscription $subscription, SubscriptionPlan $plan, string $billingCycle, User $actor): ClinicSubscription
+    /** The clinic's current users and patients must fit within the plan limits. */
+    public function assertPlanFits(Clinic $clinic, SubscriptionPlan $plan): void
     {
-        $clinic = $subscription->clinic;
         $activeUsers = PlanLimits::activeStaff($clinic->id);
-        $patients = Patient::query()->withoutGlobalScopes()->where('clinic_id', $clinic->id)->count();
+        $patients = Patient::query()->withoutGlobalScopes()->where('clinic_id', $clinic->id)->whereNull('deleted_at')->count();
         $errors = [];
         if ($plan->max_users !== null && $activeUsers > $plan->max_users) {
             $errors['plan_code'][] = "La formule {$plan->name} est limitée à {$plan->max_users} utilisateurs actifs ; la clinique en a {$activeUsers}.";
@@ -225,6 +224,105 @@ class SubscriptionService
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
+    }
+
+    /**
+     * Applies a Flutterwave payment that has been verified server-to-server. Called once per
+     * transaction (the caller holds a lock and checks the transaction status).
+     */
+    public function applyOnlinePayment(FlutterwaveTransaction $transaction): void
+    {
+        $subscription = ClinicSubscription::query()->with(['plan', 'clinic'])->lockForUpdate()->findOrFail($transaction->subscription_id);
+        $clinic = $subscription->clinic;
+
+        if ($transaction->purpose === 'INVOICE') {
+            $invoice = SaasInvoice::query()->lockForUpdate()->findOrFail($transaction->saas_invoice_id);
+        } else {
+            // A paid renewal buys a full period: it starts today when the subscription is in
+            // trial, ended or suspended, otherwise right after the current period.
+            $plan = SubscriptionPlan::query()->findOrFail($transaction->plan_id);
+            $today = Carbon::today();
+            $restart = in_array($subscription->status, ['TRIAL', 'SUSPENDED', 'CANCELLED'], true)
+                || $subscription->current_period_end->lt($today);
+            $start = $restart ? $today : $subscription->current_period_end->copy()->addDay();
+            $end = $this->periodEnd($start, $transaction->billing_cycle);
+            $subscription->update([
+                'plan_id' => $plan->id,
+                'billing_cycle' => $transaction->billing_cycle,
+                'price' => $plan->priceFor($transaction->billing_cycle),
+                'currency' => $plan->currency,
+                'current_period_start' => $restart ? $start : $subscription->current_period_start,
+                'current_period_end' => $end,
+                'trial_ends_at' => $subscription->status === 'TRIAL' ? $today->copy()->subDay() : $subscription->trial_ends_at,
+                'auto_renew' => true,
+                'cancelled_at' => null,
+                'cancellation_reason' => null,
+            ]);
+            $clinic->update(['subscription_plan' => $plan->code]);
+            $invoice = SaasInvoice::create([
+                'clinic_id' => $clinic->id,
+                'subscription_id' => $subscription->id,
+                'number' => $this->nextInvoiceNumber($start->year),
+                'plan_code' => $plan->code,
+                'billing_cycle' => $transaction->billing_cycle,
+                'period_start' => $start,
+                'period_end' => $end,
+                'amount' => $transaction->amount,
+                'currency' => $transaction->currency,
+                'status' => 'PENDING',
+                'due_date' => $start,
+                'issued_at' => now(),
+            ]);
+            $this->event($clinic, 'RENEWED', "Période payée en ligne du {$start->format('d/m/Y')} au {$end->format('d/m/Y')} (formule {$plan->name}).");
+        }
+
+        SaasPayment::create([
+            'clinic_id' => $clinic->id,
+            'saas_invoice_id' => $invoice->id,
+            'flutterwave_transaction_id' => $transaction->id,
+            'amount' => min($transaction->amount, max($invoice->balance, 0)),
+            'method' => 'FLUTTERWAVE',
+            'reference' => $transaction->flw_ref ?? (string) $transaction->flw_transaction_id,
+            'paid_on' => Carbon::today(),
+            'status' => 'CONFIRMED',
+            'declared_by' => $transaction->user_id,
+            'confirmed_at' => now(),
+            'notes' => 'Paiement en ligne Flutterwave ('.($transaction->payment_type ?? 'inconnu').').',
+        ]);
+        $subscription->update(['flw_transaction_id' => $transaction->flw_transaction_id, 'flw_ref' => $transaction->flw_ref]);
+        $this->event($clinic, 'PAYMENT', 'Paiement en ligne de '.number_format($transaction->amount, 0, ',', ' ')." {$transaction->currency} confirmé par Flutterwave (facture {$invoice->number}).");
+
+        $invoice = $invoice->fresh();
+        if ($invoice->balance <= 0) {
+            $invoice->update(['status' => 'PAID', 'paid_at' => now()]);
+        }
+        $stillOverdue = $subscription->invoices()->where('status', 'OVERDUE')->exists();
+        if (!$stillOverdue && in_array($subscription->fresh()->status, ['TRIAL', 'PAST_DUE', 'SUSPENDED', 'CANCELLED'], true)) {
+            $subscription->update(['status' => 'ACTIVE']);
+        }
+        if (!$stillOverdue && $clinic->status !== 'ACTIVE') {
+            $clinic->update(['status' => 'ACTIVE']);
+            $this->event($clinic, 'REACTIVATED', 'Clinique réactivée automatiquement après paiement en ligne.');
+        }
+        $this->notifyClinicAdmins($clinic, 'Paiement d’abonnement reçu', 'Votre paiement en ligne de '.number_format($transaction->amount, 0, ',', ' ')." {$transaction->currency} a été confirmé. Merci !");
+    }
+
+    /** A failed attempt only matters once the period is over: the subscription becomes past due. */
+    public function onlinePaymentFailed(FlutterwaveTransaction $transaction): void
+    {
+        $subscription = ClinicSubscription::query()->with('clinic')->find($transaction->subscription_id);
+        if ($subscription && in_array($subscription->status, ['TRIAL', 'ACTIVE'], true) && $subscription->current_period_end->lt(Carbon::today())) {
+            $subscription->update(['status' => 'PAST_DUE']);
+            $this->event($subscription->clinic, 'PAYMENT_FAILED', 'Paiement en ligne échoué alors que la période est terminée : abonnement en retard de paiement.');
+        } elseif ($subscription) {
+            $this->event($subscription->clinic, 'PAYMENT_FAILED', "Tentative de paiement en ligne non aboutie ({$transaction->failure_reason}).");
+        }
+    }
+
+    public function changePlan(ClinicSubscription $subscription, SubscriptionPlan $plan, string $billingCycle, User $actor): ClinicSubscription
+    {
+        $clinic = $subscription->clinic;
+        $this->assertPlanFits($clinic, $plan);
 
         $previous = $subscription->plan->name;
         $subscription->update([
@@ -301,6 +399,15 @@ class SubscriptionService
         if ($amount <= 0 || $amount > $invoice->balance + 0.001) {
             throw ValidationException::withMessages(['amount' => 'Le montant doit être positif et ne pas dépasser le reste à payer ('.number_format($invoice->balance, 0, ',', ' ').' FCFA).']);
         }
+    }
+
+    private function nextInvoiceNumber(int $year): string
+    {
+        $last = SaasInvoice::query()->withoutGlobalScopes()->where('number', 'like', "SAAS-{$year}-%")->lockForUpdate()->pluck('number')
+            ->map(fn (string $number) => (int) substr($number, strlen("SAAS-{$year}-")))
+            ->max() ?? 0;
+
+        return sprintf('SAAS-%d-%06d', $year, $last + 1);
     }
 
     private function periodEnd(Carbon $start, string $billingCycle): Carbon

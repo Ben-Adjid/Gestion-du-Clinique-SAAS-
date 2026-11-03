@@ -139,6 +139,13 @@ export function Pagination({ page, lastPage, total, onPage }: { page: number; la
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+      <svg aria-hidden="true" viewBox="0 0 64 48" className="mx-auto mb-4 h-12 w-16 text-slate-300">
+        <rect x="10" y="8" width="44" height="34" rx="5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M10 17h44" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M19 26h18M19 32h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="16" cy="12.5" r="1.2" fill="currentColor" />
+        <circle cx="20.5" cy="12.5" r="1.2" fill="currentColor" />
+      </svg>
       <p className="font-semibold text-slate-800">{title}</p>
       {description && <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">{description}</p>}
       {action && <div className="mt-4 flex justify-center">{action}</div>}
@@ -151,6 +158,26 @@ export function Loading({ label = 'Chargement…' }: { label?: string }) {
     <div role="status" className="flex items-center justify-center gap-3 rounded-2xl bg-white px-6 py-12 text-sm text-slate-500">
       <span className="h-2 w-2 animate-pulse rounded-full bg-teal-500" aria-hidden="true" />
       {label}
+    </div>
+  );
+}
+
+/** Placeholder blocks shown while data loads, shaped like the content to come. */
+export function Skeleton({ className = '' }: { className?: string }) {
+  return <span aria-hidden="true" className={`block animate-pulse rounded-md bg-slate-200/70 ${className}`} />;
+}
+
+export function TableSkeleton({ rows = 6, columns = 4 }: { rows?: number; columns?: number }) {
+  return (
+    <div role="status" aria-label="Chargement" className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="flex gap-4 border-b border-slate-100 bg-slate-50 px-4 py-3">
+        {Array.from({ length: columns }, (_, column) => <Skeleton key={column} className="h-3 flex-1" />)}
+      </div>
+      {Array.from({ length: rows }, (_, row) => (
+        <div key={row} className="flex gap-4 border-b border-slate-100 px-4 py-3.5 last:border-0">
+          {Array.from({ length: columns }, (_, column) => <Skeleton key={column} className={`h-3.5 flex-1 ${column === 0 ? 'max-w-[40%]' : ''}`} />)}
+        </div>
+      ))}
     </div>
   );
 }

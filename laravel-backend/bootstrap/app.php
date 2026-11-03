@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'clinic.ensure' => \App\Http\Middleware\EnsureUserClinicMatch::class,
+            'subscription.active' => \App\Http\Middleware\EnsureSubscriptionIsActive::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'audit' => \App\Http\Middleware\LogAuditActivity::class,
             'totp.enrolled' => \App\Http\Middleware\EnsureTotpEnrolled::class,

@@ -6,6 +6,8 @@ return [
     // SaaS billing: days to pay an invoice, then days of tolerance before the clinic is suspended.
     'saas_payment_terms_days' => (int) env('SAAS_PAYMENT_TERMS_DAYS', 7),
     'saas_suspend_after_days' => (int) env('SAAS_SUSPEND_AFTER_DAYS', 7),
+    // true: block the clinic as soon as a subscription invoice is overdue (no grace period).
+    'block_past_due' => (bool) env('CLINIC_BLOCK_PAST_DUE', false),
 
     // Where clinics send their subscription payments (shown on the clinic admin subscription page).
     'saas_payment_instructions' => [

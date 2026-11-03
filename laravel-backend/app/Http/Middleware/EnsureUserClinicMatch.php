@@ -36,10 +36,8 @@ class EnsureUserClinicMatch
             return $next($request);
         }
 
-        // A suspended clinic keeps access to its subscription pages only, so that it can pay and be reactivated.
-        if ($user->clinic && $user->clinic->status !== 'ACTIVE' && $mode !== 'allow-suspended') {
-            return response()->json(['message' => 'Votre clinique est suspendue ou inactive. Contactez l’administrateur de la plateforme.'], 403);
-        }
+        // Subscription state (suspended clinic, expired plan) is enforced by EnsureSubscriptionIsActive,
+        // which the subscription routes (mode "allow-suspended") leave out so the director can pay.
 
         // Other users can only access their own clinic
         if ($clinicId && $clinicId != $user->clinic_id) {

@@ -119,7 +119,7 @@ class PatientController extends Controller
             $patient = Patient::create([
                 ...collect($validated)->only($this->identityFields())->all(),
                 'clinic_id' => $clinicId,
-                'patient_unique_id' => $this->nextUniqueId((int) $clinicId),
+                'patient_unique_id' => \App\Services\PatientNumbering::reserve((int) $clinicId)[0],
             ]);
             foreach (['contacts' => 'emergencyContacts', 'allergies' => 'allergies', 'medical_history' => 'medicalHistory'] as $key => $relation) {
                 if (!empty($validated[$key])) {
@@ -338,20 +338,6 @@ class PatientController extends Controller
         $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value) ?: $value;
 
         return trim(preg_replace('/\s+/', ' ', preg_replace('/[^a-z ]/', '', strtolower($ascii))));
-    }
-
-    private function nextUniqueId(int $clinicId): string
-    {
-        $clinic = Clinic::whereKey($clinicId)->lockForUpdate()->firstOrFail();
-        $prefix = "{$clinic->code}-".now()->year.'-';
-        $lastSequence = Patient::withTrashed()
-            ->where('clinic_id', $clinicId)
-            ->where('patient_unique_id', 'like', $prefix.'%')
-            ->pluck('patient_unique_id')
-            ->map(fn (string $id) => (int) substr($id, strlen($prefix)))
-            ->max() ?? 0;
-
-        return $prefix.str_pad((string) ($lastSequence + 1), 6, '0', STR_PAD_LEFT);
     }
 
     private function inClinic(Request $request, Patient $patient): bool

@@ -1,4 +1,4 @@
-import { clinicScopeHeader } from '@/lib/api';
+import { clinicScopeHeader, reportSubscriptionBlocked } from '@/lib/api';
 
 export const API_ROOT = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
 
@@ -30,6 +30,7 @@ export async function apiFetch<T>(path: string, token: string, init: RequestInit
   const body = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    reportSubscriptionBlocked(response.status, body);
     throw new ApiError(body.message || `Erreur ${response.status}`, response.status, body.errors, body);
   }
   return body as T;

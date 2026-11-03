@@ -5,7 +5,7 @@ export type SubscriptionStatus = 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' |
 export type ClinicStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 export type SaasInvoiceStatus = 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
 export type SaasPaymentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED';
-export type PaymentMethod = 'ORANGE_MONEY' | 'MOOV_MONEY' | 'AIRTEL_MONEY' | 'BANK_TRANSFER' | 'CASH' | 'CARD';
+export type PaymentMethod = 'ORANGE_MONEY' | 'MOOV_MONEY' | 'AIRTEL_MONEY' | 'BANK_TRANSFER' | 'CASH' | 'CARD' | 'FLUTTERWAVE';
 
 export interface Plan {
   id: number;
@@ -115,6 +115,29 @@ export const PAYMENT_METHODS: Record<PaymentMethod, string> = {
   BANK_TRANSFER: 'Virement bancaire',
   CASH: 'Espèces',
   CARD: 'Carte bancaire',
+  FLUTTERWAVE: 'Paiement en ligne (Flutterwave)',
+};
+
+export type OnlinePaymentStatus = 'PENDING' | 'SUCCESSFUL' | 'FAILED' | 'CANCELLED';
+
+export interface OnlinePayment {
+  id: number;
+  tx_ref: string;
+  purpose: 'INVOICE' | 'RENEWAL';
+  amount: number;
+  currency: string;
+  status: OnlinePaymentStatus;
+  payment_type: string | null;
+  failure_reason: string | null;
+  created_at: string;
+  verified_at: string | null;
+}
+
+export const ONLINE_PAYMENT_STATUS: Record<OnlinePaymentStatus, { label: string; tone: Tone }> = {
+  PENDING: { label: 'En attente', tone: 'amber' },
+  SUCCESSFUL: { label: 'Confirmé', tone: 'green' },
+  FAILED: { label: 'Échoué', tone: 'red' },
+  CANCELLED: { label: 'Annulé', tone: 'slate' },
 };
 
 export const BILLING_CYCLES: Record<BillingCycle, string> = {

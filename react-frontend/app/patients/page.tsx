@@ -34,6 +34,7 @@ function PatientsContent() {
   const debouncedSearch = useDebouncedValue(search);
   const canCreate = can(user, 'create:patient');
   const canArchive = can(user, 'delete:patient');
+  const canImport = can(user, 'import:patients');
   const canBook = can(user, 'create:appointment');
 
   const load = useCallback(async () => {
@@ -84,7 +85,12 @@ function PatientsContent() {
           description="Recherchez un dossier par nom, téléphone, numéro de dossier ou pièce d’identité."
           backHref="/dashboard"
           backLabel="Tableau de bord"
-          actions={canCreate && <Link href="/patients/new" className={buttonClass.primary}>+ Nouveau patient</Link>}
+          actions={(canImport || canCreate) && (
+            <>
+              {canImport && <Link href="/patients/import" className={buttonClass.secondary}>Importer un fichier</Link>}
+              {canCreate && <Link href="/patients/new" className={buttonClass.primary}>+ Nouveau patient</Link>}
+            </>
+          )}
         />
         {notice && <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>}
         {error && <Notice tone="error" onClose={() => setError('')}>{error}</Notice>}
