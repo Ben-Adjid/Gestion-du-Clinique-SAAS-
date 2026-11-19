@@ -22,7 +22,7 @@ export function PrintSheet({ clinic, title, number, children, signature, log }: 
   title: string;
   number?: string;
   children: ReactNode;
-  signature?: { doctor: string; date: string; hash?: string | null };
+  signature?: { doctor: string; date: string; hash?: string | null; licence?: string | null };
   log?: PrintLog;
 }) {
   const { token } = useAuth();
@@ -95,6 +95,7 @@ export function PrintSheet({ clinic, title, number, children, signature, log }: 
             <div className="text-right">
               <p className="text-xs text-slate-600">Fait le {signature.date}</p>
               <p className="mt-1 font-semibold">{doctorName(signature.doctor)}</p>
+              {signature.licence !== undefined && <p className="text-xs text-slate-600">N° d’ordre : {signature.licence || 'non renseigné'}</p>}
               <div className="mt-2 h-16 w-48 border-b border-dashed border-slate-400" aria-label="Cachet et signature" />
             </div>
           </footer>

@@ -14,7 +14,7 @@ class Clinic extends Model
         'admin_email', 'admin_phone', 'settings', 'status', 'terms_version', 'terms_accepted_at',
     ];
 
-    protected $casts = ['settings' => 'json'];
+    protected $casts = ['settings' => 'json', 'terms_accepted_at' => 'datetime'];
 
     public function users() { return $this->hasMany(User::class); }
     public function patients() { return $this->hasMany(Patient::class); }

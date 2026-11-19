@@ -69,11 +69,12 @@ class DoctorPlanningController extends Controller
         $validated = $request->validate([
             'specialty' => ['required', 'string', 'max:80'],
             'employment' => ['required', Rule::in(DoctorProfile::EMPLOYMENTS)],
+            'license_number' => ['nullable', 'string', 'max:40'],
         ]);
 
         $profile = DoctorProfile::query()->updateOrCreate(
             ['user_id' => $doctor->id],
-            ['clinic_id' => $doctor->clinic_id, 'specialty' => trim($validated['specialty']), 'employment' => $validated['employment']],
+            ['clinic_id' => $doctor->clinic_id, 'specialty' => trim($validated['specialty']), 'employment' => $validated['employment'], 'license_number' => $validated['license_number'] ?? null],
         );
 
         return response()->json(['data' => $profile, 'message' => 'Profil du médecin mis à jour.']);

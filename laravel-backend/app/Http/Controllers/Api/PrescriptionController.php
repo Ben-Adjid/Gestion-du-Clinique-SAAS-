@@ -145,7 +145,7 @@ class PrescriptionController extends Controller
             return response()->json(['message' => 'Prescription not found.'], 404);
         }
 
-        $prescription->load(['consultation.patient', 'doctor:id,name', 'items.medication', 'clinic:id,name,city,country,admin_phone,admin_email']);
+        $prescription->load(['consultation.patient', 'doctor:id,name', 'doctor.doctorProfile:id,user_id,license_number', 'items.medication', 'clinic:id,name,city,country,admin_phone,admin_email']);
         // Verification code printed on the prescription so a pharmacy can check it was not altered.
         $verification = in_array($prescription->status, ['SIGNED', 'DISPENSED'], true)
             ? strtoupper(substr(hash_hmac('sha256', implode('|', [

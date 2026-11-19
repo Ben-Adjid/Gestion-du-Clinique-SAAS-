@@ -14,7 +14,7 @@ interface PrintablePrescription {
   prescribed_at: string;
   notes: string | null;
   verification_code: string | null;
-  doctor: { name: string };
+  doctor: { name: string; doctor_profile?: { license_number: string | null } | null };
   clinic: { name: string; city: string; country: string; admin_phone: string | null; admin_email: string };
   consultation: { patient: { first_name: string; last_name: string; patient_unique_id: string; date_of_birth: string | null; gender: string | null } };
   items: {
@@ -55,7 +55,7 @@ export default function PrescriptionPrintPage() {
       title="Ordonnance"
       number={`ORD-${String(prescription.id).padStart(6, '0')}`}
       log={{ kind: 'PRESCRIPTION', resourceId: prescription.id }}
-      signature={{ doctor: prescription.doctor.name, date: formatDate(prescription.prescribed_at), hash: prescription.verification_code && `code de vérification ${prescription.verification_code}` }}
+      signature={{ doctor: prescription.doctor.name, licence: prescription.doctor.doctor_profile?.license_number ?? null, date: formatDate(prescription.prescribed_at), hash: prescription.verification_code && `code de vérification ${prescription.verification_code}` }}
     >
       <p>
         Patient(e) : <strong>{patient.last_name.toUpperCase()} {patient.first_name}</strong>

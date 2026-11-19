@@ -200,6 +200,8 @@ class ClinicController extends Controller
             'address' => $clinic->settings['address'] ?? null,
             'phone' => $clinic->settings['phone'] ?? null,
             'subscription' => $clinic->subscription,
+            // Terms of use accepted at creation: version and date, for the compliance trail
+            'terms' => ['version' => $clinic->terms_version, 'accepted_at' => $clinic->terms_accepted_at?->toIso8601String()],
             'usage' => [
                 'active_users' => PlanLimits::activeStaff($clinic->id),
                 'max_users' => $plan?->max_users,

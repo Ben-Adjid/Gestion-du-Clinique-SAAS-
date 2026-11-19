@@ -46,6 +46,12 @@ class User extends Authenticatable
                     ->withPivot('clinic_id');
     }
 
+    /** Specialty and registration number of a doctor (absent for other roles). */
+    public function doctorProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(DoctorProfile::class, 'user_id');
+    }
+
     public function patient()
     {
         return $this->hasOne(Patient::class);

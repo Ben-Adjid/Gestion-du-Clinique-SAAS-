@@ -110,6 +110,16 @@ class DoctorPlanningSurgeryTest extends TestCase
         $this->assertSame($this->generalist->id, $board['tomorrow']['present'][0]['doctor_id']);
     }
 
+    public function test_the_doctor_registration_number_is_recorded_for_prescriptions(): void
+    {
+        $this->actingAs($this->user('ADMIN_CLINIC'), 'sanctum')
+            ->putJson("/api/v1/doctors/{$this->generalist->id}/profile", [
+                'specialty' => 'Médecine générale', 'employment' => 'PERMANENT', 'license_number' => 'ONM-2026-0412',
+            ])->assertOk();
+
+        $this->assertSame('ONM-2026-0412', $this->generalist->fresh()->doctorProfile->license_number);
+    }
+
     public function test_only_the_administration_edits_the_planning(): void
     {
         $payload = ['entries' => [['doctor_id' => $this->generalist->id, 'work_date' => '2026-11-10', 'status' => 'PRESENT']]];

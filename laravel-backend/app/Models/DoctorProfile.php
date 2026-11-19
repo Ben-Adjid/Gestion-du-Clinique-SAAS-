@@ -12,7 +12,7 @@ class DoctorProfile extends Model
 
     public const EMPLOYMENTS = ['PERMANENT', 'CONSULTANT'];
 
-    protected $fillable = ['clinic_id', 'user_id', 'specialty', 'employment'];
+    protected $fillable = ['clinic_id', 'user_id', 'specialty', 'employment', 'license_number'];
 
     public function user() { return $this->belongsTo(User::class); }
 }
