@@ -52,6 +52,7 @@ export default function SettingsPage() {
         {!(user.totp_required && !user.totp_enabled) && (
           <Link href="/dashboard" className="inline-block text-sm font-semibold text-teal-700 hover:text-teal-900">← Retour au tableau de bord</Link>
         )}
+        {user.role === 'ADMIN_CLINIC' && user.clinic_id && token && <ClinicLegalSection clinicId={user.clinic_id} token={token} />}
         <h1 className="text-3xl font-bold text-slate-900">Paramètres</h1>
 
         {user.totp_required && !user.totp_enabled && (
@@ -223,5 +224,75 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {children}
       {error && <span className="mt-1 block text-xs text-rose-600">{error}</span>}
     </label>
+  );
+}
+
+/** Legal details of the clinic, printed on the official receipts. Reserved to the clinic director. */
+function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: string }) {
+  const [licence, setLicence] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<{ data: { settings: { license_number?: string; address?: string; phone?: string } | null } }>(`/clinics/${clinicId}`, token)
+      .then((response) => {
+        if (!active) return;
+        setLicence(response.data.settings?.license_number ?? '');
+        setAddress(response.data.settings?.address ?? '');
+        setPhone(response.data.settings?.phone ?? '');
+        setLoaded(true);
+      })
+      .catch((err: Error) => active && setError(err.message));
+
+    return () => {
+      active = false;
+    };
+  }, [clinicId, token]);
+
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+    try {
+      await apiFetch(`/clinics/${clinicId}`, token, {
+        method: 'PUT',
+        body: JSON.stringify({ license_number: licence.trim() || null, address: address.trim() || null, phone: phone.trim() || null }),
+      });
+      setMessage('Informations de la clinique enregistrées. Elles figureront sur les prochaines quittances.');
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  if (!loaded && !error) return null;
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 className="text-base font-semibold text-slate-900">Informations légales de la clinique</h2>
+      <p className="mt-1 text-sm text-slate-500">Le numéro d’agrément, l’adresse et le téléphone sont imprimés sur les quittances de soins.</p>
+      {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
+      {message && <p role="status" className="mt-3 text-sm text-emerald-700">{message}</p>}
+      <form onSubmit={save} className="mt-4 grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-semibold text-slate-700 sm:col-span-2">
+          Numéro d’agrément
+          <input value={licence} maxLength={60} onChange={(event) => setLicence(event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm" />
+        </label>
+        <label className="block text-sm font-semibold text-slate-700 sm:col-span-2">
+          Adresse
+          <input value={address} maxLength={255} onChange={(event) => setAddress(event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm" />
+        </label>
+        <label className="block text-sm font-semibold text-slate-700">
+          Téléphone
+          <input value={phone} maxLength={30} onChange={(event) => setPhone(event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm" />
+        </label>
+        <div className="flex items-end justify-end sm:col-span-2">
+          <button type="submit" className="rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800">Enregistrer</button>
+        </div>
+      </form>
+    </section>
   );
 }

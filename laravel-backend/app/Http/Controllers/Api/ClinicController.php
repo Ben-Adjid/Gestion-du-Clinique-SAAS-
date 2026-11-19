@@ -82,6 +82,10 @@ class ClinicController extends Controller
             'country' => 'sometimes|string|max:120',
             'admin_email' => 'sometimes|email|max:255',
             'admin_phone' => 'sometimes|nullable|string|max:30',
+            // Legal details printed on the official receipts (quittances)
+            'license_number' => 'sometimes|nullable|string|max:60',
+            'address' => 'sometimes|nullable|string|max:255',
+            'phone' => 'sometimes|nullable|string|max:30',
         ];
         if ($user->role->name === 'SUPER_ADMIN') {
             $rules['code'] = 'sometimes|string|max:40|alpha_dash:ascii|unique:clinics,code,'.$clinic->id;
@@ -92,6 +96,13 @@ class ClinicController extends Controller
         $validated = $request->validate($rules);
         if (isset($validated['code'])) {
             $validated['code'] = strtoupper($validated['code']);
+        }
+
+        // Legal details live in the clinic settings (printed on receipts), the other fields are columns.
+        $legal = array_intersect_key($validated, array_flip(['license_number', 'address', 'phone']));
+        $validated = array_diff_key($validated, $legal);
+        if ($legal !== []) {
+            $validated['settings'] = array_merge($clinic->settings ?? [], $legal);
         }
 
         $clinic->update($validated);

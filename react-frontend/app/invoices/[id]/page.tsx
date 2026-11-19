@@ -4,9 +4,10 @@ import { can, useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { ReceiptPreview } from '../../components/ReceiptPreview';
 import { ConfirmDialog, Field, Loading, Notice, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '../../components/ui';
 import { ApiError, apiFetch, fieldErrors } from '../../lib/api';
-import { INVOICE_STATUS, PAYMENT_METHODS, receiverName, type Invoice, type PaymentMethod } from '../../lib/billing';
+import { INVOICE_STATUS, METHODS_NEEDING_REFERENCE, PAYMENT_METHODS, receiverName, type Invoice, type PaymentMethod } from '../../lib/billing';
 import { formatDate, formatDateTime, formatMoney } from '../../lib/format';
 
 export default function InvoicePage() {
@@ -16,6 +17,8 @@ export default function InvoicePage() {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<PaymentMethod>('CASH');
   const [reference, setReference] = useState('');
+  const [insurer, setInsurer] = useState('');
+  const [preview, setPreview] = useState<{ paymentId: number; receiptNumber: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -59,7 +62,12 @@ export default function InvoicePage() {
     try {
       const response = await apiFetch<{ data: { id: number } }>(`/invoices/${invoice.id}/payments`, token, {
         method: 'POST',
-        body: JSON.stringify({ amount: Number(amount), payment_method: method, payment_reference: reference.trim() || null }),
+        body: JSON.stringify({
+          amount: Number(amount),
+          payment_method: method,
+          payment_reference: reference.trim() || null,
+          insurer_name: method === 'INSURANCE' ? insurer.trim() || null : null,
+        }),
       });
       setLastPaymentId(response.data.id);
       setReference('');
@@ -131,7 +139,7 @@ export default function InvoicePage() {
                 {confirmedPayments.map((payment) => (
                   <li key={payment.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <span>{formatDateTime(payment.payment_datetime)} · {PAYMENT_METHODS[payment.payment_method]}{payment.payment_reference ? ` (${payment.payment_reference})` : ''} · {receiverName(payment)}</span>
-                    <span className="flex items-center gap-2"><strong>{formatMoney(payment.amount)}</strong><Link href={`/invoices/${invoice.id}/print?payment=${payment.id}`} target="_blank" className={buttonClass.small}>Reçu</Link></span>
+                    <span className="flex items-center gap-2"><strong>{formatMoney(payment.amount)}</strong>{payment.receipt_number && <button type="button" onClick={() => setPreview({ paymentId: payment.id, receiptNumber: payment.receipt_number ?? '' })} className={buttonClass.small}>Quittance</button>}<Link href={`/invoices/${invoice.id}/print?payment=${payment.id}`} target="_blank" className={buttonClass.small}>Reçu</Link></span>
                   </li>
                 ))}
               </ul>
@@ -146,7 +154,7 @@ export default function InvoicePage() {
               </Field>
               <Field label="Mode de paiement" required>
                 <div className="grid grid-cols-2 gap-2">
-                  {(['CASH', 'MOBILE_MONEY', 'BANK_TRANSFER'] as PaymentMethod[]).map((value) => (
+                  {(['CASH', 'WAVE', 'ORANGE_MONEY', 'CARD', 'INSURANCE', 'BANK_TRANSFER'] as PaymentMethod[]).map((value) => (
                     <button key={value} type="button" aria-pressed={method === value} onClick={() => setMethod(value)}
                       className={`rounded-xl border px-3 py-2 text-sm font-semibold ${method === value ? 'border-teal-600 bg-teal-50 text-teal-800' : 'border-slate-300 text-slate-600'}`}>
                       {PAYMENT_METHODS[value]}
@@ -154,8 +162,13 @@ export default function InvoicePage() {
                   ))}
                 </div>
               </Field>
-              {method !== 'CASH' && (
-                <Field label="Référence de la transaction" required error={errors.payment_reference} hint="Ex. ID de la transaction Airtel Money / Moov Money.">
+              {method === 'INSURANCE' && (
+                <Field label="Assureur" required error={errors.insurer_name} hint="Le nom de la compagnie qui prend en charge les soins.">
+                  <input required value={insurer} maxLength={120} onChange={(event) => setInsurer(event.target.value)} className={inputClass} />
+                </Field>
+              )}
+              {METHODS_NEEDING_REFERENCE.includes(method) && (
+                <Field label="Référence de la transaction" required error={errors.payment_reference} hint="Ex. ID de la transaction Wave ou Orange Money, ou numéro du dossier d’assurance.">
                   <input required value={reference} maxLength={255} onChange={(event) => setReference(event.target.value)} className={inputClass} />
                 </Field>
               )}
@@ -164,6 +177,10 @@ export default function InvoicePage() {
           )}
         </div>
       </div>
+
+      {preview && invoice && (
+        <ReceiptPreview invoiceId={invoice.id} paymentId={preview.paymentId} receiptNumber={preview.receiptNumber} onClose={() => setPreview(null)} />
+      )}
 
       <ConfirmDialog
         open={cancelling}

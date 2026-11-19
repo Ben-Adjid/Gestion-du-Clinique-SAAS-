@@ -290,6 +290,11 @@ Route::prefix('v1')->group(function () {
                 ->middleware('audit');
             Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])
                 ->middleware(['permission:manage:payment', 'audit']);
+            // Official receipt (quittance) of a payment: PDF, and e-mail to the patient
+            Route::get('/payments/{payment}/receipt', [\App\Http\Controllers\Api\ReceiptController::class, 'show'])
+                ->middleware(['permission:manage:payment', 'audit']);
+            Route::post('/payments/{payment}/receipt/email', [\App\Http\Controllers\Api\ReceiptController::class, 'sendByEmail'])
+                ->middleware(['permission:manage:payment', 'audit', 'throttle:10,1']);
 
             // Human resources (Enterprise plan): staff files, attendance, leave and payroll
             Route::middleware('plan:hr')->group(function () {

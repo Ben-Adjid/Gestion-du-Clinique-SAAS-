@@ -7,7 +7,9 @@ use App\Models\CashClosing;
 use App\Models\Clinic;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Jobs\SendReceiptByEmail;
 use App\Services\BillableActs;
+use App\Services\Receipts\ReceiptNumbering;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -251,9 +253,13 @@ class InvoiceController extends Controller
 
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:1', 'max:99999999.99'],
-            'payment_method' => ['required', 'in:CASH,MOBILE_MONEY,BANK_TRANSFER,STRIPE'],
-            'payment_reference' => ['nullable', 'required_if:payment_method,MOBILE_MONEY,BANK_TRANSFER', 'string', 'max:255'],
-        ], ['payment_reference.required_if' => 'La référence de la transaction est obligatoire pour ce mode de paiement.']);
+            'payment_method' => ['required', Rule::in(array_keys(Payment::METHOD_LABELS))],
+            'payment_reference' => ['nullable', 'required_if:payment_method,'.implode(',', Payment::METHODS_WITH_REFERENCE), 'string', 'max:255'],
+            'insurer_name' => ['nullable', 'required_if:payment_method,INSURANCE', 'string', 'max:120'],
+        ], [
+            'payment_reference.required_if' => 'La référence de la transaction est obligatoire pour ce mode de paiement.',
+            'insurer_name.required_if' => 'Indiquez l’assureur qui prend en charge les soins.',
+        ]);
 
         $closed = CashClosing::query()
             ->where('clinic_id', $invoice->clinic_id)
@@ -283,6 +289,8 @@ class InvoiceController extends Controller
                 'amount' => $amount,
                 'payment_method' => $validated['payment_method'],
                 'payment_reference' => $validated['payment_reference'] ?? null,
+                'insurer_name' => $validated['insurer_name'] ?? null,
+                'receipt_number' => ReceiptNumbering::next($lockedInvoice->clinic_id),
                 'payment_datetime' => now(),
                 'received_by' => $request->user()->id,
                 'status' => 'CONFIRMED',
@@ -294,6 +302,9 @@ class InvoiceController extends Controller
 
             return $payment;
         });
+
+        // The receipt is e-mailed in the background: a mail problem never blocks the cashier.
+        SendReceiptByEmail::dispatch($payment->id);
 
         return response()->json([
             'data' => $payment,

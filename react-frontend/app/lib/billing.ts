@@ -1,13 +1,16 @@
 type Tone = 'slate' | 'green' | 'amber' | 'red' | 'blue' | 'teal' | 'violet';
 
 export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-export type PaymentMethod = 'CASH' | 'MOBILE_MONEY' | 'BANK_TRANSFER' | 'STRIPE';
+export type PaymentMethod = 'CASH' | 'WAVE' | 'ORANGE_MONEY' | 'MOBILE_MONEY' | 'BANK_TRANSFER' | 'CARD' | 'STRIPE' | 'INSURANCE';
 
 export interface Payment {
   id: number;
   amount: string;
   payment_method: PaymentMethod;
   payment_reference: string | null;
+  insurer_name?: string | null;
+  receipt_number?: string | null;
+  receipt_sent_at?: string | null;
   payment_datetime: string;
   status: string;
   /** Laravel serialises the receivedBy relation under the same key as the column. */
@@ -59,10 +62,17 @@ export const INVOICE_STATUS: Record<InvoiceStatus, { label: string; tone: Tone }
 
 export const PAYMENT_METHODS: Record<PaymentMethod, string> = {
   CASH: 'Espèces',
+  WAVE: 'Wave',
+  ORANGE_MONEY: 'Orange Money',
   MOBILE_MONEY: 'Mobile Money',
   BANK_TRANSFER: 'Virement',
+  CARD: 'Carte bancaire',
   STRIPE: 'Carte bancaire',
+  INSURANCE: 'Prise en charge assurance',
 };
+
+/** Methods whose transaction needs a reference (phone transfer, bank transfer, insurance file). */
+export const METHODS_NEEDING_REFERENCE: PaymentMethod[] = ['WAVE', 'ORANGE_MONEY', 'BANK_TRANSFER', 'INSURANCE'];
 
 export function receiverName(payment: Payment): string {
   return typeof payment.received_by === 'object' && payment.received_by ? payment.received_by.name : '—';
