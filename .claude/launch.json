@@ -4,8 +4,8 @@
     {
       "name": "Laravel API",
       "runtimeExecutable": "php",
-      "runtimeArgs": ["laravel-backend/artisan", "serve", "--port=8000"],
-      "port": 8000
+      "runtimeArgs": ["laravel-backend/artisan", "serve", "--port=8100"],
+      "port": 8100
     },
     {
       "name": "Next.js",

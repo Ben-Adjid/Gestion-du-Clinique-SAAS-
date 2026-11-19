@@ -8,7 +8,7 @@ import { moduleGroups, PATIENT_GROUP_TITLES, type Module } from '@/app/lib/navig
 import { ROLE_DASHBOARD_PROFILES, ROLE_LABELS, type Role } from '@/app/lib/permissions';
 import { clinicScopedFetch } from '@/lib/api';
 
-const API_ROOT = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
+const API_ROOT = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8100/api/v1').replace(/\/$/, '');
 
 type Widget = {
   key: string;

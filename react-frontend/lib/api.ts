@@ -1,4 +1,4 @@
-const apiRoot = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
+const apiRoot = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8100/api/v1').replace(/\/$/, '');
 
 export function clinicScopeHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
