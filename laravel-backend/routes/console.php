@@ -24,3 +24,10 @@ Artisan::command('billing:overdue', function (\App\Services\InvoiceReminders $re
 })->purpose('Passe en retard les factures patients impayées et prépare les relances');
 
 Schedule::command('billing:overdue')->dailyAt('06:00');
+
+Artisan::command('attendance:alert-absences', function (\App\Services\AbsenceAlerts $alerts) {
+    $counters = $alerts->run();
+    $this->info("Alertes d’absence créées : {$counters['alerts']} · cliniques contrôlées : {$counters['clinics']}");
+})->purpose('Signale à 10 h les absences sans pointage, congé ni justificatif');
+
+Schedule::command('attendance:alert-absences')->dailyAt('10:00');

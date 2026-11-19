@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 
 class SubscriptionPlanSeeder extends Seeder
 {
-    public const CORE_MODULES = ['patients', 'appointments', 'consultations', 'prescriptions', 'nursing', 'invoices'];
+    public const CORE_MODULES = ['patients', 'appointments', 'consultations', 'prescriptions', 'nursing', 'pharmacy', 'invoices'];
 
     public function run(): void
     {
@@ -24,7 +24,7 @@ class SubscriptionPlanSeeder extends Seeder
                 'max_users' => 10,
                 'max_patients' => 2000,
                 'modules' => self::CORE_MODULES,
-                'trial_days' => 14,
+                'trial_days' => 90,
             ],
             [
                 'code' => 'PRO',
@@ -35,7 +35,7 @@ class SubscriptionPlanSeeder extends Seeder
                 'max_users' => 40,
                 'max_patients' => 20000,
                 'modules' => [...self::CORE_MODULES, 'lab', 'imaging', 'reports'],
-                'trial_days' => 14,
+                'trial_days' => 90,
             ],
             [
                 'code' => 'ENTERPRISE',
@@ -45,8 +45,8 @@ class SubscriptionPlanSeeder extends Seeder
                 'yearly_price' => 4000000,
                 'max_users' => null,
                 'max_patients' => null,
-                'modules' => [...self::CORE_MODULES, 'lab', 'imaging', 'reports', 'hr', 'patient_portal'],
-                'trial_days' => 30,
+                'modules' => [...self::CORE_MODULES, 'lab', 'imaging', 'reports', 'hr', 'patient_portal', 'surgery'],
+                'trial_days' => 90,
             ],
         ];
 

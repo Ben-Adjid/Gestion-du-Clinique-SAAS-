@@ -13,6 +13,9 @@ use Illuminate\Validation\Rule;
 
 class PrescriptionController extends Controller
 {
+    /** Days during which a signed prescription can still be dispensed. */
+    public const PHARMACY_VALIDITY_DAYS = 30;
+
     public function medications(Request $request)
     {
         if ($request->user()->role?->name === 'PATIENT') {
@@ -43,6 +46,10 @@ class PrescriptionController extends Controller
             ->with(['consultation.patient:id,first_name,last_name,patient_unique_id', 'doctor:id,name', 'items.medication:id,name,dosage,form'])
             ->when($clinicId !== null, fn ($query) => $query->where('clinic_id', $clinicId))
             ->when($request->user()->role?->name === 'DOCTOR', fn ($query) => $query->where('doctor_id', $request->user()->id))
+            // Pharmacy: only the active prescriptions awaiting dispensing, never the history.
+            ->when($request->user()->role?->name === 'PHARMACIST', fn ($query) => $query
+                ->where('status', 'SIGNED')
+                ->where('prescribed_at', '>=', now()->subDays(self::PHARMACY_VALIDITY_DAYS)))
             ->when($request->user()->role?->name === 'PATIENT', function ($query) use ($request) {
                 $query->whereHas('consultation', fn ($consultations) => $consultations
                     ->where('patient_id', $request->user()->patient?->id ?? 0))
@@ -212,8 +219,13 @@ class PrescriptionController extends Controller
             && ((int) $prescription->consultation()->value('patient_id') !== (int) ($request->user()->patient?->id ?? 0)
                 || !in_array($prescription->status, ['SIGNED', 'DISPENSED'], true));
 
+        // A pharmacist sees one prescription only: an active one, not the rest of the history.
+        $isPharmacyOutsideActive = $request->user()->role?->name === 'PHARMACIST'
+            && ($prescription->status !== 'SIGNED' || $prescription->prescribed_at?->lt(now()->subDays(self::PHARMACY_VALIDITY_DAYS)));
+
         return ($clinicId === null || (int) $prescription->clinic_id === $clinicId)
             && !$isPatientOutsideOwnCase
+            && !$isPharmacyOutsideActive
             && ($request->user()->role?->name !== 'DOCTOR' || (int) $prescription->doctor_id === (int) $request->user()->id);
     }
 

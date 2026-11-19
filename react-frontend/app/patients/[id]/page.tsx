@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { CertificatesSection } from '../../components/CertificatesSection';
+import { PatientRightsPanel } from '../../components/PatientRightsPanel';
 import { ConfirmDialog, Loading, Notice, PageHeader, StatusBadge, buttonClass } from '../../components/ui';
 import { ApiError, API_ROOT, apiFetch, fetchObjectUrl } from '../../lib/api';
 import { ageFrom, formatDate, formatDateTime } from '../../lib/format';
@@ -169,6 +170,17 @@ function PatientDetailContent() {
           <CertificatesSection token={token} patientId={patient.id} canCreate={can(user, 'create:certificate')} currentUserId={user?.id} />
         )}
         {can(user, 'read:dpe') && <MedicalTimeline patientId={patientId} token={token} />}
+        {!isPatient && (
+          <PatientRightsPanel
+            base={`/patients/${patient.id}`}
+            token={token}
+            fileName={`dossier-${patient.patient_unique_id}.json`}
+            canEdit={canEdit}
+            canExport={can(user, 'read:dpe')}
+            canAnonymize={can(user, 'delete:patient')}
+            onAnonymized={() => { void load(); }}
+          />
+        )}
       </div>
 
       <ConfirmDialog

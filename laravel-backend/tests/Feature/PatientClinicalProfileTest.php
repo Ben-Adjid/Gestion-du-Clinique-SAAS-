@@ -43,8 +43,8 @@ class PatientClinicalProfileTest extends TestCase
             ->assertJsonPath('data.medical_history.0.condition', 'Asthme');
 
         $this->assertDatabaseHas('patient_contacts', ['patient_id' => $patient->id]);
-        $this->assertDatabaseHas('patient_allergies', ['patient_id' => $patient->id, 'allergen' => 'Pénicilline']);
-        $this->assertDatabaseHas('patient_medical_history', ['patient_id' => $patient->id, 'condition' => 'Asthme']);
+        $this->assertTrue($patient->allergies->contains(fn ($allergy) => $allergy->allergen === 'Pénicilline'));
+        $this->assertTrue($patient->medicalHistory->contains(fn ($item) => $item->condition === 'Asthme'));
     }
 
     public function test_clinical_profile_rejects_invalid_dates_and_patient_edits(): void

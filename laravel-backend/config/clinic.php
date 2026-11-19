@@ -3,6 +3,9 @@
 return [
     'appointment_slot_minutes' => (int) env('APPOINTMENT_SLOT_MINUTES', 30),
 
+    // Version of the terms of use (CGU) the clinic accepts at creation.
+    'terms_version' => env('CLINIC_TERMS_VERSION', '2026-11'),
+
     // SaaS billing: days to pay an invoice, then days of tolerance before the clinic is suspended.
     'saas_payment_terms_days' => (int) env('SAAS_PAYMENT_TERMS_DAYS', 7),
     'saas_suspend_after_days' => (int) env('SAAS_SUSPEND_AFTER_DAYS', 7),

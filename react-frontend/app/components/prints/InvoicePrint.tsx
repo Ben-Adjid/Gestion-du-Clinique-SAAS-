@@ -38,7 +38,7 @@ export function InvoicePrint({ path, paymentId }: { path: string; paymentId: str
     const paidUntil = (invoice.payments ?? []).filter((item) => item.status === 'CONFIRMED' && item.id <= payment.id).reduce((sum, item) => sum + Number(item.amount), 0);
 
     return (
-      <PrintSheet clinic={invoice.clinic} title="Reçu de paiement" number={`REC-${String(payment.id).padStart(6, '0')}`}>
+      <PrintSheet clinic={invoice.clinic} title="Reçu de paiement" number={`REC-${String(payment.id).padStart(6, '0')}`} log={path.startsWith('/portal') ? undefined : { kind: 'RECEIPT', resourceId: invoice.id }}>
         {patientBlock}
         <div className="mt-8 rounded-xl border-2 border-slate-800 px-6 py-5 text-center">
           <p className="text-sm text-slate-600">Montant reçu</p>
@@ -59,7 +59,7 @@ export function InvoicePrint({ path, paymentId }: { path: string; paymentId: str
   }
 
   return (
-    <PrintSheet clinic={invoice.clinic} title="Facture" number={invoice.invoice_number}>
+    <PrintSheet clinic={invoice.clinic} title="Facture" number={invoice.invoice_number} log={path.startsWith('/portal') ? undefined : { kind: 'RECEIPT', resourceId: invoice.id }}>
       <div className="flex justify-between gap-4">
         {patientBlock}
         <p className="text-right text-xs text-slate-600">Date : {formatDate(invoice.issued_at ?? invoice.created_at)}<br />Échéance : {formatDate(invoice.due_date)}</p>

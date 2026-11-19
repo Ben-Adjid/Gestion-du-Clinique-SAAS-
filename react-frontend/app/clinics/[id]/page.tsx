@@ -154,6 +154,10 @@ export default function ClinicDetailsPage() {
             <div className="space-y-4">
               <UsageBar label="Utilisateurs actifs (personnel)" used={clinic.usage.active_users} limit={clinic.usage.max_users} />
               <UsageBar label="Dossiers patients" used={clinic.usage.patients} limit={clinic.usage.max_patients} />
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                <span className="text-slate-700">Espace disque de l’imagerie</span>
+                <span className="font-semibold tabular-nums text-slate-900">{formatStorage(clinic.usage.imaging_storage_bytes ?? 0)}</span>
+              </div>
             </div>
             <p className="mt-4 text-xs text-slate-500">Le contenu des dossiers médicaux n’est jamais accessible depuis la plateforme : seuls les volumes sont affichés.</p>
           </Section>
@@ -268,6 +272,14 @@ export default function ClinicDetailsPage() {
       )}
     </main>
   );
+}
+
+/** Human-readable size of the imaging storage (bytes → Ko / Mo / Go). */
+function formatStorage(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1).replace('.', ',')} Mo`;
+
+  return `${(bytes / 1024 ** 3).toFixed(2).replace('.', ',')} Go`;
 }
 
 function Row({ label, value }: { label: string; value: string }) {

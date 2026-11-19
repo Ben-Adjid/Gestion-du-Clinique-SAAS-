@@ -26,6 +26,7 @@ const emptyForm = {
   plan_code: 'PRO',
   billing_cycle: 'MONTHLY' as BillingCycle,
   with_trial: true,
+  accepted_terms: false,
   admin_name: '',
   admin_email: '',
   admin_phone: '',
@@ -93,6 +94,10 @@ export default function NewClinicPage() {
       return;
     }
     if (!token) return;
+    if (!form.accepted_terms) {
+      setError('Acceptez les conditions générales d’utilisation pour créer la clinique.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -202,13 +207,13 @@ export default function NewClinicPage() {
                         ))}
                       </div>
                     </fieldset>
-                    <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm">
-                      <input type="checkbox" checked={form.with_trial} onChange={(event) => set('with_trial', event.target.checked)} className="mt-1" />
-                      <span>
-                        <span className="font-semibold text-slate-800">Commencer par un essai gratuit</span>
-                        <span className="block text-xs text-slate-500">{selectedPlan ? `${selectedPlan.trial_days} jours, puis première facture automatique.` : ''} Sans essai, la première facture est émise aujourd’hui.</span>
-                      </span>
-                    </label>
+                    <div className="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm">
+                      <span aria-hidden="true" className="mt-0.5 text-teal-700">✓</span>
+                      <p>
+                        <span className="font-semibold text-slate-800">Essai gratuit de {selectedPlan?.trial_days ?? 90} jours, automatique.</span>
+                        <span className="block text-xs text-slate-600">À la fin de l’essai, l’administrateur de la clinique reçoit la première facture et doit la régler pour garder l’accès.</span>
+                      </p>
+                    </div>
                   </div>
                 </>
               )}
@@ -228,6 +233,12 @@ export default function NewClinicPage() {
                   <input className={inputClass} value={form.admin_phone} placeholder="+235 66 00 00 00" onChange={(event) => set('admin_phone', event.target.value)} />
                 </Field>
               </div>
+              <label className="mt-5 flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm">
+                <input type="checkbox" checked={form.accepted_terms} onChange={(event) => set('accepted_terms', event.target.checked)} className="mt-1" />
+                <span className="text-slate-700">
+                  J’accepte les <a href="/cgu" target="_blank" rel="noreferrer" className="font-semibold text-teal-700 underline">conditions générales d’utilisation</a> (décharge de responsabilité médicale, secret professionnel, propriété des données).
+                </span>
+              </label>
             </Section>
           )}
 

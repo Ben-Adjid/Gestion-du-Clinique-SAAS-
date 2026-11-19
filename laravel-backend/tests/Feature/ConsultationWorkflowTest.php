@@ -45,12 +45,14 @@ class ConsultationWorkflowTest extends TestCase
                 ['section_number' => 3, 'title' => 'Examen clinique', 'content' => 'Examen initial.'],
             ],
         ])->assertOk()->assertJsonPath('data.status', 'COMPLETED');
-        $this->assertDatabaseHas('consultation_sections', [
+        // Clinical text is encrypted at rest: the check goes through the model, which decrypts.
+        $this->assertSame('Antécédent mis à jour.', \App\Models\ConsultationSection::query()
+            ->where('consultation_id', $consultationId)->where('section_number', 2)->value('content'));
+        $this->assertDatabaseMissing('consultation_sections', [
             'consultation_id' => $consultationId,
             'section_number' => 2,
             'content' => 'Antécédent mis à jour.',
         ]);
-
         $this->postJson("/api/v1/consultations/{$consultationId}/sign")
             ->assertOk()
             ->assertJsonPath('data.status', 'SIGNED')

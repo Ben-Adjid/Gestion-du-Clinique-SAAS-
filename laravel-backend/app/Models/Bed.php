@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Concerns\BelongsToClinic;
+use Illuminate\Database\Eloquent\Model;
+
+/** A hospital bed in a ward, free, occupied by a patient, or out of service. */
+class Bed extends Model
+{
+    use BelongsToClinic;
+
+    public const STATUSES = ['AVAILABLE', 'OCCUPIED', 'MAINTENANCE'];
+
+    protected $fillable = ['clinic_id', 'code', 'ward', 'status', 'patient_id', 'admitted_at', 'note', 'updated_by'];
+
+    protected $casts = ['admitted_at' => 'datetime'];
+
+    public function patient() { return $this->belongsTo(Patient::class); }
+}

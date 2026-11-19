@@ -11,6 +11,8 @@ class PatientMedicalHistory extends Model
     protected $fillable = ['condition', 'start_date', 'end_date', 'notes'];
 
     protected $casts = [
+        'notes' => 'encrypted',
+        'condition' => 'encrypted',
         'start_date' => 'date:Y-m-d',
         'end_date' => 'date:Y-m-d',
     ];

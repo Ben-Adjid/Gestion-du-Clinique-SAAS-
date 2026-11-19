@@ -28,11 +28,14 @@ final class ModuleAccess
         'subscription' => ['view:subscription'],
         'hr' => ['manage:employees', 'manage:attendance', 'manage:leaves', 'manage:payroll', 'approve:payroll'],
         'staff' => ['access:staff_space'],
+        'planning' => ['read:doctor_planning'],
+        'surgery' => ['read:surgery'],
+        'beds' => ['read:beds'],
         'portal' => ['access:patient_portal'],
     ];
 
     /** Modules that a clinic only gets when its subscription plan includes them. */
-    public const PLAN_GATED = ['patients', 'appointments', 'consultations', 'prescriptions', 'nursing', 'invoices', 'lab', 'imaging', 'reports', 'hr', 'staff', 'portal'];
+    public const PLAN_GATED = ['patients', 'appointments', 'consultations', 'prescriptions', 'nursing', 'invoices', 'pharmacy', 'lab', 'imaging', 'reports', 'hr', 'staff', 'portal', 'surgery'];
 
     /** Application module => module name used in the subscription plans. */
     public const PLAN_MODULE = ['staff' => 'hr', 'portal' => 'patient_portal'];
@@ -51,7 +54,7 @@ final class ModuleAccess
         $modules = [];
         foreach (self::PERMISSION_MODULES as $module => $permissions) {
             if ($user->role?->name === 'PATIENT'
-                && !in_array($module, ['patients', 'appointments', 'consultations', 'prescriptions', 'portal'], true)) {
+                && !in_array($module, ['appointments', 'consultations', 'prescriptions', 'portal'], true)) {
                 continue;
             }
             if ($plan && in_array($module, self::PLAN_GATED, true) && !$plan->includesModule(self::PLAN_MODULE[$module] ?? $module)) {

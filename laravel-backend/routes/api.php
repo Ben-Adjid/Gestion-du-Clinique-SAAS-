@@ -62,6 +62,8 @@ Route::prefix('v1')->group(function () {
         Route::prefix('saas')->middleware('totp.enrolled')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\Api\Saas\DashboardController::class, 'show'])
                 ->middleware('permission:view:saas_dashboard');
+            Route::get('/health', [\App\Http\Controllers\Api\Saas\HealthController::class, 'show'])
+                ->middleware('permission:view:saas_dashboard');
             Route::get('/plans', [\App\Http\Controllers\Api\Saas\PlanController::class, 'index'])
                 ->middleware('permission:manage:subscriptions');
             Route::put('/plans/{plan}', [\App\Http\Controllers\Api\Saas\PlanController::class, 'update'])
@@ -128,6 +130,16 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:read:patient');
             Route::delete('/patients/{patient}/photo', [PatientController::class, 'deletePhoto'])
                 ->middleware(['permission:update:patient', 'audit']);
+            // Rights of the patient over personal data (consents, copy of the record, anonymisation)
+            Route::get('/patients/{patient}/rights', [\App\Http\Controllers\Api\PatientRightsController::class, 'show'])
+                ->middleware('permission:read:patient');
+            Route::put('/patients/{patient}/consents', [\App\Http\Controllers\Api\PatientRightsController::class, 'updateConsents'])
+                ->middleware(['permission:update:patient', 'audit']);
+            // Full record with clinical content: care team only (doctors, nurses)
+            Route::get('/patients/{patient}/export', [\App\Http\Controllers\Api\PatientRightsController::class, 'export'])
+                ->middleware(['permission:read:dpe', 'audit']);
+            Route::post('/patients/{patient}/anonymize', [\App\Http\Controllers\Api\PatientRightsController::class, 'anonymize'])
+                ->middleware(['permission:delete:patient', 'audit']);
             Route::apiResource('patients', PatientController::class)
                 ->middlewareFor(['index', 'show'], 'permission:read:patient')
                 ->middlewareFor('store', 'permission:create:patient')
@@ -189,7 +201,7 @@ Route::prefix('v1')->group(function () {
                 ->middleware(['permission:sign:prescription', 'audit']);
 
             // Pharmacy: catalogue, stock by lot (FEFO), dispensing and counter sales
-            Route::controller(\App\Http\Controllers\Api\PharmacyController::class)->group(function () {
+            Route::middleware('plan:pharmacy')->controller(\App\Http\Controllers\Api\PharmacyController::class)->group(function () {
                 Route::post('/medications', 'addMedication')->middleware(['permission:manage:pharmacy_stock', 'audit']);
                 Route::patch('/medications/{medication}', 'updateMedication')->middleware(['permission:manage:pharmacy_stock', 'audit']);
                 Route::get('/pharmacy/stock', 'stock')->middleware('permission:manage:pharmacy_stock');
@@ -209,8 +221,9 @@ Route::prefix('v1')->group(function () {
 
             // Lab Requests (Pro and Enterprise plans)
             Route::middleware('plan:lab')->group(function () {
+            // The exam catalogue is also used by the director to set prices, without seeing results.
             Route::get('/lab-exams', [LabRequestController::class, 'exams'])
-                ->middleware('permission:read:lab_request');
+                ->middleware('permission:read:lab_request|manage:exams');
             Route::post('/lab-exams', [LabRequestController::class, 'addExam'])
                 ->middleware(['permission:manage:exams', 'audit']);
             Route::patch('/lab-exams/{labExam}', [LabRequestController::class, 'updateExam'])
@@ -232,7 +245,7 @@ Route::prefix('v1')->group(function () {
             // Imaging Requests (Pro and Enterprise plans)
             Route::middleware('plan:imaging')->group(function () {
             Route::get('/imaging-exams', [ImagingRequestController::class, 'exams'])
-                ->middleware('permission:read:imaging');
+                ->middleware('permission:read:imaging|manage:exams');
             Route::post('/imaging-exams', [ImagingRequestController::class, 'addExam'])
                 ->middleware(['permission:manage:exams', 'audit']);
             Route::patch('/imaging-exams/{imagingExam}', [ImagingRequestController::class, 'updateExam'])
@@ -300,6 +313,14 @@ Route::prefix('v1')->group(function () {
                     Route::post('/hr/leaves/{leave}/review', 'review')->middleware(['permission:manage:leaves', 'audit']);
                     Route::post('/hr/leaves/{leave}/cancel', 'cancel')->middleware(['permission:access:staff_space', 'audit']);
                 });
+                // Justification of an absence: the employee submits, HR decides
+                Route::controller(\App\Http\Controllers\Api\Hr\AbsenceRequestController::class)->group(function () {
+                    Route::get('/me/absence-requests', 'mine')->middleware('permission:access:staff_space');
+                    Route::post('/me/absence-requests', 'store')->middleware(['permission:access:staff_space', 'audit']);
+                    Route::get('/hr/absence-requests', 'index')->middleware('permission:manage:attendance');
+                    Route::get('/hr/absence-requests/{absenceRequest}/attachment', 'attachment')->middleware('permission:manage:attendance');
+                    Route::post('/hr/absence-requests/{absenceRequest}/review', 'review')->middleware(['permission:manage:attendance', 'audit']);
+                });
                 Route::controller(\App\Http\Controllers\Api\Hr\PayrollController::class)->group(function () {
                     Route::get('/hr/payroll', 'index')->middleware('permission:manage:payroll|approve:payroll');
                     Route::post('/hr/payroll/generate', 'generate')->middleware(['permission:manage:payroll', 'audit']);
@@ -312,6 +333,37 @@ Route::prefix('v1')->group(function () {
                     ->middleware('permission:access:staff_space');
             });
 
+            // Doctor planning: who is on call, present or unavailable; specialties and employment
+            Route::controller(\App\Http\Controllers\Api\DoctorPlanningController::class)->group(function () {
+                Route::get('/planning/board', 'board')->middleware('permission:read:doctor_planning');
+                Route::put('/planning', 'update')->middleware(['permission:manage:doctor_planning', 'audit']);
+                Route::get('/doctor-specialties', 'specialties')->middleware('permission:read:doctor_planning');
+                Route::put('/doctors/{doctor}/profile', 'updateProfile')->middleware(['permission:manage:doctor_planning', 'audit']);
+            });
+
+            // Hospital beds: occupancy, admission and discharge (nursing)
+            Route::controller(\App\Http\Controllers\Api\BedController::class)->group(function () {
+                Route::get('/beds', 'index')->middleware('permission:read:beds');
+                Route::post('/beds', 'store')->middleware(['permission:manage:beds', 'audit']);
+                Route::post('/beds/{bed}/assign', 'assign')->middleware(['permission:manage:beds', 'audit']);
+                Route::post('/beds/{bed}/release', 'release')->middleware(['permission:manage:beds', 'audit']);
+                Route::post('/beds/{bed}/maintenance', 'maintenance')->middleware(['permission:manage:beds', 'audit']);
+            });
+
+            // Operating theatre (Enterprise plan): operations, teams, operative report
+            Route::middleware('plan:surgery')->controller(\App\Http\Controllers\Api\SurgeryController::class)->group(function () {
+                Route::get('/surgeries', 'index')->middleware('permission:read:surgery');
+                Route::get('/surgeries/team-options', 'teamOptions')->middleware('permission:manage:surgery');
+                Route::post('/surgeries', 'store')->middleware(['permission:manage:surgery', 'audit']);
+                Route::get('/surgeries/{surgery}', 'show')->middleware('permission:read:surgery');
+                Route::patch('/surgeries/{surgery}', 'update')->middleware(['permission:manage:surgery', 'audit']);
+                Route::put('/surgeries/{surgery}/report', 'updateReport')->middleware(['permission:edit:surgery_report', 'audit']);
+                Route::post('/surgeries/{surgery}/sign-report', 'signReport')->middleware(['permission:edit:surgery_report', 'audit']);
+            });
+
+            // Traceability of printed documents: the browser prints only after this call succeeds
+            Route::post('/prints', [\App\Http\Controllers\Api\PrintLogController::class, 'store'])->middleware('throttle:60,1');
+
             // Patient portal (Enterprise plan)
             Route::middleware(['plan:patient_portal', 'permission:access:patient_portal'])->prefix('portal')
                 ->controller(\App\Http\Controllers\Api\PortalController::class)->group(function () {
@@ -321,6 +373,9 @@ Route::prefix('v1')->group(function () {
                     Route::get('/imaging-requests/{imagingRequest}', 'imaging')->middleware('audit');
                     Route::get('/invoices', 'invoices');
                     Route::get('/invoices/{invoice}', 'invoice');
+                    Route::get('/rights', 'rights');
+                    Route::put('/consents', 'updateConsents');
+                    Route::get('/export', 'export')->middleware('audit');
                 });
 
             // Nursing care, vital signs and medical record timeline

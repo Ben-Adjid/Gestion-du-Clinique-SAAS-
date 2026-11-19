@@ -107,6 +107,10 @@ class SubscriptionService
                             'price' => $subscription->plan->priceFor($subscription->billing_cycle),
                         ]);
                         $this->issueInvoice($subscription, $start, $end);
+                        if ($wasTrial) {
+                            $this->notifyClinicAdmins($subscription->clinic, 'Fin de l’essai gratuit',
+                                'Votre essai de 3 mois est terminé. Réglez la première facture avant le '.$end->copy()->subDays(0)->format('d/m/Y').' pour garder l’accès à Clinique+.');
+                        }
                         $this->event($subscription->clinic, 'RENEWED', $wasTrial
                             ? 'Fin de l’essai : première facture émise.'
                             : "Renouvellement du {$start->format('d/m/Y')} au {$end->format('d/m/Y')}.");

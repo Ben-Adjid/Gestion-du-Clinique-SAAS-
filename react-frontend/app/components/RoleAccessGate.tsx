@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
 import { SUBSCRIPTION_BLOCKED_EVENT, type SubscriptionBlockedDetail } from '@/lib/api';
 import RoleSidebar from './RoleSidebar';
+import HelpChat from './HelpChat';
 
 const STATUS_LABELS: Record<string, string> = {
   PAST_DUE: 'Paiement en retard',
@@ -48,7 +49,7 @@ function SubscriptionBlockedScreen({ detail, onPay, onLogout }: { detail: Subscr
   );
 }
 
-const PUBLIC_PATHS = ['/', '/login', '/forgot-password', '/reset-password'];
+const PUBLIC_PATHS = ['/', '/login', '/forgot-password', '/reset-password', '/cgu'];
 
 export default function RoleAccessGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -68,6 +69,7 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
   const modulesPending = isAuthenticated && modules === null;
   const ROUTE_MODULES: Record<string, string[]> = {
     'lab-imaging': ['lab', 'imaging'],
+    surgeries: ['surgery'],
     certificates: ['consultations'],
   };
   const routeModules = ROUTE_MODULES[pathModule] ?? [pathModule];
@@ -119,6 +121,7 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
   return (
     <>
       {showNavigation && <RoleSidebar />}
+      {showNavigation && <HelpChat />}
       <div className={showNavigation ? 'min-h-screen lg:ml-[250px]' : ''}>
         {clinicScopeRequired && allowed ? (
           <main className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-6">

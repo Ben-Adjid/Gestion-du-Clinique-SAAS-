@@ -39,7 +39,8 @@ class DashboardAccessTest extends TestCase
 
         $modules = $this->actingAs($user, 'sanctum')->getJson('/api/v1/me')->json('data.modules');
 
-        $this->assertEqualsCanonicalizing(['patients', 'appointments', 'reception', 'staff', 'notifications', 'settings'], $modules);
+        // The planning is read-only for the front desk: it shows who can be booked on a day.
+        $this->assertEqualsCanonicalizing(['patients', 'appointments', 'reception', 'planning', 'beds', 'staff', 'notifications', 'settings'], $modules);
     }
 
     public function test_patient_gets_only_personal_care_modules_and_records(): void
@@ -79,7 +80,7 @@ class DashboardAccessTest extends TestCase
             ->assertOk()
             ->json('data.modules');
         $this->assertEqualsCanonicalizing(
-            ['patients', 'appointments', 'consultations', 'prescriptions', 'portal', 'notifications', 'settings'],
+            ['appointments', 'consultations', 'prescriptions', 'portal', 'notifications', 'settings'],
             $modules,
         );
 
@@ -144,8 +145,9 @@ class DashboardAccessTest extends TestCase
         $this->assertNotContains('imaging', $nurseModules);
         $this->assertContains('imaging', $radiologistModules);
         $this->assertNotContains('lab', $radiologistModules);
-        $this->assertContains('lab', $adminModules);
-        $this->assertContains('imaging', $adminModules);
+        // The director manages exam prices but reads no lab or imaging results.
+        $this->assertNotContains('lab', $adminModules);
+        $this->assertNotContains('imaging', $adminModules);
         // Medical secrecy: the platform operator never opens clinical modules.
         $this->assertNotContains('lab', $superAdminModules);
         $this->assertNotContains('imaging', $superAdminModules);

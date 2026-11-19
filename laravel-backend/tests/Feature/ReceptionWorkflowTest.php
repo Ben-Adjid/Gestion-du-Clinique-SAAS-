@@ -56,8 +56,9 @@ class ReceptionWorkflowTest extends TestCase
             ->assertJsonPath('data.clinical_profile_visible', false);
         $patientId = $response->json('data.id');
         $this->assertDatabaseHas('patient_contacts', ['patient_id' => $patientId, 'emergency_contact_name' => 'Abakar Mahamat']);
-        $this->assertDatabaseHas('patient_allergies', ['patient_id' => $patientId, 'allergen' => 'Pénicilline', 'severity' => 'HIGH']);
-        $this->assertDatabaseHas('patient_medical_history', ['patient_id' => $patientId, 'condition' => 'Asthme']);
+        // Allergens and conditions are encrypted: they are checked on the decrypted model, not in SQL.
+        $this->assertTrue(\App\Models\PatientAllergy::query()->where('patient_id', $patientId)->where('severity', 'HIGH')->get()->contains(fn ($allergy) => $allergy->allergen === 'Pénicilline'));
+        $this->assertTrue(\App\Models\PatientMedicalHistory::query()->where('patient_id', $patientId)->get()->contains(fn ($item) => $item->condition === 'Asthme'));
     }
 
     public function test_possible_duplicate_is_blocked_until_confirmed(): void

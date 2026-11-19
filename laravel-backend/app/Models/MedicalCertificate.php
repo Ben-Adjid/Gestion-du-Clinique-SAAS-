@@ -24,6 +24,7 @@ class MedicalCertificate extends Model
     ];
 
     protected $casts = [
+        'content' => 'encrypted',
         'start_date' => 'date:Y-m-d',
         'end_date' => 'date:Y-m-d',
         'issued_at' => 'datetime',

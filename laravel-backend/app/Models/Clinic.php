@@ -11,7 +11,7 @@ class Clinic extends Model
 
     protected $fillable = [
         'name', 'city', 'country', 'code', 'subscription_plan',
-        'admin_email', 'admin_phone', 'settings', 'status',
+        'admin_email', 'admin_phone', 'settings', 'status', 'terms_version', 'terms_accepted_at',
     ];
 
     protected $casts = ['settings' => 'json'];

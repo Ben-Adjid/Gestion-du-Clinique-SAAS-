@@ -173,15 +173,24 @@ class ImagingRequestController extends Controller
                 ? 'Marquez d’abord l’examen comme réalisé.'
                 : 'Un examen dont le compte rendu est signé ne reçoit plus de fichiers.'], 422);
         }
-        $request->validate(['file' => ['required', 'file', 'max:20480', 'extensions:jpg,jpeg,png,pdf,dcm']], [
-            'file.max' => 'Le fichier ne doit pas dépasser 20 Mo.',
+        // Heavy DICOM series may go up to 200 MB; other images and PDFs stay at 20 MB.
+        $request->validate(['file' => ['required', 'file', 'max:204800', 'extensions:jpg,jpeg,png,pdf,dcm']], [
+            'file.max' => 'Le fichier ne doit pas dépasser 200 Mo.',
             'file.extensions' => 'Formats acceptés : JPEG, PNG, PDF ou DICOM (.dcm).',
         ]);
+        $upload = $request->file('file');
+        $isDicom = strtolower($upload->getClientOriginalExtension()) === 'dcm';
+        if (!$isDicom && $upload->getSize() > 20 * 1024 * 1024) {
+            return response()->json(['message' => 'Un JPEG, PNG ou PDF ne doit pas dépasser 20 Mo. Les images lourdes s’envoient au format DICOM (.dcm).'], 422);
+        }
+        // A DICOM file carries the "DICM" signature after its 128-byte preamble: a renamed file is refused.
+        if ($isDicom && substr((string) file_get_contents($upload->getRealPath(), false, null, 128, 4), 0, 4) !== 'DICM') {
+            return response()->json(['message' => 'Ce fichier n’est pas un DICOM valide.'], 422);
+        }
         if ($imagingRequest->files()->count() >= 30) {
             return response()->json(['message' => 'Trente fichiers maximum par examen.'], 422);
         }
 
-        $upload = $request->file('file');
         $extension = strtolower($upload->getClientOriginalExtension());
         $path = $upload->storeAs("imaging/{$imagingRequest->clinic_id}/{$imagingRequest->id}", Str::uuid().'.'.$extension, 'local');
         $file = $imagingRequest->files()->create([
@@ -237,14 +246,13 @@ class ImagingRequestController extends Controller
             return response()->json(['message' => 'A signed imaging report cannot be modified.'], 422);
         }
         DB::transaction(function () use ($imagingRequest, $request, $validated, $report) {
-            DB::table('imaging_reports')->updateOrInsert(
+            // Through the model so that report_text is encrypted at rest.
+            \App\Models\ImagingReport::query()->updateOrCreate(
                 ['request_id' => $imagingRequest->id],
                 [
                     'radiologist_id' => $request->user()->id,
                     'report_text' => $validated['report_text'],
                     'signed_at' => null,
-                    'updated_at' => now(),
-                    'created_at' => $report?->created_at ?? now(),
                 ],
             );
             $imagingRequest->update(['status' => 'READY']);

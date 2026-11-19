@@ -3,6 +3,8 @@
 namespace App\Services\Import;
 
 use App\Models\Patient;
+use App\Models\PatientAllergy;
+use App\Models\PatientMedicalHistory;
 use App\Services\PatientNumbering;
 use App\Support\PlanLimits;
 use Illuminate\Support\Carbon;
@@ -40,9 +42,12 @@ class PatientImporter
         'city' => ['ville', 'city'],
         'blood_group' => ['groupe_sanguin', 'blood_group', 'blood_type'],
         'legacy_id' => ['ancien_numero', 'ancien_dossier', 'numero_dossier', 'legacy_id', 'old_id'],
+        // Several values in one cell, separated by ';' or '|' (e.g. "Hypertension; Diabète")
+        'medical_history' => ['antecedents', 'antecedents_medicaux', 'historique_medical', 'medical_history', 'antecedent'],
+        'allergies' => ['allergies', 'allergie', 'allergies_connues'],
     ];
 
-    public const TEMPLATE_HEADERS = ['nom', 'prenom', 'sexe', 'date_naissance', 'telephone', 'email', 'piece_identite', 'situation_familiale', 'profession', 'adresse', 'ville', 'groupe_sanguin', 'ancien_numero'];
+    public const TEMPLATE_HEADERS = ['nom', 'prenom', 'sexe', 'date_naissance', 'telephone', 'email', 'piece_identite', 'situation_familiale', 'profession', 'adresse', 'ville', 'groupe_sanguin', 'ancien_numero', 'antecedents', 'allergies'];
 
     public function __construct(private readonly SpreadsheetReader $reader)
     {
@@ -187,8 +192,15 @@ class PatientImporter
                         'updated_at' => $now,
                     ];
                 }
-                foreach (array_chunk($records, 100) as $chunk) {
-                    DB::table('patients')->insert($chunk);
+                // One insert per patient to know its id, then the history and allergies that belong to it.
+                foreach ($records as $index => $record) {
+                    $patientId = DB::table('patients')->insertGetId($record);
+                    foreach ($insertable[$index]['allergies'] as $allergen) {
+                        PatientAllergy::query()->forceCreate(['patient_id' => $patientId, 'allergen' => $allergen, 'severity' => 'MEDIUM', 'notes' => 'Importé depuis l’ancien dossier']);
+                    }
+                    foreach ($insertable[$index]['medical_history'] as $condition) {
+                        PatientMedicalHistory::query()->forceCreate(['patient_id' => $patientId, 'condition' => $condition, 'notes' => 'Importé depuis l’ancien dossier']);
+                    }
                 }
                 $created = count($records);
             });
@@ -214,9 +226,9 @@ class PatientImporter
     {
         $rows = [
             self::TEMPLATE_HEADERS,
-            ['MAHAMAT', 'Halimé', 'F', '12/04/1990', '+235 66 12 34 56', 'halime.mahamat@example.com', 'TD-01-1234567', 'Mariée', 'Enseignante', 'Quartier Moursal', 'N’Djamena', 'O+', 'DOS-2019-0042'],
-            ['ABAKAR', 'Moussa', 'M', '03/11/1978', '+235 99 45 67 89', '', '', 'Marié', 'Commerçant', 'Quartier Chagoua', 'N’Djamena', 'A+', 'DOS-2020-0117'],
-            ['DJIBRINE', 'Achta', 'F', '2015-06-21', '66 77 88 99', '', '', 'Célibataire', 'Élève', 'Quartier Farcha', 'N’Djamena', '', ''],
+            ['MAHAMAT', 'Halimé', 'F', '12/04/1990', '+235 66 12 34 56', 'halime.mahamat@example.com', 'TD-01-1234567', 'Mariée', 'Enseignante', 'Quartier Moursal', 'N’Djamena', 'O+', 'DOS-2019-0042', 'Hypertension; Diabète type 2', 'Pénicilline'],
+            ['ABAKAR', 'Moussa', 'M', '03/11/1978', '+235 99 45 67 89', '', '', 'Marié', 'Commerçant', 'Quartier Chagoua', 'N’Djamena', 'A+', 'DOS-2020-0117', '', 'Arachides'],
+            ['DJIBRINE', 'Achta', 'F', '2015-06-21', '66 77 88 99', '', '', 'Célibataire', 'Élève', 'Quartier Farcha', 'N’Djamena', '', '', '', ''],
         ];
         $handle = fopen('php://temp', 'w+b');
         fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel opens accents correctly
@@ -277,6 +289,8 @@ class PatientImporter
             'city' => $value('city') !== null ? mb_substr($value('city'), 0, 120) : null,
             'blood_group' => null,
             'legacy_id' => $value('legacy_id') !== null ? mb_substr($value('legacy_id'), 0, 60) : null,
+            'medical_history' => $this->splitList($value('medical_history'), 255),
+            'allergies' => $this->splitList($value('allergies'), 120),
         ];
 
         if ($row['last_name'] === null) {
@@ -351,6 +365,24 @@ class PatientImporter
     }
 
     /** Accepts JJ/MM/AAAA, JJ-MM-AAAA, AAAA-MM-JJ and Excel date serial numbers. */
+    /** Splits a cell holding several values (";", "|" or new line) into a clean list. */
+    private function splitList(?string $value, int $maxLength): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        return collect(preg_split('/[;|
+]+/', $value))
+            ->map(fn (string $item) => trim($item))
+            ->filter()
+            ->map(fn (string $item) => mb_substr($item, 0, $maxLength))
+            ->unique()
+            ->take(30)
+            ->values()
+            ->all();
+    }
+
     private function parseDate(string $value): ?string
     {
         if (preg_match('/^\d{4,5}(\.\d+)?$/', $value) && (float) $value > 1 && (float) $value < 80000) {

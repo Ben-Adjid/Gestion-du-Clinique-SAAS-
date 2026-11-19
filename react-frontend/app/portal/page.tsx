@@ -3,6 +3,7 @@
 import { useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { PatientRightsPanel } from '../components/PatientRightsPanel';
 import { EmptyState, Loading, Notice, PageHeader, Section, StatusBadge, buttonClass } from '../components/ui';
 import { apiFetch } from '../lib/api';
 import { INVOICE_STATUS, type InvoiceStatus } from '../lib/billing';
@@ -164,6 +165,8 @@ export default function PortalPage() {
             </ul>
           )}
         </Section>
+
+        {token && <PatientRightsPanel base="/portal" token={token} fileName="mon-dossier.json" canEdit canExport />}
       </div>
     </main>
   );

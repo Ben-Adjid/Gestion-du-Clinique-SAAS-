@@ -22,6 +22,7 @@ class Patient extends Model
     protected $casts = [
         'metadata' => 'json',
         'date_of_birth' => 'date:Y-m-d',
+        'anonymized_at' => 'datetime',
     ];
 
     public function clinic() { return $this->belongsTo(Clinic::class); }
@@ -31,4 +32,5 @@ class Patient extends Model
     public function emergencyContacts() { return $this->hasMany(PatientContact::class); }
     public function allergies() { return $this->hasMany(PatientAllergy::class); }
     public function medicalHistory() { return $this->hasMany(PatientMedicalHistory::class); }
+    public function consents() { return $this->hasMany(PatientConsent::class); }
 }

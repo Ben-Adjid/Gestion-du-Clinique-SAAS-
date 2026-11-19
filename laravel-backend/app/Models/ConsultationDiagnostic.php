@@ -19,7 +19,10 @@ class ConsultationDiagnostic extends Model
 
     protected function casts(): array
     {
-        return ['is_primary' => 'boolean'];
+        return [
+            'notes' => 'encrypted',
+            'is_primary' => 'boolean',
+        ];
     }
 
     public function consultation(): BelongsTo

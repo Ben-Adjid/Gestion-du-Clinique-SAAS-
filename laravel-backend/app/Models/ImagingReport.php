@@ -11,7 +11,7 @@ class ImagingReport extends Model
 
     protected function casts(): array
     {
-        return ['signed_at' => 'datetime'];
+        return ['signed_at' => 'datetime', 'report_text' => 'encrypted'];
     }
 
     public function request(): BelongsTo

@@ -50,7 +50,7 @@ class SaasSubscriptionTest extends TestCase
         $response = $this->actingAs($this->superAdmin, 'sanctum')->postJson('/api/v1/saas/clinics', $this->clinicPayload())
             ->assertCreated()
             ->assertJsonPath('data.subscription.status', 'TRIAL')
-            ->assertJsonPath('data.subscription.trial_ends_at', '2026-03-15');
+            ->assertJsonPath('data.subscription.trial_ends_at', '2026-05-30');
 
         $admin = User::where('email', 'directeur@hariri.td')->firstOrFail();
         $this->assertSame('ADMIN_CLINIC', $admin->role->name);
@@ -60,26 +60,56 @@ class SaasSubscriptionTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['resource' => 'CLINIC', 'action' => 'CREATE', 'clinic_id' => $response->json('data.id')]);
     }
 
-    public function test_paid_start_issues_a_first_invoice_due_within_payment_terms(): void
+    public function test_a_clinic_cannot_be_created_without_accepting_the_terms_of_use(): void
+    {
+        $payload = $this->clinicPayload();
+        unset($payload['accepted_terms']);
+
+        $this->actingAs($this->superAdmin, 'sanctum')->postJson('/api/v1/saas/clinics', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('accepted_terms');
+    }
+
+    public function test_the_acceptance_of_the_terms_is_recorded_on_the_clinic(): void
+    {
+        $response = $this->actingAs($this->superAdmin, 'sanctum')->postJson('/api/v1/saas/clinics', $this->clinicPayload())->assertCreated();
+
+        $clinic = \App\Models\Clinic::query()->findOrFail($response->json('data.id'));
+        $this->assertNotNull($clinic->terms_accepted_at);
+        $this->assertSame(config('clinic.terms_version'), $clinic->terms_version);
+    }
+
+    public function test_every_new_clinic_starts_on_the_three_month_trial_whatever_the_flag(): void
     {
         $this->actingAs($this->superAdmin, 'sanctum')
             ->postJson('/api/v1/saas/clinics', [...$this->clinicPayload(), 'with_trial' => false, 'plan_code' => 'PRO'])
             ->assertCreated()
-            ->assertJsonPath('data.subscription.status', 'ACTIVE')
-            ->assertJsonPath('data.invoices.0.amount', 150000)
-            ->assertJsonPath('data.invoices.0.status', 'PENDING')
-            ->assertJsonPath('data.invoices.0.due_date', '2026-03-09');
+            ->assertJsonPath('data.subscription.status', 'TRIAL')
+            ->assertJsonPath('data.subscription.trial_ends_at', '2026-05-30')
+            ->assertJsonCount(0, 'data.invoices');
+    }
+
+    public function test_a_paid_start_issues_a_first_invoice_due_within_payment_terms(): void
+    {
+        $clinic = $this->clinicOnPlan('PRO', trial: false);
+
+        $invoice = $clinic->subscription->invoices()->firstOrFail();
+        $this->assertSame('ACTIVE', $clinic->subscription->status);
+        $this->assertSame(150000.0, (float) $invoice->amount);
+        $this->assertSame('PENDING', $invoice->status);
+        $this->assertSame('2026-03-09', $invoice->due_date->toDateString());
     }
 
     public function test_end_of_trial_issues_the_first_invoice(): void
     {
         $clinic = $this->clinicOnPlan('BASIC', trial: true);
 
-        app(SubscriptionService::class)->runBilling(Carbon::parse('2026-03-16'));
+        app(SubscriptionService::class)->runBilling(Carbon::parse('2026-06-01'));
 
         $subscription = $clinic->subscription->fresh();
         $this->assertSame('ACTIVE', $subscription->status);
-        $this->assertSame('2026-03-16', $subscription->current_period_start->toDateString());
+        // The trial ends on 30 May (included): the paid period starts the day after.
+        $this->assertSame('2026-05-31', $subscription->current_period_start->toDateString());
         $this->assertSame(1, $subscription->invoices()->where('status', 'PENDING')->count());
     }
 
@@ -244,6 +274,7 @@ class SaasSubscriptionTest extends TestCase
             'plan_code' => 'BASIC',
             'billing_cycle' => 'MONTHLY',
             'with_trial' => true,
+            'accepted_terms' => true,
             'admin_name' => 'Dr Abakar Mahamat',
             'admin_email' => 'directeur@hariri.td',
             'admin_phone' => '+235 66 12 34 56',

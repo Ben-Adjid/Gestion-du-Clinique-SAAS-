@@ -164,14 +164,14 @@ class AppointmentController extends Controller
             return response()->json(['data' => []]);
         }
 
-        $doctors = User::query()
-            ->where('clinic_id', $clinicId)
-            ->where('status', 'ACTIVE')
-            ->whereHas('role', fn ($query) => $query->where('name', 'DOCTOR'))
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        // Optional filters: the specialty chosen first, and the day to show the planning status for.
+        $validated = $request->validate([
+            'specialty' => ['sometimes', 'nullable', 'string', 'max:80'],
+            'date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+        ]);
 
-        return response()->json(['data' => $doctors]);
+        return response()->json(['data' => app(\App\Services\DoctorPlanning::class)
+            ->doctorsFor($clinicId, $validated['date'] ?? null, $validated['specialty'] ?? null)]);
     }
 
     public function store(Request $request)
@@ -197,6 +197,16 @@ class AppointmentController extends Controller
         $doctor = User::with('role')->findOrFail($validated['doctor_id']);
         if ($doctor->role?->name !== 'DOCTOR' || $doctor->status !== 'ACTIVE') {
             return response()->json(['message' => 'Select an active doctor from this clinic.'], 422);
+        }
+
+        // The planning protects the day: an unscheduled doctor cannot receive an appointment.
+        $planning = app(\App\Services\DoctorPlanning::class);
+        $planning->assertBookable($clinicId, $doctor->id, $walkIn ? now()->toDateString() : $validated['appointment_date']);
+        $specialty = $request->string('specialty')->trim()->toString();
+        $doctorSpecialty = \App\Models\DoctorProfile::query()->withoutGlobalScopes()
+            ->where('user_id', $doctor->id)->value('specialty') ?? 'Médecine générale';
+        if ($specialty !== '' && $doctorSpecialty !== $specialty) {
+            return response()->json(['message' => 'Ce médecin ne correspond pas à la spécialité choisie.'], 422);
         }
 
         $appointmentDateTime = $walkIn

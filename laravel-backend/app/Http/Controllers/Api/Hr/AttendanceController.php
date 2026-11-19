@@ -57,7 +57,7 @@ class AttendanceController extends Controller
         $record = DB::transaction(function () use ($employee, $settings, $now) {
             $record = Attendance::query()->where('employee_id', $employee->id)->whereDate('work_date', $now->toDateString())->lockForUpdate()->first();
             if (!$record) {
-                $limit = Carbon::parse($now->toDateString().' '.$settings['work_start'])->addMinutes((int) $settings['late_tolerance_minutes']);
+                $late = HumanResources::lateMinutes($now, $settings);
 
                 return Attendance::create([
                     'clinic_id' => $employee->clinic_id,
@@ -65,10 +65,11 @@ class AttendanceController extends Controller
                     'work_date' => $now->toDateString(),
                     'check_in_datetime' => $now,
                     'check_in_method' => 'MOBILE',
-                    'status' => $now->gt($limit) ? 'LATE' : 'PRESENT',
+                    'status' => $late > 0 ? 'LATE' : 'PRESENT',
+                    'late_minutes' => $late,
                 ]);
             }
-            if ($record->check_out_datetime !== null || $record->status === 'ABSENT') {
+            if ($record->check_out_datetime !== null || in_array($record->status, ['ABSENT', 'JUSTIFIED_ABSENCE'], true)) {
                 abort(422, 'Votre journée est déjà clôturée.');
             }
             $record->update(['check_out_datetime' => $now]);
@@ -96,13 +97,16 @@ class AttendanceController extends Controller
         ], ['check_in.required_unless' => 'L’heure d’arrivée est obligatoire sauf pour une absence.']);
 
         $absent = $validated['status'] === 'ABSENT';
+        // The status follows the real arrival time: the HR form cannot record an on-time arrival as late.
+        $late = $absent || empty($validated['check_in']) ? 0 : HumanResources::lateMinutes(Carbon::parse("{$validated['work_date']} {$validated['check_in']}:00"), HumanResources::settings($clinicId));
         $record = Attendance::updateOrCreate(
             ['employee_id' => $validated['employee_id'], 'work_date' => $validated['work_date']],
             [
                 'clinic_id' => $clinicId,
                 'check_in_datetime' => $absent ? null : "{$validated['work_date']} {$validated['check_in']}:00",
                 'check_out_datetime' => $absent || empty($validated['check_out']) ? null : "{$validated['work_date']} {$validated['check_out']}:00",
-                'status' => $validated['status'],
+                'status' => $absent ? 'ABSENT' : ($late > 0 ? 'LATE' : 'PRESENT'),
+                'late_minutes' => $late,
                 'check_in_method' => null,
                 'notes' => $validated['notes'] ?? null,
                 'recorded_by' => $request->user()->id,

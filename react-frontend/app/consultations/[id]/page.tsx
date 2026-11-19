@@ -8,6 +8,7 @@ import { CertificatesSection } from '../../components/CertificatesSection';
 import { ExamOrders } from '../../components/ExamOrders';
 import { Cim10Picker } from '../../components/Cim10Picker';
 import { VitalsForm, bmi, bmiLabel } from '../../components/VitalsForm';
+import { VoiceDictation } from '../../components/VoiceDictation';
 import { ConfirmDialog, Field, Loading, Notice, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '../../components/ui';
 import { ApiError, apiFetch, fieldErrors } from '../../lib/api';
 import { SECTIONS, STATUS_LABELS, type Consultation, type Diagnosis } from '../../lib/consultations';
@@ -204,6 +205,12 @@ export default function ConsultationEditorPage() {
                 {SECTIONS.map((section) => (
                   editable ? (
                     <Field key={section.number} label={`${section.number}. ${section.title}`} required={section.number === 1}>
+                      <VoiceDictation
+                        onText={(text) => {
+                          setSections((current) => ({ ...current, [section.number]: [current[section.number], text].filter(Boolean).join(' ') }));
+                          setDirty(true);
+                        }}
+                      />
                       <textarea rows={section.rows} maxLength={10000} value={sections[section.number] ?? ''} placeholder={section.placeholder}
                         onChange={(event) => { setSections((current) => ({ ...current, [section.number]: event.target.value })); setDirty(true); }}
                         className={inputClass} />

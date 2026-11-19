@@ -62,7 +62,10 @@ class ClinicController extends Controller
             'phone' => ['nullable', 'string', 'max:30'],
             'plan_code' => ['required', Rule::exists('subscription_plans', 'code')->where('is_active', true)],
             'billing_cycle' => ['required', Rule::in(['MONTHLY', 'YEARLY'])],
-            'with_trial' => ['required', 'boolean'],
+            // The clinic must accept the terms of use (CGU) before it is created.
+            'accepted_terms' => ['required', 'accepted'],
+            // Every new clinic starts with the free trial of its plan (3 months); no longer a choice.
+            'with_trial' => ['sometimes', 'boolean'],
             'admin_name' => ['required', 'string', 'max:255'],
             'admin_email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'admin_phone' => ['nullable', 'string', 'max:30', 'unique:users,phone'],
@@ -83,6 +86,8 @@ class ClinicController extends Controller
                 'admin_email' => $validated['admin_email'],
                 'admin_phone' => $validated['admin_phone'] ?? null,
                 'settings' => ['address' => $validated['address'] ?? null, 'phone' => $validated['phone'] ?? null],
+                'terms_version' => config('clinic.terms_version'),
+                'terms_accepted_at' => now(),
                 'status' => 'ACTIVE',
             ]);
             User::create([
@@ -94,7 +99,7 @@ class ClinicController extends Controller
                 'role_id' => Role::query()->where('name', 'ADMIN_CLINIC')->value('id'),
                 'status' => 'ACTIVE',
             ]);
-            $this->subscriptions->start($clinic, $plan, $validated['billing_cycle'], (bool) $validated['with_trial'], $request->user());
+            $this->subscriptions->start($clinic, $plan, $validated['billing_cycle'], true, $request->user());
 
             return $clinic;
         });
@@ -200,6 +205,11 @@ class ClinicController extends Controller
                 'max_users' => $plan?->max_users,
                 'patients' => Patient::query()->withoutGlobalScopes()->where('clinic_id', $clinic->id)->whereNull('deleted_at')->count(),
                 'max_patients' => $plan?->max_patients,
+                // Disk space used by the clinic's imaging files (exams, DICOM or scanned reports)
+                'imaging_storage_bytes' => (int) \Illuminate\Support\Facades\DB::table('imaging_files')
+                    ->join('imaging_requests', 'imaging_requests.id', '=', 'imaging_files.request_id')
+                    ->where('imaging_requests.clinic_id', $clinic->id)
+                    ->sum('imaging_files.file_size'),
             ],
             'administrators' => User::query()
                 ->where('clinic_id', $clinic->id)

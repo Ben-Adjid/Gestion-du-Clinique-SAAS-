@@ -33,6 +33,7 @@ export default function CertificatePrintPage() {
       clinic={certificate.clinic}
       title={certificate.type_label}
       number={certificate.number}
+      log={{ kind: 'CERTIFICATE', resourceId: certificate.id }}
       signature={{ doctor: certificate.doctor?.name ?? '', date: formatDate(certificate.issued_at), hash: certificate.signature_hash }}
     >
       <p>

@@ -79,6 +79,7 @@ export interface Usage {
   max_users: number | null;
   patients: number;
   max_patients: number | null;
+  imaging_storage_bytes?: number;
 }
 
 export const SUBSCRIPTION_STATUS: Record<SubscriptionStatus, { label: string; tone: Tone }> = {

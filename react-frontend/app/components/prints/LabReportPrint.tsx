@@ -28,7 +28,7 @@ export function LabReportPrint({ path }: { path: string }) {
   const validated = request.results[0];
 
   return (
-    <PrintSheet clinic={request.clinic} title="Compte rendu d’analyses" number={request.sample_number ?? `LAB-${request.id}`}>
+    <PrintSheet clinic={request.clinic} title="Compte rendu d’analyses" number={request.sample_number ?? `LAB-${request.id}`} log={path.startsWith('/portal') ? undefined : { kind: 'LAB_REPORT', resourceId: request.id }}>
       <div className="grid grid-cols-2 gap-4 text-sm">
         <p>
           Patient(e) : <strong>{request.patient.last_name.toUpperCase()} {request.patient.first_name}</strong>

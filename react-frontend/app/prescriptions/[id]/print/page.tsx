@@ -54,6 +54,7 @@ export default function PrescriptionPrintPage() {
       clinic={prescription.clinic}
       title="Ordonnance"
       number={`ORD-${String(prescription.id).padStart(6, '0')}`}
+      log={{ kind: 'PRESCRIPTION', resourceId: prescription.id }}
       signature={{ doctor: prescription.doctor.name, date: formatDate(prescription.prescribed_at), hash: prescription.verification_code && `code de vérification ${prescription.verification_code}` }}
     >
       <p>

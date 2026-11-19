@@ -182,6 +182,21 @@ class PatientImportTest extends TestCase
             ->assertJsonValidationErrors('file');
     }
 
+    public function test_the_medical_history_and_allergies_of_the_old_file_are_imported_and_encrypted(): void
+    {
+        $csv = "nom;prenom;date_naissance;antecedents;allergies\nBAGA;Mariam;12/04/1980;\"Hypertension; Diabète type 2\";Pénicilline|Arachides\nDJIBRINE;Achta;;;";
+        $token = $this->actingAs($this->director, 'sanctum')
+            ->post('/api/v1/imports/patients/preview', ['file' => UploadedFile::fake()->createWithContent('historique.csv', $csv)], ['Accept' => 'application/json'])
+            ->assertOk()->json('token');
+        $this->actingAs($this->director, 'sanctum')->postJson('/api/v1/imports/patients/commit', ['token' => $token, 'offset' => 0])->assertOk();
+
+        $baga = Patient::withoutGlobalScopes()->where('last_name', 'BAGA')->firstOrFail();
+        $this->assertSame(['Hypertension', 'Diabète type 2'], $baga->medicalHistory()->pluck('condition')->all());
+        $this->assertSame(['Pénicilline', 'Arachides'], $baga->allergies()->pluck('allergen')->all());
+        $this->assertNotSame('Hypertension', \Illuminate\Support\Facades\DB::table('patient_medical_history')->where('patient_id', $baga->id)->value('condition'), 'Les antécédents sont chiffrés en base.');
+        $this->assertSame(0, Patient::withoutGlobalScopes()->where('last_name', 'DJIBRINE')->first()->medicalHistory()->count());
+    }
+
     /** Builds a minimal .xlsx (shared strings for text, numbers inline). */
     private function xlsx(array $rows): string
     {

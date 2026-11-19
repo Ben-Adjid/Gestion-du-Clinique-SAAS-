@@ -113,13 +113,13 @@ function PatientsContent() {
         ) : (
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-sm">
+              <table className="w-full min-w-[460px] text-left text-sm md:min-w-[720px]">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-5 py-3 font-semibold">Patient</th>
-                    <th className="px-5 py-3 font-semibold">N° de dossier</th>
-                    <th className="px-5 py-3 font-semibold">Âge / sexe</th>
-                    <th className="px-5 py-3 font-semibold">Téléphone</th>
+                    <th className="whitespace-nowrap px-5 py-3 font-semibold">N° de dossier</th>
+                    <th className="hidden px-5 py-3 font-semibold md:table-cell">Âge / sexe</th>
+                    <th className="hidden px-5 py-3 font-semibold lg:table-cell">Téléphone</th>
                     <th className="px-5 py-3 text-right font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -135,12 +135,12 @@ function PatientsContent() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3 font-mono text-xs text-slate-600">{patient.patient_unique_id}</td>
-                      <td className="px-5 py-3 text-slate-600">
+                      <td className="whitespace-nowrap px-5 py-3 font-mono text-xs text-slate-600">{patient.patient_unique_id}</td>
+                      <td className="hidden px-5 py-3 text-slate-600 md:table-cell">
                         {patient.date_of_birth ? `${ageFrom(patient.date_of_birth)} · ${formatDate(patient.date_of_birth)}` : 'Date inconnue'}
                         {patient.gender && <span className="block text-xs text-slate-400">{GENDER_LABELS[patient.gender]}</span>}
                       </td>
-                      <td className="px-5 py-3 text-slate-600">{patient.phone ?? '—'}</td>
+                      <td className="hidden px-5 py-3 text-slate-600 lg:table-cell">{patient.phone ?? '—'}</td>
                       <td className="px-5 py-3" onClick={(event) => event.stopPropagation()}>
                         <div className="flex justify-end gap-2">
                           <Link href={`/patients/${patient.id}`} className={buttonClass.small}>Dossier</Link>

@@ -44,7 +44,7 @@ export default function PayslipPrintPage() {
   ];
 
   return (
-    <PrintSheet clinic={payslip.clinic} title={`Bulletin de paie — ${payslip.period_label}`} number={employee.employee_number}>
+    <PrintSheet clinic={payslip.clinic} title={`Bulletin de paie — ${payslip.period_label}`} number={employee.employee_number} log={{ kind: 'PAYSLIP', resourceId: payslip.id }}>
       <div className="grid grid-cols-2 gap-4 rounded-lg border border-slate-300 p-4 text-sm">
         <p><strong>{employee.last_name.toUpperCase()} {employee.first_name}</strong><br />{employee.position}{employee.department ? ` · ${employee.department}` : ''}<br />{CONTRACT_TYPES[employee.contract_type]} · embauché(e) le {formatDate(employee.hire_date)}</p>
         <p className="text-right">N° CNPS : {employee.cnps_number ?? '—'}<br />Jours travaillés : {payslip.worked_days}<br />Paiement : {PAY_METHODS[employee.payment_method]}</p>

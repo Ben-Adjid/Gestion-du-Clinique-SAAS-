@@ -13,7 +13,7 @@ class Attendance extends Model
     protected $table = 'attendance';
 
     protected $fillable = [
-        'clinic_id', 'employee_id', 'work_date', 'check_in_datetime', 'check_out_datetime', 'status',
+        'clinic_id', 'employee_id', 'work_date', 'check_in_datetime', 'check_out_datetime', 'status', 'late_minutes',
         'check_in_method', 'location_gps', 'notes', 'recorded_by',
     ];
 

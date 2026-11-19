@@ -18,22 +18,22 @@ class RolePermissionSeeder extends Seeder
             ],
             'ADMIN_CLINIC' => [
                 'manage:users', 'manage:roles', 'view:reports', 'view:audit_logs', 'manage:exams',
-                'view:subscription', 'declare:subscription_payment',
+                'view:subscription', 'declare:subscription_payment', 'read:doctor_planning', 'manage:doctor_planning', 'read:beds', 'manage:beds',
                 'create:patient', 'read:patient', 'update:patient', 'delete:patient', 'import:patients',
                 'create:appointment', 'read:appointment', 'update:appointment', 'cancel:appointment',
                 'read:invoice', 'create:invoice', 'update:invoice', 'manage:payment', 'manage:tariffs',
-                'read:lab_request', 'read:imaging',
+                // Results of lab and imaging exams are medical content: not for the director.
                 // HR: the director sees the staff and approves the payroll prepared by HR.
                 'manage:employees', 'approve:payroll',
             ],
-            'DOCTOR' => ['read:patient', 'read:patient_clinical_profile', 'update:patient_clinical_profile', 'read:dpe', 'update:dpe', 'create:appointment', 'read:appointment', 'update:appointment', 'cancel:appointment', 'create:consultation', 'read:consultation', 'update:consultation', 'sign:consultation', 'create:certificate', 'read:certificate', 'create:prescription', 'read:prescription', 'update:prescription', 'sign:prescription', 'create:lab_request', 'read:lab_request', 'read:imaging', 'create:imaging_request', 'read:care_task', 'create:care_task', 'read:vitals', 'record:vitals'],
-            'NURSE' => ['read:patient', 'read:patient_clinical_profile', 'read:dpe', 'create:appointment', 'read:appointment', 'update:appointment', 'read:consultation', 'read:prescription', 'create:lab_request', 'read:lab_request', 'collect:lab_sample', 'read:care_task', 'complete:care_task', 'read:vitals', 'record:vitals'],
+            'DOCTOR' => ['read:patient', 'read:patient_clinical_profile', 'update:patient_clinical_profile', 'read:dpe', 'update:dpe', 'create:appointment', 'read:appointment', 'update:appointment', 'cancel:appointment', 'create:consultation', 'read:consultation', 'update:consultation', 'sign:consultation', 'create:certificate', 'read:certificate', 'create:prescription', 'read:prescription', 'update:prescription', 'sign:prescription', 'create:lab_request', 'read:lab_request', 'read:imaging', 'create:imaging_request', 'read:care_task', 'create:care_task', 'read:vitals', 'record:vitals', 'read:doctor_planning', 'read:surgery', 'manage:surgery', 'edit:surgery_report', 'read:beds'],
+            'NURSE' => ['read:patient', 'read:patient_clinical_profile', 'read:dpe', 'create:appointment', 'read:appointment', 'update:appointment', 'read:consultation', 'read:prescription', 'create:lab_request', 'read:lab_request', 'collect:lab_sample', 'read:care_task', 'complete:care_task', 'read:vitals', 'record:vitals', 'read:doctor_planning', 'read:surgery', 'read:beds', 'manage:beds'],
             'CASHIER' => ['read:patient', 'read:invoice', 'create:invoice', 'update:invoice', 'manage:payment'],
             'PHARMACIST' => ['read:patient', 'read:prescription', 'manage:pharmacy_stock', 'dispense:medication'],
             'LABORATORY_TECHNICIAN' => ['read:patient', 'create:lab_request', 'read:lab_request', 'collect:lab_sample', 'update:lab_request', 'submit:lab_results', 'sign:lab_results'],
             'RADIOLOGIST' => ['read:patient', 'read:imaging', 'upload:imaging', 'update:imaging', 'create:imaging_report'],
             'HR_MANAGER' => ['manage:employees', 'manage:attendance', 'manage:payroll', 'manage:leaves'],
-            'RECEPTIONIST' => ['create:patient', 'read:patient', 'update:patient', 'create:appointment', 'read:appointment', 'update:appointment', 'cancel:appointment'],
+            'RECEPTIONIST' => ['create:patient', 'read:patient', 'update:patient', 'create:appointment', 'read:appointment', 'update:appointment', 'cancel:appointment', 'read:doctor_planning', 'read:beds'],
             'PATIENT' => ['read:patient', 'read:patient_clinical_profile', 'read:appointment', 'request:appointment', 'read:consultation', 'read:prescription', 'read:certificate', 'access:patient_portal'],
         ];
 

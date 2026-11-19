@@ -350,6 +350,35 @@ function BookingForm({ token, doctors, initial, asRequest, onClose, onSaved }: {
   const [time, setTime] = useState(initial.time);
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
+  // The specialty is chosen first; the doctors list then shows who is programmed on the day.
+  const [specialty, setSpecialty] = useState('');
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [doctorList, setDoctorList] = useState<(Doctor & { specialty?: string; bookable?: boolean; planning_status?: string | null })[]>(doctors);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<{ data: string[] }>('/doctor-specialties', token)
+      .then((response) => active && setSpecialties(response.data))
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  useEffect(() => {
+    let active = true;
+    const query = new URLSearchParams();
+    if (specialty) query.set('specialty', specialty);
+    if (date) query.set('date', date);
+    apiFetch<{ data: (Doctor & { specialty?: string; bookable?: boolean; planning_status?: string | null })[] }>(`/appointments/doctors?${query}`, token)
+      .then((response) => active && setDoctorList(response.data))
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [specialty, date, token]);
   const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -371,7 +400,7 @@ function BookingForm({ token, doctors, initial, asRequest, onClose, onSaved }: {
         method: 'POST',
         body: JSON.stringify(asRequest
           ? { doctor_id: Number(doctorId), requested_date: date, requested_time: time }
-          : { patient_id: patient?.id, doctor_id: Number(doctorId), appointment_date: date, appointment_time: time, reason: reason.trim() || null }),
+          : { patient_id: patient?.id, doctor_id: Number(doctorId), appointment_date: date, appointment_time: time, reason: reason.trim() || null, specialty: specialty || undefined }),
       });
       onSaved(asRequest ? 'Votre demande a été envoyée à la clinique pour confirmation.' : `Rendez-vous programmé le ${formatDate(date)} à ${time}.`);
     } catch (requestError) {
@@ -392,10 +421,20 @@ function BookingForm({ token, doctors, initial, asRequest, onClose, onSaved }: {
             <PatientPicker token={token} value={patient} onChange={setPatient} />
           </Field>
         )}
-        <Field label="Médecin" required className={asRequest ? 'sm:col-span-2' : 'sm:col-span-2'}>
+        <Field label="Spécialité" className="sm:col-span-2">
+          <select value={specialty} onChange={(event) => { setSpecialty(event.target.value); setDoctorId(''); }} className={inputClass}>
+            <option value="">Toutes les spécialités</option>
+            {specialties.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </Field>
+        <Field label="Médecin" required className="sm:col-span-2">
           <select value={doctorId} onChange={(event) => setDoctorId(event.target.value)} className={inputClass}>
             <option value="">Choisir un médecin</option>
-            {doctors.map((doctor) => <option key={doctor.id} value={doctor.id}>{doctorName(doctor.name)}</option>)}
+            {doctorList.map((doctor) => (
+              <option key={doctor.id} value={doctor.id} disabled={doctor.bookable === false}>
+                {doctorName(doctor.name)}{doctor.specialty ? ` · ${doctor.specialty}` : ''}{doctor.bookable === false ? ' — non programmé ce jour' : ''}
+              </option>
+            ))}
           </select>
         </Field>
         <Field label="Date" required>

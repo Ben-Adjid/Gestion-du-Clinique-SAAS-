@@ -116,6 +116,15 @@ class PermissionSeeder extends Seeder
             ['name' => 'view:saas_dashboard', 'resource' => 'platform', 'action' => 'view_dashboard'],
             ['name' => 'view:subscription', 'resource' => 'subscription', 'action' => 'view'],
             ['name' => 'declare:subscription_payment', 'resource' => 'subscription', 'action' => 'declare_payment'],
+
+            // Doctor planning (presence, on call) and operating theatre
+            ['name' => 'read:doctor_planning', 'resource' => 'planning', 'action' => 'read'],
+            ['name' => 'manage:doctor_planning', 'resource' => 'planning', 'action' => 'manage'],
+            ['name' => 'read:surgery', 'resource' => 'surgery', 'action' => 'read'],
+            ['name' => 'manage:surgery', 'resource' => 'surgery', 'action' => 'manage'],
+            ['name' => 'read:beds', 'resource' => 'beds', 'action' => 'read'],
+            ['name' => 'manage:beds', 'resource' => 'beds', 'action' => 'manage'],
+            ['name' => 'edit:surgery_report', 'resource' => 'surgery', 'action' => 'edit_report'],
         ];
     }
 }

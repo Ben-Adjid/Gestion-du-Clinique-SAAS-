@@ -1,23 +1,83 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { buttonClass } from './ui';
+import { useId, useState, type ReactNode } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../lib/api';
 import { doctorName } from '../lib/format';
+import { buttonClass, inputClass } from './ui';
 
-/** A4 sheet with the clinic letterhead, a print button and the signature footer. */
-export function PrintSheet({ clinic, title, number, children, signature }: {
+/** What is printed, for the audit trail. The server re-checks the record and its clinic. */
+export interface PrintLog {
+  kind: 'RECEIPT' | 'PRESCRIPTION' | 'LAB_REPORT' | 'IMAGING_REPORT' | 'CERTIFICATE' | 'CLINICAL_FILE' | 'PAYSLIP';
+  resourceId: number;
+}
+
+/**
+ * A4 sheet with the clinic letterhead, a print button and the signature footer.
+ * When `log` is given, printing first asks for the reason and records the print: if the record
+ * cannot be logged, nothing is printed.
+ */
+export function PrintSheet({ clinic, title, number, children, signature, log }: {
   clinic?: { name: string; city?: string | null; country?: string | null; admin_phone?: string | null; admin_email?: string | null } | null;
   title: string;
   number?: string;
   children: ReactNode;
   signature?: { doctor: string; date: string; hash?: string | null };
+  log?: PrintLog;
 }) {
+  const { token } = useAuth();
+  const titleId = useId();
+  const [asking, setAsking] = useState(false);
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const confirm = async () => {
+    if (!log || !token) return;
+    setBusy(true);
+    setError('');
+    try {
+      await apiFetch('/prints', token, {
+        method: 'POST',
+        body: JSON.stringify({ kind: log.kind, resource_id: log.resourceId, reason }),
+      });
+      setAsking(false);
+      setReason('');
+      window.print();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 py-8 print:bg-white print:py-0">
       <div className="mx-auto mb-4 flex max-w-[210mm] justify-end gap-2 px-4 print:hidden">
         <button type="button" onClick={() => window.close()} className={buttonClass.secondary}>Fermer</button>
-        <button type="button" onClick={() => window.print()} className={buttonClass.primary}>Imprimer / PDF</button>
+        <button type="button" onClick={() => (log ? setAsking(true) : window.print())} className={buttonClass.primary}>Imprimer / PDF</button>
       </div>
+
+      {asking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 print:hidden">
+          <div role="alertdialog" aria-modal="true" aria-labelledby={titleId} className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 id={titleId} className="text-base font-semibold text-slate-900">Motif de l’impression</h2>
+            <p className="mt-2 text-sm text-slate-600">Cette impression est tracée : qui, quel dossier, quand et pourquoi.</p>
+            <label className="mt-4 block text-sm font-medium text-slate-700">
+              Motif
+              <textarea className={`${inputClass} mt-1.5`} rows={3} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Ex. : remise du reçu au patient" />
+            </label>
+            {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setAsking(false)} className={buttonClass.secondary}>Annuler</button>
+              <button type="button" onClick={confirm} disabled={busy || reason.trim().length < 5} className={buttonClass.primary}>
+                {busy ? 'Traçage…' : 'Imprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <article className="mx-auto flex min-h-[297mm] max-w-[210mm] flex-col bg-white px-[18mm] py-[16mm] text-[13px] leading-relaxed text-slate-900 shadow-lg print:min-h-0 print:shadow-none">
         <header className="flex items-start justify-between border-b-2 border-teal-700 pb-4">
           <div>

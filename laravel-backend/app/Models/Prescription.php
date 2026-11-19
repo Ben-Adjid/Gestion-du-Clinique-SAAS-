@@ -17,7 +17,7 @@ class Prescription extends Model
 
     protected function casts(): array
     {
-        return ['prescribed_at' => 'datetime'];
+        return ['prescribed_at' => 'datetime', 'notes' => 'encrypted'];
     }
 
     public function clinic(): BelongsTo

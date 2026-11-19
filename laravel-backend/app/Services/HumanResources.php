@@ -20,7 +20,7 @@ final class HumanResources
 {
     public const DEFAULTS = [
         'work_start' => '08:00',
-        'late_tolerance_minutes' => 15,
+        'late_tolerance_minutes' => 0,
         'daily_hours' => 8,
         'working_days_per_month' => 26,
         'monthly_hours' => 173.33,
@@ -35,6 +35,18 @@ final class HumanResources
         $settings = is_array($settings) ? $settings : (json_decode((string) $settings, true) ?: []);
 
         return [...self::DEFAULTS, ...($settings['hr'] ?? [])];
+    }
+
+    /**
+     * Minutes of lateness for an arrival, measured from the official start (08:00), not from
+     * the end of the tolerance: an arrival at 08:30 is 30 minutes late. Zero when on time.
+     */
+    public static function lateMinutes(\Carbon\CarbonInterface $checkIn, array $settings): int
+    {
+        $start = Carbon::parse($checkIn->toDateString().' '.$settings['work_start'], $checkIn->getTimezone());
+        $limit = $start->copy()->addMinutes((int) $settings['late_tolerance_minutes']);
+
+        return $checkIn->lessThanOrEqualTo($limit) ? 0 : (int) $start->diffInMinutes($checkIn);
     }
 
     /** Working days between two dates, Sundays excluded. */

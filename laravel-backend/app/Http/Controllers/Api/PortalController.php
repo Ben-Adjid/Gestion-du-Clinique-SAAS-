@@ -11,6 +11,7 @@ use App\Models\LabRequest;
 use App\Models\MedicalCertificate;
 use App\Models\Patient;
 use App\Models\Prescription;
+use App\Services\PatientRights;
 use Illuminate\Http\Request;
 
 /**
@@ -151,5 +152,35 @@ class PortalController extends Controller
         abort_if(!$patient, 404, 'Aucun dossier patient n’est lié à votre compte.');
 
         return $patient;
+    }
+
+    /** Consents and the rights the patient holds on the record. */
+    public function rights(Request $request)
+    {
+        $patient = $this->patient($request);
+
+        return response()->json(['data' => ['consents' => app(PatientRights::class)->consents($patient)]]);
+    }
+
+    public function updateConsents(Request $request)
+    {
+        $patient = $this->patient($request);
+        if ($patient->anonymized_at !== null) {
+            return response()->json(['message' => 'Ce dossier a été anonymisé.'], 422);
+        }
+        $validated = $request->validate(['consents' => ['required', 'array']]);
+        app(PatientRights::class)->updateConsents($patient, PatientRightsController::validConsents($validated['consents']), $request->user()->id);
+
+        return response()->json(['data' => ['consents' => app(PatientRights::class)->consents($patient)]]);
+    }
+
+    /** Copy of everything the clinic holds about the patient (right of access and portability). */
+    public function export(Request $request)
+    {
+        $patient = $this->patient($request);
+
+        return response()->json(app(PatientRights::class)->export($patient), 200, [
+            'Content-Disposition' => 'attachment; filename="mon-dossier-'.$patient->patient_unique_id.'.json"',
+        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 }
