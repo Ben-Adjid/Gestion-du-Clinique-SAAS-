@@ -33,6 +33,11 @@ return [
      * M-Pesa, Visa/Mastercard). The secret hash is the value configured in the
      * Flutterwave dashboard and sent back in the "verif-hash" header of webhooks.
      */
+    // Online payment of the clinic subscription: off until the provider keys are configured and the feature is opened.
+    'online_payments' => [
+        'enabled' => (bool) env('ONLINE_PAYMENTS_ENABLED', false),
+    ],
+
     'flutterwave' => [
         'public_key' => env('FLUTTERWAVE_PUBLIC_KEY'),
         'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),

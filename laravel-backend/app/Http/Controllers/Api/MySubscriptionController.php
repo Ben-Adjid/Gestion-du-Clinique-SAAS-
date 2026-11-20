@@ -37,7 +37,7 @@ class MySubscriptionController extends Controller
                 ->limit(24)
                 ->get(),
             'payment_instructions' => config('clinic.saas_payment_instructions'),
-            'online_payment_enabled' => app(\App\Services\Payments\FlutterwaveClient::class)->isConfigured(),
+            'online_payment_enabled' => (bool) config('services.online_payments.enabled') && app(\App\Services\Payments\FlutterwaveClient::class)->isConfigured(),
             'online_payments' => \App\Models\FlutterwaveTransaction::query()
                 ->where('clinic_id', $clinic?->id)
                 ->latest()

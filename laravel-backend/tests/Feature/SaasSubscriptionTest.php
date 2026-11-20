@@ -29,6 +29,8 @@ class SaasSubscriptionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // The online payment is switched off by default: these tests exercise the code path itself.
+        config(["services.online_payments.enabled" => true]);
         Carbon::setTestNow('2026-03-02 09:00:00');
         $this->seed([RoleSeeder::class, PermissionSeeder::class, RolePermissionSeeder::class, SubscriptionPlanSeeder::class]);
         $this->superAdmin = User::factory()->create([
@@ -183,7 +185,7 @@ class SaasSubscriptionTest extends TestCase
     {
         $clinic = $this->clinicOnPlan('BASIC', trial: false);
         $invoice = SaasInvoice::where('clinic_id', $clinic->id)->firstOrFail();
-        $payload = ['amount' => 20000, 'method' => 'AIRTEL_MONEY', 'reference' => 'AM-777', 'paid_on' => '2026-03-02'];
+        $payload = ['amount' => 20000, 'method' => 'BANK_TRANSFER', 'reference' => 'VIR-777', 'paid_on' => '2026-03-02'];
 
         $this->actingAs($this->superAdmin, 'sanctum')->postJson("/api/v1/saas/invoices/{$invoice->id}/payments", $payload)->assertCreated();
         $this->actingAs($this->superAdmin, 'sanctum')->postJson("/api/v1/saas/invoices/{$invoice->id}/payments", $payload)

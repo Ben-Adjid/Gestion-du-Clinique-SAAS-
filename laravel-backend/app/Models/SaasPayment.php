@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SaasPayment extends Model
 {
-    public const METHODS = ['ORANGE_MONEY', 'MOOV_MONEY', 'AIRTEL_MONEY', 'BANK_TRANSFER', 'CASH', 'CARD'];
+    /** Recorded by hand at the platform: cash or bank transfer. Mobile money and card are off for now. */
+    public const METHODS = ['CASH', 'BANK_TRANSFER'];
 
     protected $fillable = [
         'clinic_id',

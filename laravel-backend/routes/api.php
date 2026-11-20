@@ -24,7 +24,7 @@ use App\Http\Controllers\Api\V1\PerformanceController;
 
 // Flutterwave webhook: authenticated by the "verif-hash" signature, outside the API version.
 Route::post('/webhooks/flutterwave', \App\Http\Controllers\Api\Webhooks\FlutterwaveWebhookController::class)
-    ->middleware('throttle:120,1');
+    ->middleware(['online.payments', 'throttle:120,1']);
 
 Route::prefix('v1')->group(function () {
     // Auth routes (public)
@@ -53,13 +53,13 @@ Route::prefix('v1')->group(function () {
             Route::get('/subscription', [\App\Http\Controllers\Api\MySubscriptionController::class, 'show'])
                 ->middleware('permission:view:subscription');
             Route::post('/subscription/payments', [\App\Http\Controllers\Api\MySubscriptionController::class, 'declarePayment'])
-                ->middleware(['permission:declare:subscription_payment', 'audit']);
+                ->middleware(['online.payments', 'permission:declare:subscription_payment', 'audit']);
             Route::get('/subscription/plans', [\App\Http\Controllers\Api\SubscriptionController::class, 'plans'])
                 ->middleware('permission:view:subscription');
             Route::post('/subscription/checkout', [\App\Http\Controllers\Api\SubscriptionController::class, 'checkout'])
-                ->middleware(['permission:declare:subscription_payment', 'audit', 'throttle:10,1']);
+                ->middleware(['online.payments', 'permission:declare:subscription_payment', 'audit', 'throttle:10,1']);
             Route::get('/subscription/checkout/verify', [\App\Http\Controllers\Api\SubscriptionController::class, 'verify'])
-                ->middleware(['permission:declare:subscription_payment', 'throttle:30,1']);
+                ->middleware(['online.payments', 'permission:declare:subscription_payment', 'throttle:30,1']);
         });
 
         // SaaS platform (super administrator), outside any clinic context

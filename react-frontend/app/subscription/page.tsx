@@ -45,7 +45,8 @@ export default function MySubscriptionPage() {
   const [openedAt] = useState(() => Date.now());
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const returnParams = useRef<URLSearchParams | null>(null);
-  const canDeclare = can(user, 'declare:subscription_payment');
+  // Declaring a payment is part of the online/mobile money flow, which is switched off for now.
+  const canDeclare = can(user, 'declare:subscription_payment') && !!data?.online_payment_enabled;
 
   const load = useCallback(() => {
     if (!token) return;

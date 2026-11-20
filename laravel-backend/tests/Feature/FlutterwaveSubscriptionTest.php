@@ -36,6 +36,8 @@ class FlutterwaveSubscriptionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // The online payment is switched off by default: these tests exercise the code path itself.
+        config(["services.online_payments.enabled" => true]);
         Carbon::setTestNow('2026-03-02 09:00:00');
         config([
             'services.flutterwave.secret_key' => 'FLWSECK_TEST-123',

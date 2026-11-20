@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'totp.enrolled' => \App\Http\Middleware\EnsureTotpEnrolled::class,
             'plan' => \App\Http\Middleware\EnsurePlanModule::class,
             'terms.accepted' => \App\Http\Middleware\EnsureTermsAccepted::class,
+            'online.payments' => \App\Http\Middleware\EnsureOnlinePaymentsEnabled::class,
         ]);
         // The clinic context must exist before route models are resolved, so they are clinic-scoped too.
         $middleware->prependToPriorityList(
