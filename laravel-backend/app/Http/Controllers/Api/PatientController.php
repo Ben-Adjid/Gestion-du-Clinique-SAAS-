@@ -309,10 +309,11 @@ class PatientController extends Controller
                 $samePhone = strlen($digits) >= 8 && str_ends_with(preg_replace('/\D/', '', (string) $candidate->phone), $digits);
                 $sameBirth = $birth !== null && $candidate->date_of_birth?->toDateString() === $birth;
 
+                // A same name alone is not a duplicate (two people can share a name): the phone or the birth date must match too.
                 $reason = match (true) {
-                    $samePhone && $similarity >= 60 => 'Même numéro de téléphone et nom proche',
+                    $samePhone && $sameBirth => 'Même numéro de téléphone et même date de naissance',
                     $sameBirth && $similarity >= 85 => 'Nom très proche et même date de naissance',
-                    $similarity >= 95 => 'Nom identique ou presque',
+                    $birth === null && $samePhone && $similarity >= 60 => 'Même numéro de téléphone et nom proche',
                     default => null,
                 };
 
