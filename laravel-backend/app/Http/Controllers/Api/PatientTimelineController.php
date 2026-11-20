@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Str;
 use App\Models\Consultation;
 use App\Models\ImagingRequest;
 use App\Models\Invoice;
@@ -46,11 +47,17 @@ class PatientTimelineController extends Controller
                     'Analyse de laboratoire',
                     $request->exams->pluck('name')->join(', ') ?: null,
                     $request->status)))
-            ->merge(ImagingRequest::query()->where('patient_id', $patient->id)->with('exam')->latest()->limit(self::LIMIT)->get()
-                ->map(fn (ImagingRequest $request) => $this->event('imaging', $request->id, $request->created_at,
-                    'Imagerie',
-                    $request->exam?->name,
-                    $request->status)))
+            ->merge(ImagingRequest::query()->where('patient_id', $patient->id)->with(['exam', 'reports'])->latest()->limit(self::LIMIT)->get()
+                ->map(function (ImagingRequest $request) {
+                    // A signed report is attached to the record: its opening text is shown in the timeline.
+                    $report = $request->status === 'SIGNED' ? $request->reports->sortByDesc('id')->first() : null;
+                    $detail = collect([
+                        $request->exam?->name,
+                        $report?->report_text ? 'Compte rendu : '.Str::limit($report->report_text, 200) : null,
+                    ])->filter()->join(' · ');
+
+                    return $this->event('imaging', $request->id, $request->created_at, 'Imagerie', $detail ?: null, $request->status);
+                }))
             ->merge(VitalSign::query()->where('patient_id', $patient->id)->with('recorder:id,name')->latest('recorded_at')->limit(self::LIMIT)->get()
                 ->map(fn (VitalSign $vital) => $this->event('vitals', $vital->id, $vital->recorded_at,
                     'Signes vitaux · '.($vital->recorder?->name ?? 'Soignant'),
