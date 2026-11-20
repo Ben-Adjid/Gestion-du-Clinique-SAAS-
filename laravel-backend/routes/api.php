@@ -103,6 +103,9 @@ Route::prefix('v1')->group(function () {
         // Clinic routes: tenant isolation, 2FA and an active subscription
         Route::middleware(['clinic.ensure', 'totp.enrolled', 'subscription.active'])->group(function () {
             Route::apiResource('clinics', ClinicController::class, ['only' => ['index', 'store', 'show', 'update']]);
+            // Logo of the director's own clinic (printed on receipts and prescriptions)
+            Route::post('/clinic/logo', [\App\Http\Controllers\Api\ClinicLogoController::class, 'store'])->middleware(['audit', 'throttle:20,1']);
+            Route::delete('/clinic/logo', [\App\Http\Controllers\Api\ClinicLogoController::class, 'destroy'])->middleware('audit');
             Route::get('/audit-logs', [AuditLogController::class, 'index'])
                 ->middleware('permission:view:audit_logs');
             Route::get('/notifications', [NotificationController::class, 'index']);

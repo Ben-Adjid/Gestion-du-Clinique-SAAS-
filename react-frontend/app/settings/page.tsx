@@ -276,6 +276,33 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
       <p className="mt-1 text-sm text-slate-500">Le numéro d’agrément, l’adresse et le téléphone sont imprimés sur les quittances de soins.</p>
       {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
       {message && <p role="status" className="mt-3 text-sm text-emerald-700">{message}</p>}
+      <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-dashed border-slate-300 p-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-slate-800">Logo de la clinique</p>
+          <p className="text-xs text-slate-500">PNG, JPG, SVG ou WEBP, 1 Mo au maximum. Les quittances et ordonnances affichent le logo en PNG ou JPG ; sinon le nom de la clinique.</p>
+        </div>
+        <label className="cursor-pointer rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          Choisir un fichier
+          <input type="file" accept=".png,.jpg,.jpeg,.svg,.webp,image/png,image/jpeg,image/svg+xml,image/webp" className="sr-only"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              if (file.size > 1024 * 1024) {
+                setError('Le logo ne doit pas dépasser 1 Mo.');
+                return;
+              }
+              const body = new FormData();
+              body.append('logo', file);
+              try {
+                const response = await apiFetch<{ message: string }>('/clinic/logo', token, { method: 'POST', body });
+                setMessage(response.message);
+                setError('');
+              } catch (err) {
+                setError((err as Error).message);
+              }
+            }} />
+        </label>
+      </div>
       <form onSubmit={save} className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className="block text-sm font-semibold text-slate-700 sm:col-span-2">
           Numéro d’agrément
