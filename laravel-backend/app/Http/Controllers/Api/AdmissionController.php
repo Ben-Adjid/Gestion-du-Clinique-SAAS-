@@ -7,7 +7,9 @@ use App\Models\Admission;
 use App\Models\AdmissionTransfer;
 use App\Models\Bed;
 use App\Models\Patient;
+use App\Models\PatientSpecialtyRecord;
 use App\Models\Room;
+use App\Models\Specialty;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -49,14 +51,23 @@ class AdmissionController extends Controller
         $validated = $request->validate([
             'q' => ['required', 'string', 'min:2', 'max:80'],
             'service' => ['sometimes', 'nullable', 'in:'.implode(',', Room::SERVICES)],
+            'specialty' => ['sometimes', 'nullable', 'string', 'max:40', Rule::exists('specialties', 'code')],
         ]);
         $term = trim($validated['q']);
+        $specialty = isset($validated['specialty']) && $validated['specialty'] !== '' ? Specialty::query()->where('code', $validated['specialty'])->first() : null;
 
+        // A specialty filter finds patients with a record of that specialty, or hospitalised in its service or under its doctors.
         $patients = Patient::query()
             ->where(fn ($query) => $query
                 ->where('patient_unique_id', 'like', "%{$term}%")
                 ->orWhere('first_name', 'like', "%{$term}%")
                 ->orWhere('last_name', 'like', "%{$term}%"))
+            ->when($specialty, fn ($query) => $query->where(fn ($inner) => $inner
+                ->whereIn('id', PatientSpecialtyRecord::query()->where('specialty_id', $specialty->id)->select('patient_id'))
+                ->orWhereIn('id', Admission::query()->whereIn('status', Admission::ACTIVE)->where(fn ($stay) => $stay
+                    ->whereHas('room', fn ($rooms) => $rooms->where('service', $specialty->service))
+                    ->orWhereHas('doctor.doctorProfile', fn ($profiles) => $profiles->where('specialty_id', $specialty->id)))
+                    ->select('patient_id'))))
             ->orderBy('last_name')->limit(20)->get(['id', 'first_name', 'last_name', 'patient_unique_id']);
 
         $results = $patients->map(function (Patient $patient) use ($request, $validated) {

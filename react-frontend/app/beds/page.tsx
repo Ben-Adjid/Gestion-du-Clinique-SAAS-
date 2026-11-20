@@ -265,9 +265,21 @@ function Kpi({ label, value }: { label: string; value: string }) {
 function PatientSearch({ token, canOpenFile, onOpenStay }: { token: string; canOpenFile: boolean; onOpenStay: (id: number) => void }) {
   const [query, setQuery] = useState('');
   const [service, setService] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [specialties, setSpecialties] = useState<{ code: string; label: string }[]>([]);
   const [results, setResults] = useState<SearchResult[] | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<{ data: { code: string; label: string }[] }>('/specialties', token)
+      .then((response) => active && setSpecialties(response.data))
+      .catch(() => active && setSpecialties([]));
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   const search = async (event: FormEvent) => {
     event.preventDefault();
@@ -280,6 +292,7 @@ function PatientSearch({ token, canOpenFile, onOpenStay }: { token: string; canO
     try {
       const params = new URLSearchParams({ q: query.trim() });
       if (service) params.set('service', service);
+      if (specialty) params.set('specialty', specialty);
       const response = await apiFetch<{ data: SearchResult[] }>(`/admissions/search?${params.toString()}`, token);
       setResults(response.data);
     } catch (err) {
@@ -291,7 +304,7 @@ function PatientSearch({ token, canOpenFile, onOpenStay }: { token: string; canO
 
   return (
     <Section title="Rechercher un patient" description="Par nom ou numéro de dossier HARIRI-AAAA-NNNNNN, avec le service.">
-      <form onSubmit={search} className="grid gap-4 sm:grid-cols-[1fr_200px_auto] sm:items-end">
+      <form onSubmit={search} className="grid gap-4 sm:grid-cols-[1fr_180px_180px_auto] sm:items-end">
         <Field label="Nom ou n° de dossier" required>
           <input value={query} onChange={(event) => setQuery(event.target.value)} maxLength={80} className={inputClass} placeholder="Ex. : MAHAMAT ou HARIRI-2026-000023" />
         </Field>
@@ -299,6 +312,12 @@ function PatientSearch({ token, canOpenFile, onOpenStay }: { token: string; canO
           <select value={service} onChange={(event) => setService(event.target.value)} className={inputClass}>
             <option value="">Tous les services</option>
             {Object.entries(SERVICE_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+          </select>
+        </Field>
+        <Field label="Spécialité">
+          <select value={specialty} onChange={(event) => setSpecialty(event.target.value)} className={inputClass}>
+            <option value="">Toutes les spécialités</option>
+            {specialties.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
           </select>
         </Field>
         <button type="submit" disabled={busy} className={buttonClass.primary}>{busy ? 'Recherche…' : 'Rechercher'}</button>

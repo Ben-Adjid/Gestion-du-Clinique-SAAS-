@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { CertificatesSection } from '../../components/CertificatesSection';
+import { SpecialtyRecords } from '../../components/SpecialtyRecords';
 import { PatientRightsPanel } from '../../components/PatientRightsPanel';
 import { ConfirmDialog, Loading, Notice, PageHeader, StatusBadge, buttonClass, ListSkeleton } from '../../components/ui';
 import { ApiError, API_ROOT, apiFetch, fetchObjectUrl } from '../../lib/api';
@@ -170,6 +171,7 @@ function PatientDetailContent() {
         {can(user, 'read:certificate') && !isPatient && (
           <CertificatesSection token={token} patientId={patient.id} canCreate={can(user, 'create:certificate')} currentUserId={user?.id} />
         )}
+        {!isPatient && token && <SpecialtyRecords token={token} patientId={patient.id} />}
         {can(user, 'read:dpe') && <MedicalTimeline patientId={patientId} token={token} />}
         {!isPatient && (
           <PatientRightsPanel
