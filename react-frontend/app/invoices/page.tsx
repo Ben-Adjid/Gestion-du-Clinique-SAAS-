@@ -95,7 +95,7 @@ function PendingActs({ token }: { token: string }) {
               <p className="mt-1 flex flex-wrap gap-1">{row.kinds.map((kind) => <StatusBadge key={kind} tone={ACT_KINDS[kind].tone} label={ACT_KINDS[kind].label} />)}<span className="text-xs text-slate-500">· {row.acts_count} prestation(s) · dernière le {formatDateTime(row.last_date)}</span></p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-lg font-bold text-slate-900">{formatMoney(row.total)}</span>
+              <span className="text-lg font-bold text-slate-900"><span className="tabular-nums">{formatMoney(row.total)}</span></span>
               <Link href={`/invoices/new?patient=${row.patient.id}`} className={buttonClass.primary}>Facturer</Link>
             </div>
           </li>
@@ -165,8 +165,8 @@ function InvoiceList({ token }: { token: string }) {
                 <tr key={invoice.id} className="cursor-pointer hover:bg-slate-50/70" onClick={() => router.push(`/invoices/${invoice.id}`)}>
                   <td className="px-4 py-3"><Link href={`/invoices/${invoice.id}`} className="font-mono text-xs font-semibold text-emerald-800">{invoice.invoice_number}</Link><span className="block text-xs text-slate-500">{formatDate(invoice.created_at)}</span></td>
                   <td className="px-4 py-3">{invoice.patient.last_name.toUpperCase()} {invoice.patient.first_name}<span className="block text-xs text-slate-500">{invoice.patient.patient_unique_id}</span></td>
-                  <td className="px-4 py-3 text-right">{formatMoney(invoice.total_amount)}</td>
-                  <td className={`px-4 py-3 text-right font-semibold ${invoice.outstanding_amount > 0 ? 'text-slate-900' : 'text-slate-400'}`}>{formatMoney(invoice.outstanding_amount)}</td>
+                  <td className="px-4 py-3 text-right"><span className="tabular-nums">{formatMoney(invoice.total_amount)}</span></td>
+                  <td className={`px-4 py-3 text-right font-semibold ${invoice.outstanding_amount > 0 ? 'text-slate-900' : 'text-slate-400'}`}><span className="tabular-nums">{formatMoney(invoice.outstanding_amount)}</span></td>
                   <td className="px-4 py-3 text-slate-600">{formatDate(invoice.due_date)}</td>
                   <td className="px-4 py-3"><StatusBadge tone={INVOICE_STATUS[invoice.status].tone} label={INVOICE_STATUS[invoice.status].label} /></td>
                 </tr>
@@ -239,7 +239,7 @@ function CashRegister({ token, isAdmin, onNotice }: { token: string; isAdmin: bo
               {([['CASH', 'Espèces'], ['MOBILE_MONEY', 'Mobile Money'], ['BANK_TRANSFER', 'Virements'], ['total', 'Total encaissé']] as const).map(([key, label]) => (
                 <div key={key} className="bg-white p-4">
                   <p className="text-xs text-slate-500">{label}</p>
-                  <p className={`mt-1 text-lg font-bold ${key === 'total' ? 'text-emerald-700' : 'text-slate-900'}`}>{formatMoney(summary.totals[key])}</p>
+                  <p className={`mt-1 text-lg font-bold ${key === 'total' ? 'text-emerald-700' : 'text-slate-900'}`}><span className="tabular-nums">{formatMoney(summary.totals[key])}</span></p>
                 </div>
               ))}
             </div>
@@ -252,7 +252,7 @@ function CashRegister({ token, isAdmin, onNotice }: { token: string; isAdmin: bo
                       <td className="px-4 py-2 text-slate-600">{new Date(payment.payment_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</td>
                       <td className="px-4 py-2"><Link href={`/invoices/${payment.invoice?.id}`} className="font-mono text-xs text-emerald-800">{payment.invoice?.invoice_number}</Link> <span className="text-slate-600">{payment.invoice?.patient?.last_name.toUpperCase()} {payment.invoice?.patient?.first_name}</span></td>
                       <td className="px-4 py-2">{PAYMENT_METHODS[payment.payment_method]}{payment.payment_reference && <span className="block text-xs text-slate-400">{payment.payment_reference}</span>}</td>
-                      <td className="px-4 py-2 text-right font-semibold">{formatMoney(payment.amount)}</td>
+                      <td className="px-4 py-2 text-right font-semibold"><span className="tabular-nums">{formatMoney(payment.amount)}</span></td>
                       {isAdmin && <td className="px-4 py-2 text-slate-600">{receiverName(payment)}</td>}
                     </tr>
                   ))}
@@ -266,8 +266,8 @@ function CashRegister({ token, isAdmin, onNotice }: { token: string; isAdmin: bo
               <div key={closing.id} className={`rounded-2xl border p-4 text-sm ${closing.difference === 0 ? 'border-emerald-200 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`}>
                 <p className="font-semibold">Caisse clôturée — {closing.cashier.name}</p>
                 <p className="text-xs text-slate-600">le {formatDateTime(closing.closed_at)} · {closing.payments_count} encaissement(s)</p>
-                <p className="mt-2">Espèces attendues : {formatMoney(closing.expected_cash)}<br />Espèces comptées : {formatMoney(closing.counted_cash)}</p>
-                <p className={`mt-1 font-semibold ${closing.difference === 0 ? 'text-emerald-800' : 'text-amber-900'}`}>Écart : {formatMoney(closing.difference)}</p>
+                <p className="mt-2">Espèces attendues : <span className="tabular-nums">{formatMoney(closing.expected_cash)}</span><br />Espèces comptées : <span className="tabular-nums">{formatMoney(closing.counted_cash)}</span></p>
+                <p className={`mt-1 font-semibold ${closing.difference === 0 ? 'text-emerald-800' : 'text-amber-900'}`}>Écart : <span className="tabular-nums">{formatMoney(closing.difference)}</span></p>
                 {closing.notes && <p className="mt-1 text-xs italic">{closing.notes}</p>}
               </div>
             ))}

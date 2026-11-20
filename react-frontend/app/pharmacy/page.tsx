@@ -136,7 +136,7 @@ function DispenseQueue({ token, onNotice }: { token: string; onNotice: (message:
                       <tbody className="divide-y divide-slate-100">
                         {prescription.items.map((item) => (
                           <tr key={item.id}>
-                            <td className="py-2"><strong>{item.medication.name}</strong> {item.medication.dosage}<span className="block text-xs text-slate-500">{item.medication.form} · {formatMoney(item.unit_price)} l’unité</span></td>
+                            <td className="py-2"><strong>{item.medication.name}</strong> {item.medication.dosage}<span className="block text-xs text-slate-500">{item.medication.form} · <span className="tabular-nums">{formatMoney(item.unit_price)}</span> l’unité</span></td>
                             <td className="py-2 text-xs text-slate-600">{item.dosage_prescribed}, {item.frequency}, {item.duration_days} j</td>
                             <td className="py-2 text-right">{item.remaining_quantity}</td>
                             <td className={`py-2 text-right ${item.available_quantity < item.remaining_quantity ? 'font-semibold text-rose-700' : ''}`}>{item.available_quantity}</td>
@@ -151,7 +151,7 @@ function DispenseQueue({ token, onNotice }: { token: string; onNotice: (message:
                     </table>
                     {prescription.notes && <p className="mt-2 text-xs italic text-slate-500">Note du médecin : {prescription.notes}</p>}
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                      <span className="text-sm">Montant : <strong>{formatMoney(total)}</strong> <span className="text-xs text-slate-500">(réglé à la caisse)</span></span>
+                      <span className="text-sm">Montant : <strong><span className="tabular-nums">{formatMoney(total)}</span></strong> <span className="text-xs text-slate-500">(réglé à la caisse)</span></span>
                       <button type="submit" disabled={busy || total === 0} className={buttonClass.primary}>{busy ? 'Délivrance…' : 'Délivrer et sortir du stock'}</button>
                     </div>
                   </form>
@@ -209,7 +209,7 @@ function Stock({ token, onNotice }: { token: string; onNotice: (message: string)
           ))}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <p className="text-xs text-slate-500">Valeur du stock (prix d’achat)</p>
-            <p className="mt-1 text-lg font-bold text-slate-900">{formatMoney(data.summary.stock_value)}</p>
+            <p className="mt-1 text-lg font-bold text-slate-900"><span className="tabular-nums">{formatMoney(data.summary.stock_value)}</span></p>
           </div>
         </div>
       )}
@@ -236,7 +236,7 @@ function Stock({ token, onNotice }: { token: string; onNotice: (message: string)
                       <td className={`px-4 py-3 text-right font-semibold ${item.is_low ? 'text-amber-700' : ''}`}>{item.available_quantity}</td>
                       <td className="px-4 py-3 text-right text-slate-500">{item.min_threshold}</td>
                       <td className="px-4 py-3">{item.next_expiration ? <>{formatDate(item.next_expiration)} <span className={`text-xs ${days !== null && days <= 60 ? 'font-semibold text-amber-700' : 'text-slate-400'}`}>({days} j)</span></> : '—'}</td>
-                      <td className="px-4 py-3 text-right">{formatMoney(item.selling_price)}</td>
+                      <td className="px-4 py-3 text-right"><span className="tabular-nums">{formatMoney(item.selling_price)}</span></td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {item.available_quantity === 0 ? <StatusBadge tone="red" label="Rupture" /> : item.is_low && <StatusBadge tone="amber" label="Stock bas" />}
@@ -483,7 +483,7 @@ function CounterSale({ token, onNotice }: { token: string; onNotice: (message: s
         <button type="button" onClick={() => setLines((current) => [...current, { medication_id: '', quantity: '1' }])} className={buttonClass.small}>+ Ajouter une ligne</button>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-        <span className="text-lg">Total : <strong>{formatMoney(total)}</strong></span>
+        <span className="text-lg">Total : <strong><span className="tabular-nums">{formatMoney(total)}</span></strong></span>
         <button type="submit" disabled={saving || total === 0} className={buttonClass.primary}>{saving ? 'Enregistrement…' : 'Enregistrer la vente'}</button>
       </div>
     </form>

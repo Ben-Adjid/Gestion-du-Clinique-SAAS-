@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, fieldErrors } from '../lib/api';
 import { formatDate, formatDateTime, doctorName } from '../lib/format';
-import { ConfirmDialog, Field, Notice, Section, StatusBadge, buttonClass, inputClass } from './ui';
+import { ConfirmDialog, Field, Notice, Section, StatusBadge, buttonClass, inputClass, ListSkeleton } from './ui';
 
 export interface Certificate {
   id: number;
@@ -173,7 +173,7 @@ export function CertificatesSection({ token, patientId, consultationId, canCreat
           </form>
         )}
 
-        {certificates === null ? <p className="text-sm text-slate-500">Chargement…</p> : certificates.length === 0 ? (
+        {certificates === null ? <ListSkeleton rows={3} label="Chargement…" /> : certificates.length === 0 ? (
           <p className="text-sm text-slate-500">Aucun certificat délivré.</p>
         ) : (
           <ul className="divide-y divide-slate-100">

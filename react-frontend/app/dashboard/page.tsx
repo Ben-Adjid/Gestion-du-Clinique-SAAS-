@@ -1,5 +1,6 @@
 'use client';
 
+import { ListSkeleton } from '../components/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -163,7 +164,7 @@ export default function DashboardPage() {
               <p className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">Impossible de charger les indicateurs. Actualisez la page.</p>
             )}
             {!widgetsError && widgets === null && (
-              <p className="text-sm text-slate-500">Chargement des indicateurs…</p>
+              <ListSkeleton rows={3} label="Chargement des indicateurs…" />
             )}
             {widgets !== null && widgets.length === 0 && (
               <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-500">Aucun indicateur disponible pour votre rôle.</p>

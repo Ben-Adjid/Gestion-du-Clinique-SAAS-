@@ -151,7 +151,7 @@ export default function StaffSpacePage() {
                 {space.payslips.map((payslip) => (
                   <li key={payslip.id} className="flex items-center justify-between gap-2 py-2">
                     <span className="capitalize">{MONTHS[payslip.month - 1]} {payslip.year}</span>
-                    <span className="flex items-center gap-2"><strong>{formatMoney(payslip.net_salary)}</strong><StatusBadge tone={PAYROLL_STATUS[payslip.status].tone} label={PAYROLL_STATUS[payslip.status].label} /><Link href={`/staff/payslips/${payslip.id}/print`} target="_blank" className={buttonClass.small}>Voir</Link></span>
+                    <span className="flex items-center gap-2"><strong><span className="tabular-nums">{formatMoney(payslip.net_salary)}</span></strong><StatusBadge tone={PAYROLL_STATUS[payslip.status].tone} label={PAYROLL_STATUS[payslip.status].label} /><Link href={`/staff/payslips/${payslip.id}/print`} target="_blank" className={buttonClass.small}>Voir</Link></span>
                   </li>
                 ))}
               </ul>

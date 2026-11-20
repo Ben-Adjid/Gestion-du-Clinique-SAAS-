@@ -118,7 +118,7 @@ export default function PortalPage() {
           </div>
           <div className={`rounded-2xl border p-5 shadow-sm ${summary.balance_due > 0 ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'}`}>
             <p className="text-xs text-slate-500">Reste à payer</p>
-            <p className="mt-1 text-lg font-bold text-slate-900">{formatMoney(summary.balance_due)}</p>
+            <p className="mt-1 text-lg font-bold text-slate-900"><span className="tabular-nums">{formatMoney(summary.balance_due)}</span></p>
             <p className="text-sm text-slate-600">{summary.balance_due > 0 ? `Réglez à la caisse de la clinique${summary.clinic.admin_phone ? ` (${summary.clinic.admin_phone})` : ''}.` : 'Vous êtes à jour.'}</p>
           </div>
         </div>
@@ -172,13 +172,13 @@ export default function PortalPage() {
                     <p className="text-sm text-slate-600">{invoice.items.map((item) => item.description).join(' · ')}</p>
                     {(invoice.payments ?? []).filter((payment) => payment.receipt_number).map((payment) => (
                       <p key={payment.id} className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                        <span className="tabular-nums">{payment.receipt_number} · {formatMoney(payment.amount)} · {formatDate(payment.payment_datetime)}</span>
+                        <span className="tabular-nums">{payment.receipt_number} · <span className="tabular-nums">{formatMoney(payment.amount)}</span> · {formatDate(payment.payment_datetime)}</span>
                         <button type="button" onClick={() => token && downloadReceipt(payment.id, payment.receipt_number as string, token).catch((err: Error) => setError(err.message))} className="font-semibold text-emerald-800 hover:underline">Télécharger la quittance</button>
                       </p>
                     ))}
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm">{formatMoney(invoice.total_amount)}{invoice.outstanding_amount > 0 && <span className="block text-xs font-semibold text-amber-800">reste {formatMoney(invoice.outstanding_amount)}</span>}</span>
+                    <span className="text-sm"><span className="tabular-nums">{formatMoney(invoice.total_amount)}</span>{invoice.outstanding_amount > 0 && <span className="block text-xs font-semibold text-amber-800">reste <span className="tabular-nums">{formatMoney(invoice.outstanding_amount)}</span></span>}</span>
                     <StatusBadge tone={INVOICE_STATUS[invoice.status].tone} label={INVOICE_STATUS[invoice.status].label} />
                     {invoice.status !== 'CANCELLED' && <Link href={`/portal/invoices/${invoice.id}/print`} target="_blank" className={buttonClass.small}>Imprimer</Link>}
                   </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { PageSkeleton, ListSkeleton } from '../components/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiFetch } from '@/app/lib/api';
@@ -50,7 +51,7 @@ export default function NotificationsPage() {
     }
   };
 
-  if (loading || !isAuthenticated) return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Chargement…</div>;
+  if (loading || !isAuthenticated) return <PageSkeleton />;
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 sm:p-10">
@@ -59,7 +60,7 @@ export default function NotificationsPage() {
         <p className="mt-1 text-sm text-slate-500">{unread} non lue{unread > 1 ? 's' : ''}</p>
 
         {error && <p className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</p>}
-        {!loaded && !error && <p className="mt-6 text-sm text-slate-500">Chargement…</p>}
+        {!loaded && !error && <ListSkeleton rows={3} label="Chargement…" />}
         {loaded && items.length === 0 && !error && (
           <p className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">Aucune notification.</p>
         )}

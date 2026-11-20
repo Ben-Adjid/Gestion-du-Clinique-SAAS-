@@ -1,5 +1,6 @@
 'use client';
 
+import { PageSkeleton, ListSkeleton } from '../components/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth, type AuthUser } from '@/app/context/AuthContext';
@@ -24,7 +25,7 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  if (loading || !isAuthenticated || !user) return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Chargement…</div>;
+  if (loading || !isAuthenticated || !user) return <PageSkeleton />;
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -300,7 +301,7 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
   if (!loaded && !error) {
     return (
       <section className="rounded-2xl border border-slate-200 bg-white p-6" aria-busy="true">
-        <p className="text-sm text-slate-500">Chargement des informations légales…</p>
+        <ListSkeleton rows={3} label="Chargement des informations légales…" />
       </section>
     );
   }

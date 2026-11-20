@@ -1,5 +1,6 @@
 'use client';
 
+import { ListSkeleton } from './ui';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -100,7 +101,7 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
   if (mounted && !loading && isAuthenticated && (modulesPending || !allowed)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-center">
-        <p className="text-sm font-medium text-slate-600">Chargement de votre espace…</p>
+        <ListSkeleton rows={3} label="Chargement de votre espace…" />
       </div>
     );
   }

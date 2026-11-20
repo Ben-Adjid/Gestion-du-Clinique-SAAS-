@@ -42,15 +42,15 @@ export function InvoicePrint({ path, paymentId }: { path: string; paymentId: str
         {patientBlock}
         <div className="mt-8 rounded-xl border-2 border-slate-800 px-6 py-5 text-center">
           <p className="text-sm text-slate-600">Montant reçu</p>
-          <p className="mt-1 text-3xl font-bold">{formatMoney(payment.amount)}</p>
+          <p className="mt-1 text-3xl font-bold"><span className="tabular-nums">{formatMoney(payment.amount)}</span></p>
           <p className="mt-1 text-sm">{PAYMENT_METHODS[payment.payment_method]}{payment.payment_reference ? ` — réf. ${payment.payment_reference}` : ''}</p>
         </div>
         <table className="mt-8 w-full text-sm">
           <tbody>
             <tr><td className="py-1">Facture</td><td className="py-1 text-right font-mono">{invoice.invoice_number}</td></tr>
-            <tr><td className="py-1">Montant de la facture</td><td className="py-1 text-right">{formatMoney(invoice.total_amount)}</td></tr>
-            <tr><td className="py-1">Total payé à ce jour</td><td className="py-1 text-right">{formatMoney(paidUntil)}</td></tr>
-            <tr className="font-semibold"><td className="py-1">Reste à payer</td><td className="py-1 text-right">{formatMoney(Math.max(0, Number(invoice.total_amount) - paidUntil))}</td></tr>
+            <tr><td className="py-1">Montant de la facture</td><td className="py-1 text-right"><span className="tabular-nums">{formatMoney(invoice.total_amount)}</span></td></tr>
+            <tr><td className="py-1">Total payé à ce jour</td><td className="py-1 text-right"><span className="tabular-nums">{formatMoney(paidUntil)}</span></td></tr>
+            <tr className="font-semibold"><td className="py-1">Reste à payer</td><td className="py-1 text-right"><span className="tabular-nums">{formatMoney(Math.max(0, Number(invoice.total_amount) - paidUntil))}</span></td></tr>
           </tbody>
         </table>
         <p className="mt-10 text-right text-sm">Encaissé le {formatDateTime(payment.payment_datetime)}<br /><strong>{receiverName(payment)}</strong>, caisse</p>
@@ -67,12 +67,12 @@ export function InvoicePrint({ path, paymentId }: { path: string; paymentId: str
       <table className="mt-8 w-full border-collapse text-sm">
         <thead><tr className="border-b-2 border-slate-800 text-left"><th className="py-2">Désignation</th><th className="py-2 text-right">Montant</th></tr></thead>
         <tbody>
-          {invoice.items?.map((item) => <tr key={item.id} className="border-b border-slate-200"><td className="py-2 pr-3">{item.description}</td><td className="py-2 text-right">{formatMoney(item.amount)}</td></tr>)}
+          {invoice.items?.map((item) => <tr key={item.id} className="border-b border-slate-200"><td className="py-2 pr-3">{item.description}</td><td className="py-2 text-right"><span className="tabular-nums">{formatMoney(item.amount)}</span></td></tr>)}
         </tbody>
         <tfoot>
-          <tr><td className="pt-3 text-right font-semibold">Total à payer</td><td className="pt-3 text-right text-lg font-bold">{formatMoney(invoice.total_amount)}</td></tr>
-          {invoice.paid_amount > 0 && <tr><td className="text-right text-slate-600">Déjà réglé</td><td className="text-right">{formatMoney(invoice.paid_amount)}</td></tr>}
-          {invoice.paid_amount > 0 && <tr><td className="text-right font-semibold">Reste dû</td><td className="text-right font-semibold">{formatMoney(invoice.outstanding_amount)}</td></tr>}
+          <tr><td className="pt-3 text-right font-semibold">Total à payer</td><td className="pt-3 text-right text-lg font-bold"><span className="tabular-nums">{formatMoney(invoice.total_amount)}</span></td></tr>
+          {invoice.paid_amount > 0 && <tr><td className="text-right text-slate-600">Déjà réglé</td><td className="text-right"><span className="tabular-nums">{formatMoney(invoice.paid_amount)}</span></td></tr>}
+          {invoice.paid_amount > 0 && <tr><td className="text-right font-semibold">Reste dû</td><td className="text-right font-semibold"><span className="tabular-nums">{formatMoney(invoice.outstanding_amount)}</span></td></tr>}
         </tfoot>
       </table>
       <p className="mt-8 text-xs text-slate-500">Paiement en espèces à la caisse ou par Mobile Money. Merci de conserver cette facture.</p>

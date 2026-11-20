@@ -1,5 +1,6 @@
 'use client';
 
+import { PageSkeleton } from '../components/ui';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, type FormEvent } from 'react';
@@ -7,7 +8,7 @@ import { apiRequest } from '@/lib/api';
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Chargement…</div>}>
+    <Suspense fallback={<PageSkeleton />}>
       <ResetPasswordForm />
     </Suspense>
   );

@@ -138,7 +138,7 @@ export default function SaasDashboardPage() {
                           <td className="py-2.5 pr-4 text-slate-600">{renewal.plan}</td>
                           <td className="py-2.5 pr-4"><StatusBadge label={SUBSCRIPTION_STATUS[renewal.status].label} tone={SUBSCRIPTION_STATUS[renewal.status].tone} /></td>
                           <td className="py-2.5 pr-4 text-slate-600">{formatDate(renewal.period_end)}</td>
-                          <td className="py-2.5 pr-4 text-right font-medium text-slate-900">{formatMoney(renewal.price)}</td>
+                          <td className="py-2.5 pr-4 text-right font-medium text-slate-900"><span className="tabular-nums">{formatMoney(renewal.price)}</span></td>
                           <td className="py-2.5">{renewal.auto_renew ? <span className="text-slate-600">Automatique</span> : <StatusBadge label="Résiliation prévue" tone="amber" />}</td>
                         </tr>
                       ))}
@@ -193,7 +193,7 @@ function MonthlyBars({ data }: { data: { month: string; label: string; amount: n
             <div key={point.month} className="relative flex h-full flex-1 flex-col items-center justify-end">
               {showLabel && (
                 <span className="absolute -top-1 whitespace-nowrap rounded-md bg-slate-900 px-2 py-0.5 text-[11px] font-semibold text-white" style={{ bottom: `calc(${height}% + 6px)`, top: 'auto' }}>
-                  {formatMoney(point.amount)}
+                  <span className="tabular-nums">{formatMoney(point.amount)}</span>
                 </span>
               )}
               <button
@@ -222,7 +222,7 @@ function MonthlyBars({ data }: { data: { month: string; label: string; amount: n
       <table className="sr-only">
         <caption>Encaissements mensuels</caption>
         <thead><tr><th>Mois</th><th>Montant</th></tr></thead>
-        <tbody>{data.map((point) => <tr key={point.month}><td>{point.label}</td><td>{formatMoney(point.amount)}</td></tr>)}</tbody>
+        <tbody>{data.map((point) => <tr key={point.month}><td>{point.label}</td><td><span className="tabular-nums">{formatMoney(point.amount)}</span></td></tr>)}</tbody>
       </table>
     </div>
   );

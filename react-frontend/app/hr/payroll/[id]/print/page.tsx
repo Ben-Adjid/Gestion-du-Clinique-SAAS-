@@ -53,14 +53,14 @@ export default function PayslipPrintPage() {
         <thead><tr className="border-b-2 border-slate-800 text-left"><th className="py-2">Élément</th><th className="py-2 text-right">Gain</th><th className="py-2 text-right">Retenue</th></tr></thead>
         <tbody>
           {lines.map(([label, gain, loss]) => <tr key={label} className="border-b border-slate-200"><td className="py-1.5">{label}</td><td className="py-1.5 text-right">{gain !== null ? formatMoney(gain) : ''}</td><td className="py-1.5 text-right">{loss !== null ? formatMoney(loss) : ''}</td></tr>)}
-          <tr className="border-b-2 border-slate-400 font-semibold"><td className="py-2">Salaire brut</td><td className="py-2 text-right">{formatMoney(payslip.gross_salary)}</td><td /></tr>
-          {deductions.map(([label, amount]) => <tr key={label} className="border-b border-slate-200"><td className="py-1.5">{label}</td><td /><td className="py-1.5 text-right">{formatMoney(amount)}</td></tr>)}
+          <tr className="border-b-2 border-slate-400 font-semibold"><td className="py-2">Salaire brut</td><td className="py-2 text-right"><span className="tabular-nums">{formatMoney(payslip.gross_salary)}</span></td><td /></tr>
+          {deductions.map(([label, amount]) => <tr key={label} className="border-b border-slate-200"><td className="py-1.5">{label}</td><td /><td className="py-1.5 text-right"><span className="tabular-nums">{formatMoney(amount)}</span></td></tr>)}
         </tbody>
       </table>
       <div className="mt-6 flex justify-end">
         <div className="rounded-xl border-2 border-slate-800 px-6 py-3 text-right">
           <p className="text-xs uppercase tracking-wide text-slate-500">Net à payer</p>
-          <p className="text-2xl font-bold">{formatMoney(payslip.net_salary)}</p>
+          <p className="text-2xl font-bold"><span className="tabular-nums">{formatMoney(payslip.net_salary)}</span></p>
         </div>
       </div>
       <p className="mt-6 text-xs text-slate-500">

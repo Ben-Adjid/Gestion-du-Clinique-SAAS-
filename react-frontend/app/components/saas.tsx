@@ -75,7 +75,7 @@ export function PaymentDialog({ invoice, token, mode, onClose, onDone }: {
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
         <h2 id={titleId} className="text-lg font-semibold text-slate-900">{mode === 'declare' ? 'Déclarer un paiement' : 'Enregistrer un paiement'}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Facture {invoice.number} · période du {formatDate(invoice.period_start)} au {formatDate(invoice.period_end)} · reste à payer <strong>{formatMoney(invoice.balance)}</strong>
+          Facture {invoice.number} · période du {formatDate(invoice.period_start)} au {formatDate(invoice.period_end)} · reste à payer <strong><span className="tabular-nums">{formatMoney(invoice.balance)}</span></strong>
         </p>
         {mode === 'declare' && <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-800">Votre déclaration sera vérifiée par l’équipe Clinique+ avant d’être validée.</p>}
         {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}

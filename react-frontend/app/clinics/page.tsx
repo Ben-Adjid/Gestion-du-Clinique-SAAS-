@@ -140,7 +140,7 @@ function ClinicsList() {
                       </td>
                       <td className="px-4 py-3 text-slate-600">{formatDate(clinic.subscription?.current_period_end)}</td>
                       <td className="px-4 py-3 text-right text-slate-700">{clinic.active_users_count}</td>
-                      <td className={`px-4 py-3 text-right font-medium ${Number(clinic.unpaid_amount) > 0 ? 'text-rose-700' : 'text-slate-500'}`}>{formatMoney(clinic.unpaid_amount)}</td>
+                      <td className={`px-4 py-3 text-right font-medium ${Number(clinic.unpaid_amount) > 0 ? 'text-rose-700' : 'text-slate-500'}`}><span className="tabular-nums">{formatMoney(clinic.unpaid_amount)}</span></td>
                       <td className="px-4 py-3"><StatusBadge label={CLINIC_STATUS[clinic.status].label} tone={CLINIC_STATUS[clinic.status].tone} /></td>
                       <td className="px-4 py-3 text-right"><Link href={`/clinics/${clinic.id}`} className={buttonClass.small}>Ouvrir</Link></td>
                     </tr>

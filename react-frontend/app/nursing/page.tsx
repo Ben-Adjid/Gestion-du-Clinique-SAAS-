@@ -1,5 +1,6 @@
 'use client';
 
+import { PageSkeleton, ListSkeleton } from '../components/ui';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { can, useAuth } from '@/app/context/AuthContext';
 import { apiRequest } from '@/lib/api';
@@ -129,7 +130,7 @@ export default function NursingPage() {
     }, 'Signes vitaux enregistrés.');
   };
 
-  if (loading || !isAuthenticated) return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Chargement…</div>;
+  if (loading || !isAuthenticated) return <PageSkeleton />;
 
   return (
     <div className="min-h-screen bg-slate-50 px-5 py-8 sm:px-8">
@@ -146,7 +147,7 @@ export default function NursingPage() {
           <div className="border-b border-slate-100 px-5 py-4">
             <h2 className="text-base font-semibold text-slate-900">{canComplete ? 'Mes tâches de soins' : 'Tâches de soins prescrites'}</h2>
           </div>
-          {!loaded ? <p className="p-6 text-sm text-slate-500">Chargement…</p> : tasks.length === 0 ? (
+          {!loaded ? <ListSkeleton rows={3} label="Chargement…" /> : tasks.length === 0 ? (
             <p className="p-6 text-sm text-slate-500">Aucune tâche de soins pour le moment.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -233,13 +234,13 @@ export default function NursingPage() {
                       {vitals.map((vital) => (
                         <tr key={vital.id}>
                           <td className="px-3 py-2 text-slate-600">{new Date(vital.recorded_at).toLocaleString('fr-FR')}</td>
-                          <td className="px-3 py-2">{vital.systolic_bp && vital.diastolic_bp ? `${vital.systolic_bp}/${vital.diastolic_bp}` : '—'}</td>
-                          <td className="px-3 py-2">{vital.heart_rate ?? '—'}</td>
-                          <td className="px-3 py-2">{vital.respiratory_rate ?? '—'}</td>
-                          <td className="px-3 py-2">{vital.temperature ?? '—'}</td>
-                          <td className="px-3 py-2">{vital.spo2 != null ? `${vital.spo2} %` : '—'}</td>
-                          <td className="px-3 py-2">{vital.weight_kg != null ? `${vital.weight_kg} kg` : '—'}</td>
-                          <td className="px-3 py-2">{vital.alerts.length > 0 ? <span className="font-semibold text-rose-700">{vital.alerts.join(', ')}</span> : '—'}</td>
+                          <td className="px-3 py-2 tabular-nums">{vital.systolic_bp && vital.diastolic_bp ? `${vital.systolic_bp}/${vital.diastolic_bp}` : '—'}</td>
+                          <td className="px-3 py-2 tabular-nums">{vital.heart_rate ?? '—'}</td>
+                          <td className="px-3 py-2 tabular-nums">{vital.respiratory_rate ?? '—'}</td>
+                          <td className="px-3 py-2 tabular-nums">{vital.temperature ?? '—'}</td>
+                          <td className="px-3 py-2 tabular-nums">{vital.spo2 != null ? `${vital.spo2} %` : '—'}</td>
+                          <td className="px-3 py-2 tabular-nums">{vital.weight_kg != null ? `${vital.weight_kg} kg` : '—'}</td>
+                          <td className="px-3 py-2 tabular-nums">{vital.alerts.length > 0 ? <span className="font-semibold text-rose-700">{vital.alerts.join(', ')}</span> : '—'}</td>
                           <td className="px-3 py-2 text-slate-600">{vital.recorder?.name}</td>
                         </tr>
                       ))}

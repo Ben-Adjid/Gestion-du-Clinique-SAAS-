@@ -106,7 +106,7 @@ function Staff({ token }: { token: string }) {
                   <td className="px-4 py-3"><strong>{employee.last_name.toUpperCase()} {employee.first_name}</strong><span className="block font-mono text-xs text-slate-500">{employee.employee_number}{employee.user ? ` · ${employee.user.email}` : ' · sans compte'}</span></td>
                   <td className="px-4 py-3">{employee.position}<span className="block text-xs text-slate-500">{employee.department}</span></td>
                   <td className="px-4 py-3">{CONTRACT_TYPES[employee.contract_type]}{employee.contract_end_date && <span className="block text-xs text-slate-500">jusqu’au {formatDate(employee.contract_end_date)}</span>}</td>
-                  <td className="px-4 py-3 text-right">{formatMoney(employee.base_salary)}</td>
+                  <td className="px-4 py-3 text-right"><span className="tabular-nums">{formatMoney(employee.base_salary)}</span></td>
                   <td className="px-4 py-3"><StatusBadge tone={employee.on_leave_today ? 'blue' : EMPLOYEE_STATUS[employee.status].tone} label={employee.on_leave_today ? 'En congé aujourd’hui' : EMPLOYEE_STATUS[employee.status].label} /></td>
                 </tr>
               ))}
@@ -366,7 +366,7 @@ function PayrollTab({ token, canPrepare, canApprove, onNotice }: { token: string
         <>
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[['Masse salariale brute', data.totals.gross], [`CNPS salariés (${data.settings.cnps_rate} %)`, data.totals.cnps], [`Impôt retenu (${data.settings.tax_rate} %)`, data.totals.tax], ['Net à payer', data.totals.net]].map(([label, value]) => (
-              <div key={label as string} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-xs text-slate-500">{label}</p><p className="mt-1 text-lg font-bold">{formatMoney(value as number)}</p></div>
+              <div key={label as string} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-xs text-slate-500">{label}</p><p className="mt-1 text-lg font-bold"><span className="tabular-nums">{formatMoney(value as number)}</span></p></div>
             ))}
           </div>
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -376,12 +376,12 @@ function PayrollTab({ token, canPrepare, canApprove, onNotice }: { token: string
                 {data.data.map((payroll) => (
                   <tr key={payroll.id}>
                     <td className="px-3 py-2.5"><strong>{payroll.employee?.last_name.toUpperCase()} {payroll.employee?.first_name}</strong><span className="block text-xs text-slate-500">{payroll.employee?.position}</span></td>
-                    <td className="px-3 py-2.5 text-right">{formatMoney(payroll.base_salary)}</td>
-                    <td className="px-3 py-2.5 text-right">{payroll.absence_deduction ? <span className="text-rose-700">−{formatMoney(payroll.absence_deduction)}<span className="block text-xs">{payroll.unpaid_days} j</span></span> : '—'}</td>
+                    <td className="px-3 py-2.5 text-right"><span className="tabular-nums">{formatMoney(payroll.base_salary)}</span></td>
+                    <td className="px-3 py-2.5 text-right">{payroll.absence_deduction ? <span className="text-rose-700">−<span className="tabular-nums">{formatMoney(payroll.absence_deduction)}</span><span className="block text-xs">{payroll.unpaid_days} j</span></span> : '—'}</td>
                     <td className="px-3 py-2.5 text-right">{payroll.overtime_amount + payroll.bonus ? `+${formatMoney(payroll.overtime_amount + payroll.bonus)}` : '—'}{payroll.overtime_hours > 0 && <span className="block text-xs text-slate-500">{payroll.overtime_hours} h sup.</span>}</td>
-                    <td className="px-3 py-2.5 text-right font-semibold">{formatMoney(payroll.gross_salary)}</td>
-                    <td className="px-3 py-2.5 text-right text-slate-600">−{formatMoney(payroll.cotisation_deduction + payroll.tax_deduction + payroll.other_deductions)}</td>
-                    <td className="px-3 py-2.5 text-right text-base font-bold">{formatMoney(payroll.net_salary)}</td>
+                    <td className="px-3 py-2.5 text-right font-semibold"><span className="tabular-nums">{formatMoney(payroll.gross_salary)}</span></td>
+                    <td className="px-3 py-2.5 text-right text-slate-600">−<span className="tabular-nums">{formatMoney(payroll.cotisation_deduction + payroll.tax_deduction + payroll.other_deductions)}</span></td>
+                    <td className="px-3 py-2.5 text-right text-base font-bold"><span className="tabular-nums">{formatMoney(payroll.net_salary)}</span></td>
                     <td className="px-3 py-2.5"><StatusBadge tone={PAYROLL_STATUS[payroll.status].tone} label={PAYROLL_STATUS[payroll.status].label} /></td>
                     <td className="px-3 py-2.5 text-right">
                       <span className="flex justify-end gap-1">
@@ -449,7 +449,7 @@ function PayPayroll({ token, payroll, onClose, onSaved }: { token: string; payro
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4" onClick={onClose}>
       <form role="dialog" aria-modal="true" aria-label="Payer le salaire" onSubmit={(event) => void submit(event)} onClick={(event) => event.stopPropagation()} className="w-full max-w-md space-y-3 rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-lg font-semibold">Payer {formatMoney(payroll.net_salary)}</h2>
+        <h2 className="text-lg font-semibold">Payer <span className="tabular-nums">{formatMoney(payroll.net_salary)}</span></h2>
         <p className="text-sm text-slate-600">{payroll.employee?.first_name} {payroll.employee?.last_name}{payroll.employee?.payment_account ? ` · compte ${payroll.employee.payment_account}` : ''}</p>
         {error && !Object.keys(errors).length && <Notice tone="error">{error}</Notice>}
         <Field label="Mode de paiement" required>

@@ -1,5 +1,6 @@
 'use client';
 
+import { PageSkeleton, ListSkeleton } from '../components/ui';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiRequest } from '@/lib/api';
 import { useRouter } from 'next/navigation';
@@ -150,7 +151,7 @@ export default function UsersPage() {
   };
 
   if (loading || !isAuthenticated) {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Chargement de votre espace…</div>;
+    return <PageSkeleton />;
   }
 
   return (
@@ -216,7 +217,7 @@ export default function UsersPage() {
             <div><h2 className="text-sm font-semibold">Comptes de la plateforme</h2><p className="mt-1 text-xs text-slate-400">{loadingData ? 'Chargement…' : `${totalUsers} compte${totalUsers > 1 ? 's' : ''}`}</p></div>
             <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Rechercher nom, e-mail…" aria-label="Rechercher un utilisateur" className="h-10 w-full max-w-xs rounded-lg border border-slate-200 px-3 text-xs outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10" />
           </div>
-          {loadingData ? <div className="p-12 text-center text-sm text-slate-500">Chargement des comptes…</div> : users.length === 0 ? (
+          {loadingData ? <ListSkeleton rows={3} label="Chargement des comptes…" /> : users.length === 0 ? (
             <div className="p-12 text-center"><p className="text-sm font-semibold text-slate-800">Aucun utilisateur trouvé</p><p className="mt-1 text-xs text-slate-500">Créez un compte pour inviter un membre de l’équipe.</p></div>
           ) : (
             <div className="overflow-x-auto">

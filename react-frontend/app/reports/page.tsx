@@ -1,5 +1,6 @@
 'use client';
 
+import { PageSkeleton } from '../components/ui';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiFetch } from '@/app/lib/api';
@@ -88,5 +89,5 @@ function Stat({ label, value }: { label: string; value: number | string }) {
 }
 
 function Loading() {
-  return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Chargement…</div>;
+  return <PageSkeleton />;
 }

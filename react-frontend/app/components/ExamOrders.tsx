@@ -152,7 +152,7 @@ function OrderForm({ kind, token, consultationId, onCancel, onDone, onError }: {
                   <input type="checkbox" checked={selected.includes(exam.id)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, exam.id] : current.filter((value) => value !== exam.id))} />
                   {exam.name}
                 </span>
-                <span className="text-xs text-slate-500">{formatMoney(exam.price)}</span>
+                <span className="text-xs text-slate-500"><span className="tabular-nums">{formatMoney(exam.price)}</span></span>
               </label>
             ))}
           </fieldset>

@@ -106,7 +106,7 @@ function ExamCatalogue({ kind, token, onNotice }: { kind: 'lab' | 'imaging'; tok
                 <tr key={exam.id} className={exam.is_active ? '' : 'opacity-60'}>
                   <td className="py-2.5"><strong>{exam.name}</strong><span className="block text-xs text-slate-500">{EXAM_TYPES[exam.exam_type] ?? exam.exam_type}{exam.sample_type ? ` · ${exam.sample_type}` : ''}</span></td>
                   {kind === 'lab' && <td className="py-2.5 text-xs text-slate-600">{rangeLabel(exam.reference_min ?? null, exam.reference_max ?? null, exam.unit ?? null)}</td>}
-                  <td className="py-2.5 text-right font-semibold">{formatMoney(exam.price)}</td>
+                  <td className="py-2.5 text-right font-semibold"><span className="tabular-nums">{formatMoney(exam.price)}</span></td>
                   <td className="py-2.5">{exam.is_active ? <StatusBadge tone="green" label="Proposé" /> : <StatusBadge tone="slate" label="Désactivé" />}</td>
                   <td className="py-2.5 text-right">
                     <span className="flex justify-end gap-1">

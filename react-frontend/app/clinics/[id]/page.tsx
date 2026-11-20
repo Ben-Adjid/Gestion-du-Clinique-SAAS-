@@ -195,8 +195,8 @@ export default function ClinicDetailsPage() {
                         <tr>
                           <td className="py-2.5 pr-3 font-medium text-slate-900">{invoice.number}</td>
                           <td className="py-2.5 pr-3 text-slate-600">{formatDate(invoice.period_start)} → {formatDate(invoice.period_end)}</td>
-                          <td className="py-2.5 pr-3 text-right text-slate-900">{formatMoney(invoice.amount)}</td>
-                          <td className={`py-2.5 pr-3 text-right font-medium ${invoice.balance > 0 ? 'text-rose-700' : 'text-slate-500'}`}>{formatMoney(invoice.balance)}</td>
+                          <td className="py-2.5 pr-3 text-right text-slate-900"><span className="tabular-nums">{formatMoney(invoice.amount)}</span></td>
+                          <td className={`py-2.5 pr-3 text-right font-medium ${invoice.balance > 0 ? 'text-rose-700' : 'text-slate-500'}`}><span className="tabular-nums">{formatMoney(invoice.balance)}</span></td>
                           <td className="py-2.5 pr-3 text-slate-600">{formatDate(invoice.due_date)}</td>
                           <td className="py-2.5 pr-3"><StatusBadge label={INVOICE_STATUS[invoice.status].label} tone={INVOICE_STATUS[invoice.status].tone} /></td>
                           <td className="py-2.5 text-right">
@@ -217,7 +217,7 @@ export default function ClinicDetailsPage() {
                                 {invoice.payments?.map((payment) => (
                                   <li key={payment.id} className="flex flex-wrap items-center gap-2">
                                     <StatusBadge label={PAYMENT_STATUS[payment.status].label} tone={PAYMENT_STATUS[payment.status].tone} />
-                                    <span>{formatDate(payment.paid_on)} · {PAYMENT_METHODS[payment.method]} · {formatMoney(payment.amount)}{payment.reference ? ` · réf. ${payment.reference}` : ''}</span>
+                                    <span>{formatDate(payment.paid_on)} · {PAYMENT_METHODS[payment.method]} · <span className="tabular-nums">{formatMoney(payment.amount)}</span>{payment.reference ? ` · réf. ${payment.reference}` : ''}</span>
                                     {payment.rejection_reason && <span className="text-rose-700">Refus : {payment.rejection_reason}</span>}
                                   </li>
                                 ))}
@@ -319,7 +319,7 @@ function ChangePlanDialog({ plans, current, busy, onCancel, onConfirm }: {
               {(Object.keys(BILLING_CYCLES) as BillingCycle[]).map((key) => <option key={key} value={key}>{BILLING_CYCLES[key]}</option>)}
             </select>
           </Field>
-          {plan && <p className="text-sm text-slate-700">Nouveau tarif : <strong>{formatMoney(cycle === 'YEARLY' ? plan.yearly_price : plan.monthly_price)}</strong> {cycle === 'YEARLY' ? 'par an' : 'par mois'}</p>}
+          {plan && <p className="text-sm text-slate-700">Nouveau tarif : <strong><span className="tabular-nums">{formatMoney(cycle === 'YEARLY' ? plan.yearly_price : plan.monthly_price)}</span></strong> {cycle === 'YEARLY' ? 'par an' : 'par mois'}</p>}
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={onCancel} className={buttonClass.secondary}>Annuler</button>

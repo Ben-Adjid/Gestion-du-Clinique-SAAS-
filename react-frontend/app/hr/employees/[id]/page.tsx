@@ -119,7 +119,7 @@ export default function EmployeePage() {
               {employee.payrolls.map((payroll) => (
                 <li key={payroll.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                   <span className="capitalize">{MONTHS[payroll.month - 1]} {payroll.year}</span>
-                  <span className="flex items-center gap-2">brut {formatMoney(payroll.gross_salary)} · <strong>net {formatMoney(payroll.net_salary)}</strong>
+                  <span className="flex items-center gap-2">brut <span className="tabular-nums">{formatMoney(payroll.gross_salary)}</span> · <strong>net <span className="tabular-nums">{formatMoney(payroll.net_salary)}</span></strong>
                     <StatusBadge tone={PAYROLL_STATUS[payroll.status].tone} label={PAYROLL_STATUS[payroll.status].label} />
                     <Link href={`/hr/payroll/${payroll.id}/print`} target="_blank" className={buttonClass.small}>Bulletin</Link>
                   </span>

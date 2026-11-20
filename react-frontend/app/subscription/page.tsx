@@ -313,7 +313,7 @@ export default function MySubscriptionPage() {
                             {invoice.payments?.map((payment) => (
                               <li key={payment.id} className="flex flex-wrap items-center gap-2">
                                 <StatusBadge label={PAYMENT_STATUS[payment.status].label} tone={PAYMENT_STATUS[payment.status].tone} />
-                                {formatDate(payment.paid_on)} · {PAYMENT_METHODS[payment.method]} · {formatMoney(payment.amount)}{payment.reference ? ` · réf. ${payment.reference}` : ''}
+                                {formatDate(payment.paid_on)} · {PAYMENT_METHODS[payment.method]} · <span className="tabular-nums">{formatMoney(payment.amount)}</span>{payment.reference ? ` · réf. ${payment.reference}` : ''}
                                 {payment.rejection_reason && <span className="text-rose-700">— {payment.rejection_reason}</span>}
                               </li>
                             ))}

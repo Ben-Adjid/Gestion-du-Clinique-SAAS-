@@ -153,12 +153,43 @@ export function EmptyState({ title, description, action }: { title: string; desc
   );
 }
 
+/** Loading state of a page section: skeleton rows, with the label kept for screen readers. */
 export function Loading({ label = 'Chargement…' }: { label?: string }) {
+  return <ListSkeleton label={label} />;
+}
+
+/** Skeleton of a list of cards (patients, invoices, requests…). */
+export function ListSkeleton({ rows = 5, label = 'Chargement…' }: { rows?: number; label?: string }) {
   return (
-    <div role="status" className="flex items-center justify-center gap-3 rounded-2xl bg-white px-6 py-12 text-sm text-slate-500">
-      <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" aria-hidden="true" />
-      {label}
+    <div role="status" aria-busy="true" className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <span className="sr-only">{label}</span>
+      {Array.from({ length: rows }, (_, row) => (
+        <div key={row} className="flex items-center gap-4 px-5 py-4">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3.5 w-2/5" />
+            <Skeleton className="h-3 w-3/5" />
+          </div>
+          <Skeleton className="hidden h-6 w-20 rounded-full sm:block" />
+        </div>
+      ))}
     </div>
+  );
+}
+
+/** Skeleton of a full page: heading, then a table. */
+export function PageSkeleton({ label = 'Chargement…' }: { label?: string }) {
+  return (
+    <main className="min-h-screen bg-[#f6f8fc] px-5 py-8 sm:px-8" aria-busy="true">
+      <div className="mx-auto max-w-5xl space-y-6">
+        <span className="sr-only">{label}</span>
+        <div className="space-y-3">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-8 w-72" />
+        </div>
+        <TableSkeleton rows={6} columns={4} />
+      </div>
+    </main>
   );
 }
 

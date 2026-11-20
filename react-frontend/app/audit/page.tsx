@@ -1,5 +1,6 @@
 'use client';
 
+import { PageSkeleton } from '../components/ui';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiFetch } from '@/app/lib/api';
@@ -33,7 +34,7 @@ export default function AuditPage() {
       .catch((err: Error) => setError(err.message));
   }, [token, current]);
 
-  if (loading || !isAuthenticated) return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Chargement…</div>;
+  if (loading || !isAuthenticated) return <PageSkeleton />;
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 sm:p-10">

@@ -182,7 +182,7 @@ export default function NewClinicPage() {
                         <button type="button" key={plan.code} onClick={() => set('plan_code', plan.code)} aria-pressed={selected}
                           className={`rounded-2xl border-2 p-4 text-left transition ${selected ? 'border-emerald-600 bg-emerald-50/60' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                           <p className="text-base font-semibold text-slate-900">{plan.name}</p>
-                          <p className="mt-1 text-xl font-semibold text-slate-900">{formatMoney(form.billing_cycle === 'YEARLY' ? plan.yearly_price : plan.monthly_price)}</p>
+                          <p className="mt-1 text-xl font-semibold text-slate-900"><span className="tabular-nums">{formatMoney(form.billing_cycle === 'YEARLY' ? plan.yearly_price : plan.monthly_price)}</span></p>
                           <p className="text-xs text-slate-500">{form.billing_cycle === 'YEARLY' ? 'par an' : 'par mois'}</p>
                           <p className="mt-3 text-xs text-slate-600">{plan.description}</p>
                           <ul className="mt-3 space-y-1 text-xs text-slate-700">

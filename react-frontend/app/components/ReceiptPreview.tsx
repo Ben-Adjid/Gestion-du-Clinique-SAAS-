@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiFetch, fetchObjectUrl } from '@/app/lib/api';
-import { Notice, buttonClass, inputClass } from './ui';
+import { Notice, buttonClass, inputClass, ListSkeleton } from './ui';
 
 /**
  * Preview of the official receipt (quittance) of one payment, with download, e-mail to the patient,
@@ -113,7 +113,7 @@ export function ReceiptPreview({ invoiceId, paymentId, receiptNumber, onClose }:
         {notice && <div className="px-5 pt-3"><Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice></div>}
 
         <div className="min-h-0 flex-1 bg-slate-100">
-          {url ? <iframe ref={frame} src={url} title="Aperçu de la quittance" className="h-full w-full" /> : <p className="p-6 text-sm text-slate-500">Chargement de la quittance…</p>}
+          {url ? <iframe ref={frame} src={url} title="Aperçu de la quittance" className="h-full w-full" /> : <ListSkeleton rows={3} label="Chargement de la quittance…" />}
         </div>
 
         {printing && (

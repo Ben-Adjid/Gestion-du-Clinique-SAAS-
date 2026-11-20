@@ -1,3 +1,4 @@
+import { PageSkeleton } from './components/ui';
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegistration />
         <AuthProvider>
-          <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Préparation de votre espace…</div>}>
+          <Suspense fallback={<PageSkeleton />}>
             <RoleAccessGate>{children}</RoleAccessGate>
           </Suspense>
         </AuthProvider>

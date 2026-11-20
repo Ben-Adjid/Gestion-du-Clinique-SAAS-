@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { CertificatesSection } from '../../components/CertificatesSection';
 import { PatientRightsPanel } from '../../components/PatientRightsPanel';
-import { ConfirmDialog, Loading, Notice, PageHeader, StatusBadge, buttonClass } from '../../components/ui';
+import { ConfirmDialog, Loading, Notice, PageHeader, StatusBadge, buttonClass, ListSkeleton } from '../../components/ui';
 import { ApiError, API_ROOT, apiFetch, fetchObjectUrl } from '../../lib/api';
 import { ageFrom, formatDate, formatDateTime } from '../../lib/format';
 import { GENDER_LABELS, MARITAL_LABELS, SEVERITY_LABELS, initials, type Patient } from '../../lib/patients';
@@ -440,7 +440,7 @@ function MedicalTimeline({ patientId, token }: { patientId: string; token: strin
       <h2 className="text-base font-semibold text-slate-900">Dossier médical</h2>
       <p className="mt-1 text-sm text-gray-500">Du plus récent au plus ancien. Chaque consultation de ce dossier est journalisée.</p>
       {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
-      {!error && events === null && <p className="mt-4 text-sm text-gray-500">Chargement…</p>}
+      {!error && events === null && <ListSkeleton rows={3} label="Chargement…" />}
       {events !== null && events.length === 0 && <p className="mt-4 text-sm text-gray-500">Aucun événement médical enregistré.</p>}
       {events !== null && events.length > 0 && (
         <ol className="mt-6 space-y-4 border-l-2 border-gray-200 pl-6">

@@ -100,7 +100,7 @@ function InvoiceBuilder() {
                             <span className="ml-2 text-slate-800">{act.description}</span>
                             <span className="block text-xs text-slate-400">{formatDateTime(act.date)}</span>
                           </span>
-                          <span className="font-semibold">{formatMoney(act.amount)}</span>
+                          <span className="font-semibold"><span className="tabular-nums">{formatMoney(act.amount)}</span></span>
                         </label>
                       </li>
                     ))}
@@ -125,9 +125,9 @@ function InvoiceBuilder() {
                   <input type="number" min={0} max={subtotal} value={discount} onChange={(event) => setDiscount(event.target.value)} className={inputClass} />
                 </Field>
                 <div className="text-right">
-                  <p className="text-sm text-slate-500">Sous-total : {formatMoney(subtotal)}</p>
-                  {Number(discount) > 0 && <p className="text-sm text-slate-500">Remise : −{formatMoney(discount)}</p>}
-                  <p className="mt-1 text-2xl font-bold text-slate-900">{formatMoney(total)}</p>
+                  <p className="text-sm text-slate-500">Sous-total : <span className="tabular-nums">{formatMoney(subtotal)}</span></p>
+                  {Number(discount) > 0 && <p className="text-sm text-slate-500">Remise : −<span className="tabular-nums">{formatMoney(discount)}</span></p>}
+                  <p className="mt-1 text-2xl font-bold text-slate-900"><span className="tabular-nums">{formatMoney(total)}</span></p>
                 </div>
               </div>
               <div className="flex justify-end gap-2">

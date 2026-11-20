@@ -44,8 +44,8 @@ export default function PlansPage() {
                   {!plan.is_active && <StatusBadge label="Non proposée" tone="slate" />}
                   <StatusBadge label={`${plan.clinics_count ?? 0} clinique${(plan.clinics_count ?? 0) > 1 ? 's' : ''}`} tone="teal" />
                 </div>
-                <p className="mt-3 text-2xl font-semibold text-slate-900">{formatMoney(plan.monthly_price)} <span className="text-sm font-normal text-slate-500">/ mois</span></p>
-                <p className="text-sm text-slate-600">ou {formatMoney(plan.yearly_price)} / an</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900"><span className="tabular-nums">{formatMoney(plan.monthly_price)}</span> <span className="text-sm font-normal text-slate-500">/ mois</span></p>
+                <p className="text-sm text-slate-600">ou <span className="tabular-nums">{formatMoney(plan.yearly_price)}</span> / an</p>
                 <p className="mt-3 text-sm text-slate-600">{plan.description}</p>
                 <dl className="mt-4 space-y-1 text-sm">
                   <div className="flex justify-between"><dt className="text-slate-500">Utilisateurs</dt><dd className="font-medium">{limitLabel(plan.max_users)}</dd></div>

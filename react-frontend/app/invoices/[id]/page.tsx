@@ -125,7 +125,7 @@ export default function InvoicePage() {
             <table className="w-full text-sm">
               <tbody className="divide-y divide-slate-100">
                 {invoice.items?.map((item) => (
-                  <tr key={item.id}><td className="py-2 pr-3">{item.description}</td><td className="py-2 text-right font-medium">{formatMoney(item.amount)}</td></tr>
+                  <tr key={item.id}><td className="py-2 pr-3">{item.description}</td><td className="py-2 text-right font-medium"><span className="tabular-nums">{formatMoney(item.amount)}</span></td></tr>
                 ))}
               </tbody>
               <tfoot className="border-t-2 border-slate-200">
@@ -150,7 +150,7 @@ export default function InvoicePage() {
                 {confirmedPayments.map((payment) => (
                   <li key={payment.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <span>{formatDateTime(payment.payment_datetime)} · {PAYMENT_METHODS[payment.payment_method]}{payment.payment_reference ? ` (${payment.payment_reference})` : ''} · {receiverName(payment)}</span>
-                    <span className="flex items-center gap-2"><strong>{formatMoney(payment.amount)}</strong>{payment.receipt_number && <button type="button" onClick={() => setPreview({ paymentId: payment.id, receiptNumber: payment.receipt_number ?? '' })} className={buttonClass.small}>Quittance</button>}<Link href={`/invoices/${invoice.id}/print?payment=${payment.id}`} target="_blank" className={buttonClass.small}>Reçu</Link></span>
+                    <span className="flex items-center gap-2"><strong><span className="tabular-nums">{formatMoney(payment.amount)}</span></strong>{payment.receipt_number && <button type="button" onClick={() => setPreview({ paymentId: payment.id, receiptNumber: payment.receipt_number ?? '' })} className={buttonClass.small}>Quittance</button>}<Link href={`/invoices/${invoice.id}/print?payment=${payment.id}`} target="_blank" className={buttonClass.small}>Reçu</Link></span>
                   </li>
                 ))}
               </ul>

@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from 'react';
 import { apiFetch, fetchObjectUrl } from '../lib/api';
 import { formatDate } from '../lib/format';
-import { Notice, Section, buttonClass, inputClass } from './ui';
+import { Notice, Section, buttonClass, inputClass, ListSkeleton } from './ui';
 
 interface ConsentState {
   type: string;
@@ -119,7 +119,7 @@ export function PatientRightsPanel({ base, token, fileName, canEdit, canExport, 
         <Notice tone="warning">Ce dossier a été anonymisé le {formatDate(anonymizedAt)}. L’identité et les coordonnées ont été effacées ; le contenu médical est conservé.</Notice>
       )}
 
-      {consents === null ? <p className="text-sm text-slate-500">Chargement…</p> : (
+      {consents === null ? <ListSkeleton rows={3} label="Chargement…" /> : (
         <>
           <fieldset>
             <legend className="text-sm font-semibold text-slate-800">Consentements facultatifs</legend>

@@ -97,8 +97,8 @@ function InvoicesTab({ token, initialStatus, onMessage, onError }: { token: stri
                     <td className="px-4 py-3 font-medium text-slate-900">{invoice.number}</td>
                     <td className="px-4 py-3">{invoice.clinic ? <Link href={`/clinics/${invoice.clinic.id}`} className="text-emerald-800 hover:underline">{invoice.clinic.name}</Link> : '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{formatDate(invoice.period_start)} → {formatDate(invoice.period_end)}</td>
-                    <td className="px-4 py-3 text-right">{formatMoney(invoice.amount)}</td>
-                    <td className={`px-4 py-3 text-right font-medium ${invoice.balance > 0 ? 'text-rose-700' : 'text-slate-500'}`}>{formatMoney(invoice.balance)}</td>
+                    <td className="px-4 py-3 text-right"><span className="tabular-nums">{formatMoney(invoice.amount)}</span></td>
+                    <td className={`px-4 py-3 text-right font-medium ${invoice.balance > 0 ? 'text-rose-700' : 'text-slate-500'}`}><span className="tabular-nums">{formatMoney(invoice.balance)}</span></td>
                     <td className="px-4 py-3 text-slate-600">{formatDate(invoice.due_date)}</td>
                     <td className="px-4 py-3"><StatusBadge label={INVOICE_STATUS[invoice.status].label} tone={INVOICE_STATUS[invoice.status].tone} /></td>
                     <td className="px-4 py-3 text-right">{invoice.balance > 0 && invoice.status !== 'CANCELLED' && <button type="button" onClick={() => setPaying(invoice)} className={buttonClass.smallPrimary}>Encaisser</button>}</td>
@@ -169,8 +169,8 @@ function PaymentsTab({ token, onMessage, onError }: { token: string; onMessage: 
                   <span className="font-semibold text-slate-900">{payment.clinic?.name}</span>
                   <StatusBadge label={PAYMENT_STATUS[payment.status].label} tone={PAYMENT_STATUS[payment.status].tone} />
                 </div>
-                <p className="mt-1 text-sm text-slate-700">{formatMoney(payment.amount)} par {PAYMENT_METHODS[payment.method]} le {formatDate(payment.paid_on)} · référence <span className="font-mono font-semibold">{payment.reference ?? '—'}</span></p>
-                <p className="mt-0.5 text-xs text-slate-500">Facture {payment.invoice?.number} ({formatMoney(payment.invoice?.amount)}) · déclaré par {payment.declarer?.name ?? '—'}</p>
+                <p className="mt-1 text-sm text-slate-700"><span className="tabular-nums">{formatMoney(payment.amount)}</span> par {PAYMENT_METHODS[payment.method]} le {formatDate(payment.paid_on)} · référence <span className="font-mono font-semibold">{payment.reference ?? '—'}</span></p>
+                <p className="mt-0.5 text-xs text-slate-500">Facture {payment.invoice?.number} (<span className="tabular-nums">{formatMoney(payment.invoice?.amount)}</span>) · déclaré par {payment.declarer?.name ?? '—'}</p>
                 {payment.notes && <p className="mt-1 text-xs text-slate-600">« {payment.notes} »</p>}
                 {payment.rejection_reason && <p className="mt-1 text-xs text-rose-700">Motif du refus : {payment.rejection_reason}</p>}
               </div>
