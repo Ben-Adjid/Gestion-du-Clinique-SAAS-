@@ -147,17 +147,26 @@ class PrescriptionController extends Controller
 
         $prescription->load(['consultation.patient', 'doctor:id,name', 'doctor.doctorProfile:id,user_id,license_number', 'items.medication', 'clinic:id,name,city,country,admin_phone,admin_email']);
         // Verification code printed on the prescription so a pharmacy can check it was not altered.
-        $verification = in_array($prescription->status, ['SIGNED', 'DISPENSED'], true)
-            ? strtoupper(substr(hash_hmac('sha256', implode('|', [
-                $prescription->id,
-                $prescription->clinic_id,
-                $prescription->doctor_id,
-                $prescription->prescribed_at?->toIso8601String(),
-                $prescription->items->map(fn ($item) => "{$item->medication_id}:{$item->dosage_prescribed}:{$item->frequency}:{$item->duration_days}:{$item->quantity}")->implode(','),
-            ]), (string) config('app.key')), 0, 16))
-            : null;
+        $verification = \App\Services\Prescriptions\PrescriptionPdf::verificationCode($prescription);
 
         return response()->json(['data' => [...$prescription->toArray(), 'verification_code' => $verification]]);
+    }
+
+    /** The prescription as a PDF, for the patient and the pharmacy. Drafts are not printable. */
+    public function pdf(Request $request, Prescription $prescription)
+    {
+        if (!$this->canAccess($request, $prescription)) {
+            return response()->json(['message' => 'Prescription not found.'], 404);
+        }
+        if (!in_array($prescription->status, ['SIGNED', 'DISPENSED'], true)) {
+            return response()->json(['message' => 'Seule une ordonnance signée peut être imprimée.'], 422);
+        }
+
+        return response(\App\Services\Prescriptions\PrescriptionPdf::render($prescription), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="ORD-'.str_pad((string) $prescription->id, 6, '0', STR_PAD_LEFT).'.pdf"',
+            'Cache-Control' => 'no-store, private',
+        ]);
     }
 
     public function sign(Request $request, Prescription $prescription)

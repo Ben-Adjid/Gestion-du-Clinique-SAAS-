@@ -218,6 +218,8 @@ Route::prefix('v1')->group(function () {
                 Route::get('/pharmacy/sales', 'sales')->middleware('permission:dispense:medication');
                 Route::post('/pharmacy/sales', 'counterSale')->middleware(['permission:dispense:medication', 'audit']);
             });
+            Route::get('/prescriptions/{prescription}/pdf', [PrescriptionController::class, 'pdf'])
+                ->middleware(['permission:read:prescription', 'audit']);
             Route::apiResource('prescriptions', PrescriptionController::class)
                 ->middlewareFor(['index', 'show'], 'permission:read:prescription')
                 ->middlewareFor('store', 'permission:create:prescription')
