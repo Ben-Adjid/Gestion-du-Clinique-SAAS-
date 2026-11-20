@@ -90,7 +90,8 @@ class UserController extends Controller
             'role_id' => ['required', 'exists:roles,id'],
             'patient_id' => ['nullable', 'integer', 'exists:patients,id'],
             'status' => ['sometimes', 'in:ACTIVE,INACTIVE,SUSPENDED'],
-            'clinic_id' => [$isSuperAdmin ? 'required' : 'prohibited', 'exists:clinics,id'],
+            // Only a super administrator chooses the clinic; a clinic administrator always creates users in their own clinic.
+            'clinic_id' => $isSuperAdmin ? ['required', 'exists:clinics,id'] : ['nullable'],
         ]);
 
         $role = Role::findOrFail($validated['role_id']);
