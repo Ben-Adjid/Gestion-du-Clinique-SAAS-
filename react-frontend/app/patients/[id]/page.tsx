@@ -134,6 +134,7 @@ function PatientDetailContent() {
         />
         {notice && <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>}
         {error && <Notice tone="error" onClose={() => setError('')}>{error}</Notice>}
+        {token && <AllergyBanner patientId={patientId} token={token} />}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-6 sm:flex-row">
@@ -366,6 +367,29 @@ function PatientClinicalProfile({ patientId, token, canEdit }: { patientId: stri
         </div>
       )}
     </section>
+  );
+}
+
+/** Red banner for severe allergies, shown above the whole record. Renders nothing when there is none. */
+function AllergyBanner({ patientId, token }: { patientId: string; token: string }) {
+  const [severe, setSevere] = useState<PatientAllergy[]>([]);
+
+  useEffect(() => {
+    apiRequest<{ data: { allergies: PatientAllergy[] } }>(`/patients/${patientId}/clinical-profile`, token)
+      .then((response) => setSevere((response.data.allergies ?? []).filter((allergy) => allergy.severity === 'HIGH')))
+      .catch(() => setSevere([]));
+  }, [patientId, token]);
+
+  if (severe.length === 0) return null;
+
+  return (
+    <div role="alert" className="mb-5 flex items-start gap-3 rounded-2xl border-2 border-rose-600 bg-rose-50 p-4 text-rose-900">
+      <span aria-hidden="true" className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose-600 text-sm font-bold text-white">!</span>
+      <div>
+        <p className="text-sm font-bold uppercase tracking-wide">Allergie grave</p>
+        <p className="text-sm font-semibold">{severe.map((allergy) => allergy.allergen).join(' · ')}</p>
+      </div>
+    </div>
   );
 }
 
