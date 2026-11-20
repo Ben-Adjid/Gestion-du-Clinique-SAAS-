@@ -17,7 +17,7 @@ class Surgery extends Model
     protected $fillable = [
         'clinic_id', 'patient_id', 'operation_type', 'scheduled_at', 'estimated_minutes', 'room', 'status',
         'surgeon_id', 'anesthetist_id', 'created_by', 'report', 'post_op_followup', 'report_signed_at',
-        'preop_checklist', 'invoice_id',
+        'preop_checklist', 'invoice_id', 'indication_id',
     ];
 
     protected $casts = [

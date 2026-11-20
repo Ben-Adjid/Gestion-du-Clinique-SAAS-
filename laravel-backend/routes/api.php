@@ -369,6 +369,21 @@ Route::prefix('v1')->group(function () {
                 Route::post('/rooms', 'storeRoom')->middleware(['permission:manage:beds', 'audit']);
             });
 
+            // Medical specialties, heads of service, surgical indications and specialty records
+            Route::get('/specialties', [\App\Http\Controllers\Api\SpecialtyController::class, 'index']);
+            Route::put('/doctors/{doctor}/head', [\App\Http\Controllers\Api\SpecialtyController::class, 'setHead'])->middleware('audit');
+            Route::get('/service/dashboard', [\App\Http\Controllers\Api\ServiceController::class, 'dashboard']);
+            Route::controller(\App\Http\Controllers\Api\IndicationController::class)->group(function () {
+                Route::post('/patients/{patient}/indications', 'store')->middleware('audit');
+                Route::get('/indications', 'index');
+                Route::post('/indications/{indication}/decide', 'decide')->middleware('audit');
+                Route::post('/indications/{indication}/pre-anesthesia', 'preAnesthesia')->middleware('audit');
+            });
+            Route::controller(\App\Http\Controllers\Api\SpecialtyRecordController::class)->group(function () {
+                Route::get('/patients/{patient}/specialty-records', 'index')->middleware('audit');
+                Route::post('/patients/{patient}/specialty-records', 'store')->middleware('audit');
+            });
+
             // Hospital stays: active admissions, search by patient, clinical file, moves and discharge
             Route::controller(\App\Http\Controllers\Api\AdmissionController::class)->group(function () {
                 Route::get('/admissions', 'index')->middleware('permission:read:beds');

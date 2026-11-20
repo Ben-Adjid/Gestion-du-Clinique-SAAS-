@@ -67,6 +67,7 @@ class SurgeryController extends Controller
         $clinicId = (int) $request->user()->clinic_id;
         $validated = $request->validate([
             'patient_id' => ['required', 'integer', Rule::exists('patients', 'id')->where('clinic_id', $clinicId)->whereNull('deleted_at')],
+            'indication_id' => ['required', 'integer', Rule::exists('surgical_indications', 'id')->where('clinic_id', $clinicId)],
             'operation_type' => ['required', 'string', 'max:150'],
             'scheduled_at' => ['required', 'date_format:Y-m-d H:i', 'after:now'],
             'room' => ['nullable', 'string', 'max:60'],
@@ -81,11 +82,15 @@ class SurgeryController extends Controller
             $this->assertDoctor((int) $validated['anesthetist_id'], $clinicId, 'L’anesthésiste doit être un médecin de la clinique.');
         }
         $staff = $this->assertNursesOnly($validated['staff'] ?? [], $clinicId);
+        $indication = $this->assertSchedulable($validated, $clinicId);
+        // The anesthesia who assessed the patient runs the operation unless another is named.
+        $validated['anesthetist_id'] ??= $indication->pre_anesthesia_by;
 
         $surgery = DB::transaction(function () use ($validated, $clinicId, $request, $staff) {
             $surgery = Surgery::query()->create([
                 'clinic_id' => $clinicId,
                 'patient_id' => $validated['patient_id'],
+                'indication_id' => $validated['indication_id'],
                 'operation_type' => $validated['operation_type'],
                 'scheduled_at' => $validated['scheduled_at'],
                 'room' => $validated['room'] ?? null,
@@ -183,6 +188,36 @@ class SurgeryController extends Controller
         $surgery->update(['report_signed_at' => Carbon::now(), 'status' => 'COMPLETED']);
 
         return response()->json(['data' => $this->present($surgery->fresh()->load(self::RELATIONS), $request), 'message' => 'Compte rendu signé.']);
+    }
+
+    /** Scheduling needs an approved indication, the head of the specialty, and the anesthesia assessment. */
+    private function assertSchedulable(array $validated, int $clinicId): \App\Models\SurgicalIndication
+    {
+        $indication = \App\Models\SurgicalIndication::query()->findOrFail($validated['indication_id']);
+        if ((int) $indication->patient_id !== (int) $validated['patient_id']) {
+            throw ValidationException::withMessages(['indication_id' => 'Cette indication ne concerne pas ce patient.']);
+        }
+        if ($indication->status === 'REFUSED') {
+            throw ValidationException::withMessages(['indication_id' => 'L’indication a été refusée : l’intervention ne peut pas être programmée.']);
+        }
+        if ($indication->status !== 'APPROVED') {
+            throw ValidationException::withMessages(['indication_id' => 'La validation du chef de service est obligatoire avant la programmation.']);
+        }
+        if (!$indication->readyToSchedule()) {
+            throw ValidationException::withMessages(['indication_id' => 'L’évaluation pré-anesthésique est obligatoire avant la programmation (score ASA et allergies vérifiées).']);
+        }
+        $surgeon = User::query()->with('doctorProfile')->find($validated['surgeon_id']);
+        if ((int) $surgeon?->doctorProfile?->specialty_id !== (int) $indication->specialty_id) {
+            throw ValidationException::withMessages(['surgeon_id' => 'Le chirurgien doit appartenir à la spécialité de l’indication.']);
+        }
+        if (!empty($validated['anesthetist_id'])) {
+            $anesth = User::query()->with('doctorProfile.specialtyRef')->find($validated['anesthetist_id']);
+            if ($anesth?->doctorProfile?->specialtyRef?->code !== 'ANESTHESIE_REA') {
+                throw ValidationException::withMessages(['anesthetist_id' => 'L’anesthésiste doit être un médecin anesthésiste-réanimateur.']);
+            }
+        }
+
+        return $indication;
     }
 
     /** Informed consent, recorded before the operation by the surgeon or the anesthetist. One per operation. */

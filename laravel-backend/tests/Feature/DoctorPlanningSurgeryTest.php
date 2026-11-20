@@ -173,10 +173,24 @@ class DoctorPlanningSurgeryTest extends TestCase
 
     public function test_only_nurses_can_be_assigned_to_the_operating_team(): void
     {
+        $indication = $this->readyIndication($this->surgeon());
         $this->actingAs($this->surgeon(), 'sanctum')->postJson('/api/v1/surgeries', [
-            'patient_id' => $this->patient->id, 'operation_type' => 'Appendicectomie', 'scheduled_at' => '2026-11-12 09:00',
+            'patient_id' => $this->patient->id, 'indication_id' => $indication->id, 'operation_type' => 'Appendicectomie', 'scheduled_at' => '2026-11-12 09:00',
             'surgeon_id' => $this->surgeon()->id, 'staff' => [$this->generalist->id],
         ])->assertUnprocessable()->assertJsonValidationErrors('staff');
+    }
+
+    /** An indication the head approved and the anesthesia assessed: the only kind an operation is scheduled from. */
+    private function readyIndication(User $surgeon): \App\Models\SurgicalIndication
+    {
+        $specialty = \App\Models\Specialty::query()->where('code', 'CHIRURGIE_GENERALE')->firstOrFail();
+        \App\Models\DoctorProfile::query()->updateOrCreate(['user_id' => $surgeon->id], ['clinic_id' => $this->clinic->id, 'specialty' => 'Chirurgie générale', 'specialty_id' => $specialty->id]);
+
+        return \App\Models\SurgicalIndication::query()->create([
+            'clinic_id' => $this->clinic->id, 'patient_id' => $this->patient->id, 'requested_by' => $surgeon->id, 'specialty_id' => $specialty->id,
+            'operation_type' => 'Appendicectomie', 'urgency' => 'ELECTIVE', 'motif' => 'Appendicite aiguë confirmée à l’échographie, indication chirurgicale.',
+            'status' => 'APPROVED', 'asa' => 2, 'allergies_reviewed' => true, 'pre_anesthesia_at' => now(), 'pre_anesthesia_by' => $this->generalist->id,
+        ]);
     }
 
     public function test_the_operating_theatre_is_not_available_below_the_enterprise_plan(): void
