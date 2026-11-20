@@ -158,7 +158,7 @@ export default function InvoicePage() {
           </Section>
 
           {open && can(user, 'manage:payment') && (
-            <form onSubmit={(event) => void pay(event)} className="h-fit space-y-3 rounded-2xl border border-teal-200 bg-white p-5 shadow-sm">
+            <form onSubmit={(event) => void pay(event)} className="h-fit space-y-3 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
               <h2 className="font-semibold">Encaisser</h2>
               <Field label="Montant (FCFA)" required error={errors.amount} hint="Un paiement partiel est possible.">
                 <input required type="number" min={1} max={invoice.outstanding_amount} value={amount} onChange={(event) => setAmount(event.target.value)} className={inputClass} />
@@ -167,7 +167,7 @@ export default function InvoicePage() {
                 <div className="grid grid-cols-2 gap-2">
                   {(['CASH', 'WAVE', 'ORANGE_MONEY', 'CARD', 'INSURANCE', 'BANK_TRANSFER'] as PaymentMethod[]).map((value) => (
                     <button key={value} type="button" aria-pressed={method === value} onClick={() => setMethod(value)}
-                      className={`rounded-xl border px-3 py-2 text-sm font-semibold ${method === value ? 'border-teal-600 bg-teal-50 text-teal-800' : 'border-slate-300 text-slate-600'}`}>
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold ${method === value ? 'border-emerald-700 bg-emerald-50 text-emerald-800' : 'border-slate-300 text-slate-600'}`}>
                       {PAYMENT_METHODS[value]}
                     </button>
                   ))}

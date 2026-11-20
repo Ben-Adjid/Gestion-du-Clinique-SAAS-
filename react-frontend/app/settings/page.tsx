@@ -6,6 +6,9 @@ import { useAuth, type AuthUser } from '@/app/context/AuthContext';
 import { ApiError, apiFetch } from '@/app/lib/api';
 import { ROLE_LABELS, type Role } from '@/app/lib/permissions';
 
+/** Origin of the API (without /api/v1), where the clinic logo is served from the public disk. */
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8100/api/v1').replace(/\/api\/v1\/?$/, '');
+
 export default function SettingsPage() {
   const { token, user, updateUser, loading, isAuthenticated, logout } = useAuth();
   const [name, setName] = useState('');
@@ -235,15 +238,21 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [logoPath, setLogoPath] = useState<string | null>(null);
+  const [logoVersion, setLogoVersion] = useState(() => Date.now());
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let active = true;
-    apiFetch<{ data: { settings: { license_number?: string; address?: string; phone?: string } | null } }>(`/clinics/${clinicId}`, token)
+    apiFetch<{ data: { settings: { license_number?: string; address?: string; phone?: string; logo_path?: string } | null } }>(`/clinics/${clinicId}`, token)
       .then((response) => {
         if (!active) return;
         setLicence(response.data.settings?.license_number ?? '');
         setAddress(response.data.settings?.address ?? '');
         setPhone(response.data.settings?.phone ?? '');
+        setLogoPath(response.data.settings?.logo_path ?? null);
         setLoaded(true);
       })
       .catch((err: Error) => active && setError(err.message));
@@ -257,6 +266,7 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
     event.preventDefault();
     setError('');
     setMessage('');
+    setSaving(true);
     try {
       await apiFetch(`/clinics/${clinicId}`, token, {
         method: 'PUT',
@@ -265,10 +275,34 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
       setMessage('Informations de la clinique enregistrées. Elles figureront sur les prochaines quittances.');
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (!loaded && !error) return null;
+  const removeLogo = async () => {
+    setUploading(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await apiFetch<{ message: string }>('/clinic/logo', token, { method: 'DELETE' });
+      setLogoPath(null);
+      setConfirmingDelete(false);
+      setMessage(response.message);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (!loaded && !error) {
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-6" aria-busy="true">
+        <p className="text-sm text-slate-500">Chargement des informations légales…</p>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -277,15 +311,33 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
       {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
       {message && <p role="status" className="mt-3 text-sm text-emerald-700">{message}</p>}
       <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-dashed border-slate-300 p-4">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+          {logoPath ? (
+            // eslint-disable-next-line @next/next/no-img-element -- logo servi par l'API (disque public), dimensions connues
+            <img src={`${API_ORIGIN}/storage/${logoPath}?v=${logoVersion}`} alt="Logo actuel de la clinique" className="max-h-16 max-w-16 object-contain" />
+          ) : (
+            <span className="text-xs font-medium text-slate-400">Aucun</span>
+          )}
+        </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-slate-800">Logo de la clinique</p>
-          <p className="text-xs text-slate-500">PNG, JPG, SVG ou WEBP, 1 Mo au maximum. Les quittances et ordonnances affichent le logo en PNG ou JPG ; sinon le nom de la clinique.</p>
+          <p className="text-xs text-slate-500">PNG, JPG ou WEBP, 1 Mo au maximum (SVG refusé). Il est redimensionné à 300 px. Les quittances et ordonnances l’affichent ; sans logo, le nom de la clinique est imprimé.</p>
+          {confirmingDelete ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-slate-700">Supprimer le logo ? Les prochains documents n’afficheront plus que le nom.</span>
+              <button type="button" disabled={uploading} onClick={removeLogo} className="rounded-lg bg-rose-600 px-2.5 py-1 font-semibold text-white hover:bg-rose-700 disabled:opacity-60">Oui, supprimer</button>
+              <button type="button" onClick={() => setConfirmingDelete(false)} className="rounded-lg border border-slate-300 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-50">Annuler</button>
+            </div>
+          ) : logoPath ? (
+            <button type="button" onClick={() => setConfirmingDelete(true)} className="mt-2 text-xs font-semibold text-rose-700 hover:underline">Supprimer le logo</button>
+          ) : null}
         </div>
-        <label className="cursor-pointer rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-          Choisir un fichier
-          <input type="file" accept=".png,.jpg,.jpeg,.svg,.webp,image/png,image/jpeg,image/svg+xml,image/webp" className="sr-only"
+        <label className={`cursor-pointer rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 ${uploading ? 'pointer-events-none opacity-60' : ''}`}>
+          {uploading ? 'Envoi…' : 'Choisir un fichier'}
+          <input type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" className="sr-only" disabled={uploading}
             onChange={async (event) => {
               const file = event.target.files?.[0];
+              event.target.value = '';
               if (!file) return;
               if (file.size > 1024 * 1024) {
                 setError('Le logo ne doit pas dépasser 1 Mo.');
@@ -293,12 +345,17 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
               }
               const body = new FormData();
               body.append('logo', file);
+              setUploading(true);
+              setError('');
               try {
                 const response = await apiFetch<{ message: string }>('/clinic/logo', token, { method: 'POST', body });
                 setMessage(response.message);
-                setError('');
+                setLogoPath(`clinics/${clinicId}/logo.png`);
+                setLogoVersion(Date.now());
               } catch (err) {
                 setError((err as Error).message);
+              } finally {
+                setUploading(false);
               }
             }} />
         </label>
@@ -317,7 +374,7 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
           <input value={phone} maxLength={30} onChange={(event) => setPhone(event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm" />
         </label>
         <div className="flex items-end justify-end sm:col-span-2">
-          <button type="submit" className="rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800">Enregistrer</button>
+          <button type="submit" disabled={saving} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
         </div>
       </form>
     </section>
