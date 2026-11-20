@@ -3,7 +3,7 @@
 import { can, useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { EmptyState, Field, Loading, Notice, PageHeader, Pagination, SearchInput, StatusBadge, buttonClass, inputClass, useDebouncedValue } from '../components/ui';
 import { apiFetch } from '../lib/api';
 import { ACT_KINDS, INVOICE_STATUS, PAYMENT_METHODS, receiverName, type BillableAct, type Invoice, type InvoiceStatus, type Payment } from '../lib/billing';
@@ -31,14 +31,11 @@ function Cashier() {
     ...(canCollect ? [{ key: 'cash' as Tab, label: 'Caisse du jour' }] : []),
   ];
   const tab = (tabs.find((item) => item.key === params.get('tab'))?.key ?? tabs[0].key) as Tab;
-  const [notice, setNotice] = useState('');
+  // A notice left by the previous page (e.g. after a save), shown once.
+  const [notice, setNotice] = useState(() => (typeof window === 'undefined' ? '' : sessionStorage.getItem('invoice_notice') ?? ''));
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('invoice_notice');
-    if (stored) {
-      setNotice(stored);
-      sessionStorage.removeItem('invoice_notice');
-    }
+    sessionStorage.removeItem('invoice_notice');
   }, []);
 
   if (!token) return <Loading />;
@@ -110,28 +107,33 @@ function PendingActs({ token }: { token: string }) {
   );
 }
 
+interface InvoiceListResult {
+  data: Invoice[];
+  current_page: number;
+  last_page: number;
+  total: number;
+  summary: { outstanding_amount: number; open_count: number; overdue_count: number; collected_today: number };
+}
+
 function InvoiceList({ token }: { token: string }) {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('UNPAID');
   const [page, setPage] = useState(1);
-  const [result, setResult] = useState<{ data: Invoice[]; current_page: number; last_page: number; total: number; summary: { outstanding_amount: number; open_count: number; overdue_count: number; collected_today: number } } | null>(null);
+  const [result, setResult] = useState<InvoiceListResult | null>(null);
   const [error, setError] = useState('');
   const debounced = useDebouncedValue(search);
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    let active = true;
     const query = new URLSearchParams({ page: String(page) });
     if (status) query.set('status', status);
     if (debounced.trim()) query.set('search', debounced.trim());
-    try {
-      setResult(await apiFetch(`/invoices?${query.toString()}`, token));
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Factures indisponibles.');
-    }
+    apiFetch<InvoiceListResult>(`/invoices?${query.toString()}`, token)
+      .then((response) => { if (active) setResult(response); })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Factures indisponibles.'); });
+    return () => { active = false; };
   }, [token, page, status, debounced]);
-
-  useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setPage(1); }, [status, debounced]);
 
   return (
     <>
@@ -152,8 +154,8 @@ function InvoiceList({ token }: { token: string }) {
         </div>
       )}
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <SearchInput value={search} onChange={setSearch} placeholder="N° de facture, patient…" />
-        <select aria-label="Statut" value={status} onChange={(event) => setStatus(event.target.value)} className={`${inputClass} w-auto`}>
+        <SearchInput value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="N° de facture, patient…" />
+        <select aria-label="Statut" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className={`${inputClass} w-auto`}>
           <option value="UNPAID">Non payées</option>
           <option value="">Toutes</option>
           {(Object.keys(INVOICE_STATUS) as InvoiceStatus[]).map((key) => <option key={key} value={key}>{INVOICE_STATUS[key].label}</option>)}
@@ -203,15 +205,17 @@ function CashRegister({ token, isAdmin, onNotice }: { token: string; isAdmin: bo
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      setSummary((await apiFetch<{ data: CashSummary }>(`/cash/summary?date=${date}`, token)).data);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Caisse indisponible.');
-    }
+  useEffect(() => {
+    let active = true;
+    apiFetch<{ data: CashSummary }>(`/cash/summary?date=${date}`, token)
+      .then((response) => { if (active) setSummary(response.data); })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Caisse indisponible.'); });
+    return () => { active = false; };
   }, [token, date]);
 
-  useEffect(() => { void load(); }, [load]);
+  const reload = async () => {
+    setSummary((await apiFetch<{ data: CashSummary }>(`/cash/summary?date=${date}`, token)).data);
+  };
 
   const close = async (event: FormEvent) => {
     event.preventDefault();
@@ -220,7 +224,7 @@ function CashRegister({ token, isAdmin, onNotice }: { token: string; isAdmin: bo
     try {
       const response = await apiFetch<{ message: string }>('/cash/closings', token, { method: 'POST', body: JSON.stringify({ counted_cash: Number(counted), notes: notes.trim() || null }) });
       onNotice(response.message);
-      await load();
+      await reload();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Clôture impossible.');
     } finally {
