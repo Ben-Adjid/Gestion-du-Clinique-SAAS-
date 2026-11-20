@@ -84,7 +84,7 @@ class PrescriptionController extends Controller
             return response()->json(['message' => 'Vous ne pouvez prescrire que pour vos consultations.'], 403);
         }
         if ($consultation->status === 'SIGNED') {
-            return response()->json(['message' => 'A signed consultation cannot receive new prescriptions.'], 422);
+            return response()->json(['message' => 'Une consultation signée ne peut plus recevoir d’ordonnance.'], 422);
         }
 
         $interactions = DrugInteractionChecker::forPatient(

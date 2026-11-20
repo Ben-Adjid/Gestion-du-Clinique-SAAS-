@@ -35,7 +35,7 @@ const TOOTH_TONE: Record<string, string> = {
   SAIN: 'border-emerald-300 bg-emerald-50 text-emerald-800',
   CARIE: 'border-rose-300 bg-rose-50 text-rose-800',
   SOIN: 'border-sky-300 bg-sky-50 text-sky-800',
-  PROTHESE: 'border-violet-300 bg-violet-50 text-violet-800',
+  PROTHESE: 'border-amber-300 bg-amber-50 text-amber-800',
   ABSENT: 'border-slate-300 bg-slate-100 text-slate-500',
 };
 

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { ApiError, apiFetch } from '@/app/lib/api';
 import { doctorName, formatDateTime } from '@/app/lib/format';
-import { ConfirmDialog, Field, Loading, Notice, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '@/app/components/ui';
+import { ConfirmDialog, Field, Notice, PageSkeleton, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '@/app/components/ui';
 import { PreOpSection, SurgeryInvoice } from '@/app/components/SurgerySafety';
 import { openDocumentPdf } from '@/app/lib/documents';
 
@@ -116,7 +116,7 @@ export default function SurgeryDossierPage() {
   };
 
   if (notFound) return <main className="p-8"><Notice tone="error">Cette intervention est introuvable.</Notice></main>;
-  if (!dossier) return error ? <main className="p-8"><Notice tone="error">{error}</Notice></main> : <Loading />;
+  if (!dossier) return error ? <main className="p-8"><Notice tone="error">{error}</Notice></main> : <PageSkeleton label="Chargement de la page…" />;
 
   const reportHidden = dossier.report === null && !dossier.can_edit_report;
   const signed = dossier.report_signed_at !== null;

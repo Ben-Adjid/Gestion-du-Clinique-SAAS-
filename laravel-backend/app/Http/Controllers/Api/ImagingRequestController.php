@@ -243,7 +243,7 @@ class ImagingRequestController extends Controller
 
         $report = DB::table('imaging_reports')->where('request_id', $imagingRequest->id)->first();
         if ($report?->signed_at !== null) {
-            return response()->json(['message' => 'A signed imaging report cannot be modified.'], 422);
+            return response()->json(['message' => 'Un compte rendu d’imagerie signé ne peut plus être modifié.'], 422);
         }
         DB::transaction(function () use ($imagingRequest, $request, $validated, $report) {
             // Through the model so that report_text is encrypted at rest.
@@ -271,7 +271,7 @@ class ImagingRequestController extends Controller
         }
         $report = DB::table('imaging_reports')->where('request_id', $imagingRequest->id)->first();
         if (!$report || $report->signed_at !== null || $imagingRequest->status !== 'READY') {
-            return response()->json(['message' => 'A report must be saved for a ready imaging request before it can be signed.'], 422);
+            return response()->json(['message' => 'Rédigez et enregistrez le compte rendu avant de le signer.'], 422);
         }
 
         DB::transaction(function () use ($imagingRequest, $report, $request): void {

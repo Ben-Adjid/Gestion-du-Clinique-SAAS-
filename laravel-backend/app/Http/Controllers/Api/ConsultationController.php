@@ -69,7 +69,7 @@ class ConsultationController extends Controller
             ? $request->user()->id
             : ($validated['doctor_id'] ?? null);
         if (!$doctorId) {
-            return response()->json(['message' => 'A doctor must be assigned to this consultation.'], 422);
+            return response()->json(['message' => 'Un médecin doit être assigné à cette consultation.'], 422);
         }
 
         $doctor = User::query()->with('role')->whereKey($doctorId)->firstOrFail();
@@ -143,7 +143,7 @@ class ConsultationController extends Controller
             return response()->json(['message' => 'Consultation introuvable.'], 404);
         }
         if ($consultation->status === 'SIGNED') {
-            return response()->json(['message' => 'A signed consultation cannot be modified.'], 422);
+            return response()->json(['message' => 'Une consultation signée ne peut plus être modifiée.'], 422);
         }
 
         $validated = $request->validate([
@@ -173,7 +173,7 @@ class ConsultationController extends Controller
             return response()->json(['message' => 'Consultation introuvable.'], 404);
         }
         if ($consultation->status === 'SIGNED') {
-            return response()->json(['message' => 'A signed consultation cannot be deleted.'], 422);
+            return response()->json(['message' => 'Une consultation signée ne peut pas être supprimée.'], 422);
         }
         $consultation->delete();
 

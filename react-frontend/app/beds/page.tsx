@@ -5,7 +5,7 @@ import { can, useAuth } from '@/app/context/AuthContext';
 import { ApiError, apiFetch } from '@/app/lib/api';
 import { openDocumentPdf } from '@/app/lib/documents';
 import { PatientPicker, type PickedPatient } from '@/app/components/PatientPicker';
-import { EmptyState, Field, Loading, Notice, PageHeader, Section, buttonClass, inputClass } from '@/app/components/ui';
+import { EmptyState, Field, Loading, Notice, PageSkeleton, PageHeader, Section, buttonClass, inputClass } from '@/app/components/ui';
 
 interface Bed {
   id: number;
@@ -131,7 +131,7 @@ export default function BedsPage() {
     }
   };
 
-  if (!board) return error ? <main className="p-8"><Notice tone="error">{error}</Notice></main> : <Loading />;
+  if (!board) return error ? <main className="p-8"><Notice tone="error">{error}</Notice></main> : <PageSkeleton label="Chargement de la page…" />;
 
   const allBeds = board.wards.flatMap((ward) => ward.beds.map((bed) => ({ ...bed, ward: ward.ward })));
 

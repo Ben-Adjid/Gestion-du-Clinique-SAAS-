@@ -99,7 +99,7 @@ class UserController extends Controller
         if ($isPatient !== isset($validated['patient_id'])) {
             return response()->json([
                 'message' => $isPatient
-                    ? 'A patient record must be selected for a patient account.'
+                    ? 'Choisissez un dossier patient pour un compte patient.'
                     : 'A patient record can only be linked to a patient account.',
             ], 422);
         }
@@ -113,7 +113,7 @@ class UserController extends Controller
         }
 
         if (!$clinicId) {
-            return response()->json(['message' => 'A clinic must be selected before creating users.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de créer des utilisateurs.'], 422);
         }
         if (!$isPatient && ($validated['status'] ?? 'ACTIVE') === 'ACTIVE') {
             PlanLimits::assertCanAddUser((int) $clinicId);
@@ -227,7 +227,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], 422);
         }
         if ($user->role?->name === 'SUPER_ADMIN') {
-            return response()->json(['message' => 'A super-admin account cannot be deleted here.'], 403);
+            return response()->json(['message' => 'Un compte super-administrateur ne peut pas être supprimé ici.'], 403);
         }
 
         DB::transaction(function () use ($user): void {

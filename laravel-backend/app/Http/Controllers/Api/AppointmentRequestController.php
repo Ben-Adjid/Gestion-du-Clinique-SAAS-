@@ -43,7 +43,7 @@ class AppointmentRequestController extends Controller
         $clinicId = $request->attributes->get('clinic_id') ?? $user->clinic_id;
         $patient = $user->role?->name === 'PATIENT' ? $user->patient : null;
         if (!$clinicId || !$patient || (int) $patient->clinic_id !== (int) $clinicId) {
-            return response()->json(['message' => 'A patient account linked to a record in this clinic is required.'], 403);
+            return response()->json(['message' => 'Un compte patient lié à un dossier de cette clinique est requis.'], 403);
         }
 
         $validated = $request->validate([
@@ -61,7 +61,7 @@ class AppointmentRequestController extends Controller
             $validated['requested_date'].' '.$validated['requested_time'],
         );
         if ($requestedAt->isPast()) {
-            return response()->json(['message' => 'A requested appointment cannot be in the past.'], 422);
+            return response()->json(['message' => 'Un rendez-vous demandé ne peut pas être dans le passé.'], 422);
         }
         $alreadyPending = AppointmentRequest::query()
             ->where('patient_id', $patient->id)
@@ -69,7 +69,7 @@ class AppointmentRequestController extends Controller
             ->where('requested_datetime', $requestedAt)
             ->exists();
         if ($alreadyPending) {
-            return response()->json(['message' => 'A request for this time is already pending.'], 422);
+            return response()->json(['message' => 'Une demande pour cet horaire est déjà en attente.'], 422);
         }
 
         $appointmentRequest = AppointmentRequest::create([
