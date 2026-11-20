@@ -48,8 +48,25 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // Expected HTTP errors (403, 422, 429...) reach the API as a French message only: never a trace or a class name, even in debug.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, Request $request) use ($isApi) {
+            if (!$isApi($request) || $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+                return null;
+            }
+            $defaults = [
+                403 => 'Vous n’avez pas l’autorisation d’effectuer cette action.',
+                405 => 'Cette action n’est pas disponible.',
+                409 => 'Cette action entre en conflit avec une donnée existante.',
+                422 => 'Requête refusée. Vérifiez les informations saisies.',
+                429 => 'Trop de tentatives. Patientez un instant puis réessayez.',
+            ];
+            $message = $e->getMessage() !== '' && !str_contains($e->getMessage(), 'Symfony') ? $e->getMessage() : ($defaults[$e->getStatusCode()] ?? 'Requête refusée.');
+
+            return response()->json(['message' => $message], $e->getStatusCode(), $e->getHeaders());
+        });
+
         $exceptions->render(function (\Throwable $e, Request $request) use ($isApi) {
-            $expected = $e instanceof \Symfony\Component\HttpKernel\Exception\HttpException
+            $expected =$e instanceof \Symfony\Component\HttpKernel\Exception\HttpException
                 || $e instanceof \Illuminate\Validation\ValidationException
                 || $e instanceof \Illuminate\Auth\AuthenticationException
                 || $e instanceof \Illuminate\Auth\Access\AuthorizationException
