@@ -106,7 +106,7 @@ export function PatientForm({ token, patient, onSaved, cancelHref }: {
             role="tab"
             aria-selected={tab === item.key}
             onClick={() => setTab(item.key)}
-            className={`flex shrink-0 items-center gap-2 rounded-t-xl px-4 py-2.5 text-sm font-semibold transition ${tab === item.key ? 'border border-b-white border-slate-200 bg-white text-emerald-800 -mb-px' : 'text-slate-500 hover:text-slate-800'}`}
+            className={`flex min-h-[44px] min-w-[44px] shrink-0 items-center gap-2 rounded-t-xl px-4 py-2.5 text-sm font-semibold transition ${tab === item.key ? 'border border-b-white border-slate-200 bg-white text-emerald-800 -mb-px' : 'text-slate-500 hover:text-slate-800'}`}
           >
             <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${tabHasError(item.key) ? 'bg-rose-600 text-white' : tab === item.key ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-600'}`}>{index + 1}</span>
             {item.label}

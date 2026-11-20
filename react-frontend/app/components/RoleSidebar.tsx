@@ -64,10 +64,10 @@ export default function RoleSidebar() {
       {pathname !== '/dashboard' && (
         <nav className="sticky top-0 z-30 flex items-center gap-3 overflow-x-auto border-b border-slate-200 bg-white px-4 py-3 lg:hidden" aria-label="Navigation des espaces">
           <span className="shrink-0 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">{role ? ROLE_LABELS[role] : 'Espace'}</span>
-          {role === 'SUPER_ADMIN' && <select aria-label="Clinique active" value={selectedClinicId ?? ''} onChange={(event) => changeClinic(event.target.value)} className="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs"><option value="">Choisir une clinique</option>{clinics.map((clinic) => <option key={clinic.id} value={clinic.id}>{clinic.name}</option>)}</select>}
-          {!clinicSuspended && <Link href="/dashboard" className="shrink-0 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">Vue d’ensemble</Link>}
+          {role === 'SUPER_ADMIN' && <select aria-label="Clinique active" value={selectedClinicId ?? ''} onChange={(event) => changeClinic(event.target.value)} className="min-h-[44px] shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs"><option value="">Choisir une clinique</option>{clinics.map((clinic) => <option key={clinic.id} value={clinic.id}>{clinic.name}</option>)}</select>}
+          {!clinicSuspended && <Link href="/dashboard" className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">Vue d’ensemble</Link>}
           {visibleGroups.flatMap((group) => group.modules).map((module) => (
-            <Link key={module.href} href={module.href} className="shrink-0 rounded-lg px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50">
+            <Link key={module.href} href={module.href} className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center rounded-lg px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50">
               {module.title}
             </Link>
           ))}
