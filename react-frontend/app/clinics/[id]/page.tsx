@@ -29,6 +29,7 @@ interface ClinicDetails {
   administrators: { id: number; name: string; email: string; phone: string | null; status: string; last_login_at: string | null }[];
   invoices: SaasInvoice[];
   events: { id: number; type: string; description: string; created_at: string; user: { name: string } | null }[];
+  terms?: { version: string | null; accepted_at: string | null } | null;
 }
 
 type Dialog = null | 'suspend' | 'reactivate' | 'cancel' | 'resume' | 'plan';
@@ -168,6 +169,12 @@ export default function ClinicDetailsPage() {
               <Row label="Téléphone" value={clinic.phone ?? '—'} />
               <Row label="E-mail de contact" value={clinic.admin_email} />
               <Row label="Cliente depuis" value={formatDate(clinic.created_at)} />
+              <Row
+                label="Conditions générales d’utilisation"
+                value={clinic.terms?.accepted_at
+                  ? `Version ${clinic.terms.version ?? '—'}, acceptées le ${formatDate(clinic.terms.accepted_at)}`
+                  : 'Pas encore acceptées par le directeur'}
+              />
             </dl>
             <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Administrateurs</p>
             <ul className="mt-2 space-y-2 text-sm">
