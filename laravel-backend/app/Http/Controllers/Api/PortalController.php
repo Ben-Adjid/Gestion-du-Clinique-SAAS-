@@ -164,7 +164,9 @@ class PortalController extends Controller
     private function patient(Request $request): Patient
     {
         $patient = Patient::query()->where('user_id', $request->user()->id)->first();
-        abort_if(!$patient, 404, 'Aucun dossier patient n’est lié à votre compte.');
+        if (!$patient) {
+            throw new \App\Exceptions\NoPatientRecordException();
+        }
 
         return $patient;
     }

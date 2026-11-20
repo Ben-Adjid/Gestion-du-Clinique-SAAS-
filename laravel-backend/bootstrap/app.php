@@ -36,6 +36,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Users never see the framework's English text, a model class name or a stack trace.
         $isApi = fn (Request $request): bool => $request->is('api/*') || $request->expectsJson();
 
+        // A patient account without a linked record: a clear French notice, with a stable code for the portal.
+        $exceptions->render(function (\App\Exceptions\NoPatientRecordException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'NO_PATIENT_RECORD'], 404);
+        });
+
         // Laravel turns a missing model into an HTTP 404 before rendering: the model name must not leak.
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) use ($isApi) {
             if ($isApi($request)) {

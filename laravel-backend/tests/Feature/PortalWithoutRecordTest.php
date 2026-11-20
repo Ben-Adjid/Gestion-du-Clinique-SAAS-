@@ -32,6 +32,7 @@ class PortalWithoutRecordTest extends TestCase
         $this->actingAs($account, 'sanctum')
             ->getJson('/api/v1/portal/documents')
             ->assertNotFound()
-            ->assertJsonPath('message', 'Élément introuvable ou non accessible.');
+            ->assertJsonPath('code', 'NO_PATIENT_RECORD')
+            ->assertJsonPath('message', "Aucun dossier patient lié à ce compte. Contactez l'accueil.");
     }
 }
