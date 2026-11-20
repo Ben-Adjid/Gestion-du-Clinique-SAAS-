@@ -202,13 +202,14 @@ class DashboardAccessTest extends TestCase
         $this->assertSame(1, $this->widgetValue($widgets, 'patients_total'));
     }
 
-    public function test_hr_manager_has_no_dashboard_widgets_until_hr_module_exists(): void
+    public function test_hr_manager_sees_the_staff_widgets_with_real_figures(): void
     {
         $hr = $this->userWithRole('HR_MANAGER');
 
-        $widgets = $this->actingAs($hr, 'sanctum')->getJson('/api/v1/dashboard')->json('data.widgets');
+        $keys = collect($this->actingAs($hr, 'sanctum')->getJson('/api/v1/dashboard')->json('data.widgets'))->pluck('key')->all();
 
-        $this->assertSame([], $widgets);
+        $this->assertContains('employees_active', $keys);
+        $this->assertContains('leaves_pending', $keys);
     }
 
     public function test_only_admin_can_create_exam_catalog_entries(): void

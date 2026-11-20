@@ -69,7 +69,7 @@ export const ROLE_DASHBOARD_PROFILES: Record<Role, RoleDashboardProfile> = {
   },
   HR_MANAGER: {
     title: 'Votre espace ressources humaines',
-    description: 'Le module RH sera disponible dans une prochaine version.',
+    description: 'Effectifs, présences, congés en attente et gardes du jour de la clinique.',
   },
   PATIENT: {
     title: 'Mon espace santé',

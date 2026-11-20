@@ -89,7 +89,10 @@ class DashboardController extends Controller
                 $this->widget('imaging_ready', 'Comptes rendus à signer', $clinic(ImagingRequest::query())->where('status', 'READY')->count(), 'imaging', '/lab-imaging?tab=imaging'),
             ],
             'HR_MANAGER' => [
-                $this->widget('employees_active', 'Employés actifs', $clinic(Employee::query())->where('status', 'ACTIVE')->count(), 'employees', null),
+                $this->widget('employees_active', 'Employés actifs', $clinic(Employee::query())->where('status', 'ACTIVE')->count(), 'staff', '/staff'),
+                $this->widget('present_today', 'Présents aujourd’hui', $clinic(\App\Models\Attendance::query())->whereDate('work_date', now()->toDateString())->whereNotNull('check_in_datetime')->count(), 'staff', '/staff'),
+                $this->widget('leaves_pending', 'Congés en attente', $clinic(\App\Models\Leave::query())->where('status', 'PENDING')->count(), 'staff', '/staff'),
+                $this->widget('on_call_today', 'Gardes du jour', $clinic(\App\Models\DoctorSchedule::query())->whereDate('work_date', now()->toDateString())->where('status', 'ON_CALL')->count(), 'planning', '/planning'),
             ],
             default => [],
         };
