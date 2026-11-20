@@ -168,6 +168,20 @@ class AppointmentRulesTest extends TestCase
         $this->assertDatabaseHas('appointment_requests', ['id' => $requestId, 'status' => 'PENDING']);
     }
 
+    public function test_the_reception_filters_the_agenda_by_doctor(): void
+    {
+        $otherDoctor = $this->userWithRole('DOCTOR');
+        $this->book($this->doctor, $this->patient, '09:00')->assertCreated();
+        $this->book($otherDoctor, $this->makePatient(), '09:00')->assertCreated();
+
+        $response = $this->actingAs($this->receptionist, 'sanctum')
+            ->getJson('/api/v1/appointments?doctor_id='.$this->doctor->id)
+            ->assertOk();
+
+        $doctorIds = collect($response->json('data'))->pluck('doctor_id')->unique()->values()->all();
+        $this->assertSame([$this->doctor->id], $doctorIds, 'Le filtre ne doit laisser que les rendez-vous de ce médecin.');
+    }
+
     private function book(User $doctor, Patient $patient, string $time)
     {
         return $this->actingAs($this->receptionist, 'sanctum')->postJson('/api/v1/appointments', [
