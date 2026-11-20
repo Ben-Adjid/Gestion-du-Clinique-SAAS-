@@ -13,9 +13,10 @@ class Bed extends Model
     /** AVAILABLE (free), OCCUPIED (patient), CLEANING (being disinfected after discharge), MAINTENANCE (out of service). */
     public const STATUSES = ['AVAILABLE', 'OCCUPIED', 'CLEANING', 'MAINTENANCE'];
 
-    protected $fillable = ['clinic_id', 'code', 'ward', 'status', 'patient_id', 'admitted_at', 'note', 'updated_by'];
+    protected $fillable = ['clinic_id', 'room_id', 'code', 'ward', 'status', 'patient_id', 'admitted_at', 'note', 'updated_by'];
 
     protected $casts = ['admitted_at' => 'datetime'];
 
     public function patient() { return $this->belongsTo(Patient::class); }
+    public function room() { return $this->belongsTo(Room::class); }
 }

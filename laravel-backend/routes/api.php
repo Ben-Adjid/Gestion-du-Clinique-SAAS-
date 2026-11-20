@@ -363,6 +363,18 @@ Route::prefix('v1')->group(function () {
                 Route::post('/beds/{bed}/release', 'release')->middleware(['permission:manage:beds', 'audit']);
                 Route::post('/beds/{bed}/ready', 'ready')->middleware(['permission:manage:beds', 'audit']);
                 Route::post('/beds/{bed}/maintenance', 'maintenance')->middleware(['permission:manage:beds', 'audit']);
+                Route::get('/rooms', 'rooms')->middleware('permission:read:beds');
+                Route::post('/rooms', 'storeRoom')->middleware(['permission:manage:beds', 'audit']);
+            });
+
+            // Hospital stays: active admissions, search by patient, clinical file, moves and discharge
+            Route::controller(\App\Http\Controllers\Api\AdmissionController::class)->group(function () {
+                Route::get('/admissions', 'index')->middleware('permission:read:beds');
+                Route::get('/admissions/search', 'search')->middleware('permission:read:beds');
+                Route::get('/admissions/{admission}', 'show')->middleware(['permission:read:beds', 'audit']);
+                Route::post('/admissions/{admission}/transfer', 'transfer')->middleware(['permission:manage:beds', 'audit']);
+                // The responsible doctor or a nurse writes the discharge summary (role checked in the controller).
+                Route::post('/admissions/{admission}/discharge', 'discharge')->middleware(['permission:read:beds', 'audit']);
             });
 
             // Operating theatre (Enterprise plan): operations, teams, operative report
