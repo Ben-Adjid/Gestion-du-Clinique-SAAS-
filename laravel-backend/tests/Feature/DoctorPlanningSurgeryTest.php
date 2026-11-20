@@ -147,6 +147,10 @@ class DoctorPlanningSurgeryTest extends TestCase
         $this->actingAs($surgeon, 'sanctum')->putJson("/api/v1/surgeries/{$surgery->id}/report", ['report' => 'Compte rendu opératoire complet et détaillé.'])->assertOk();
 
         $this->actingAs($this->anesthetist, 'sanctum')->postJson("/api/v1/surgeries/{$surgery->id}/sign-report")->assertForbidden();
+        // The operative report is signed with the surgeon's registration number.
+        $this->actingAs($surgeon, 'sanctum')->postJson("/api/v1/surgeries/{$surgery->id}/sign-report")->assertUnprocessable()->assertJsonPath('code', 'LICENCE_REQUIRED');
+        \App\Models\DoctorProfile::create(['clinic_id' => $this->clinic->id, 'user_id' => $surgeon->id, 'license_number' => 'ONM-2026-0500']);
+        $surgeon->unsetRelation('doctorProfile'); // each request loads it afresh in production
         $this->actingAs($surgeon, 'sanctum')->postJson("/api/v1/surgeries/{$surgery->id}/sign-report")->assertOk()->assertJsonPath('data.status', 'COMPLETED');
         $this->actingAs($surgeon, 'sanctum')->putJson("/api/v1/surgeries/{$surgery->id}/report", ['report' => 'Tentative de modification après signature.'])
             ->assertUnprocessable();

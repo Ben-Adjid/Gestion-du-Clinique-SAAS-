@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Models\SurgicalConsent;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -20,6 +21,15 @@ use Illuminate\Validation\ValidationException;
 class SurgeryController extends Controller
 {
     private const RELATIONS = ['patient:id,first_name,last_name,patient_unique_id,date_of_birth', 'surgeon:id,name', 'anesthetist:id,name', 'staff:id,name'];
+
+    /** Pre-operative checklist: every item must be ticked before the operation starts. */
+    public const CHECKLIST = [
+        'identity_confirmed' => 'identité du patient vérifiée (bracelet, dossier)',
+        'site_marked' => 'site opératoire marqué',
+        'allergies_checked' => 'allergies vérifiées',
+        'fasting_confirmed' => 'jeûne confirmé',
+        'anesthesia_reviewed' => 'consultation d’anesthésie faite',
+    ];
 
     public function index(Request $request): JsonResponse
     {
@@ -60,6 +70,7 @@ class SurgeryController extends Controller
             'operation_type' => ['required', 'string', 'max:150'],
             'scheduled_at' => ['required', 'date_format:Y-m-d H:i', 'after:now'],
             'room' => ['nullable', 'string', 'max:60'],
+            'estimated_minutes' => ['nullable', 'integer', 'min:15', 'max:720'],
             'surgeon_id' => ['required', 'integer', 'exists:users,id'],
             'anesthetist_id' => ['nullable', 'integer', 'exists:users,id', 'different:surgeon_id'],
             'staff' => ['sometimes', 'array', 'max:20'],
@@ -78,6 +89,7 @@ class SurgeryController extends Controller
                 'operation_type' => $validated['operation_type'],
                 'scheduled_at' => $validated['scheduled_at'],
                 'room' => $validated['room'] ?? null,
+                'estimated_minutes' => $validated['estimated_minutes'] ?? null,
                 'status' => 'PLANNED',
                 'surgeon_id' => $validated['surgeon_id'],
                 'anesthetist_id' => $validated['anesthetist_id'] ?? null,
@@ -102,6 +114,7 @@ class SurgeryController extends Controller
         $validated = $request->validate([
             'scheduled_at' => ['sometimes', 'date_format:Y-m-d H:i'],
             'room' => ['sometimes', 'nullable', 'string', 'max:60'],
+            'estimated_minutes' => ['sometimes', 'nullable', 'integer', 'min:15', 'max:720'],
             'status' => ['sometimes', Rule::in(Surgery::STATUSES)],
             'anesthetist_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
             'staff' => ['sometimes', 'array', 'max:20'],
@@ -109,6 +122,13 @@ class SurgeryController extends Controller
         ]);
         if (array_key_exists('anesthetist_id', $validated) && $validated['anesthetist_id']) {
             $this->assertDoctor((int) $validated['anesthetist_id'], $clinicId, 'L’anesthésiste doit être un médecin de la clinique.');
+        }
+        // An operation starts only with the informed consent and a complete pre-operative checklist.
+        if (($validated['status'] ?? null) === 'IN_PROGRESS' && $surgery->status !== 'IN_PROGRESS') {
+            $missing = $this->missingBeforeStart($surgery);
+            if ($missing !== []) {
+                throw ValidationException::withMessages(['status' => 'Avant de démarrer l’intervention : '.implode(', ', $missing).'.']);
+            }
         }
 
         DB::transaction(function () use ($surgery, $validated, $clinicId) {
@@ -153,9 +173,102 @@ class SurgeryController extends Controller
         if ($surgery->report_signed_at !== null || blank($surgery->report)) {
             throw ValidationException::withMessages(['report' => 'Un compte rendu rédigé et non signé est requis.']);
         }
+        // The signed operative report carries the surgeon's registration number, as a prescription does.
+        if (blank($request->user()->doctorProfile?->license_number)) {
+            return response()->json([
+                'message' => 'Renseignez votre numéro d’ordre dans vos paramètres avant de signer le compte rendu opératoire.',
+                'code' => 'LICENCE_REQUIRED',
+            ], 422);
+        }
         $surgery->update(['report_signed_at' => Carbon::now(), 'status' => 'COMPLETED']);
 
         return response()->json(['data' => $this->present($surgery->fresh()->load(self::RELATIONS), $request), 'message' => 'Compte rendu signé.']);
+    }
+
+    /** Informed consent, recorded before the operation by the surgeon or the anesthetist. One per operation. */
+    public function consent(Request $request, Surgery $surgery): JsonResponse
+    {
+        $this->assertReportAuthor($request, $surgery);
+        if ($surgery->status === 'CANCELLED' || $surgery->status === 'COMPLETED') {
+            throw ValidationException::withMessages(['consent' => 'Le consentement se recueille avant l’intervention.']);
+        }
+        if ($surgery->consent()->exists()) {
+            throw ValidationException::withMessages(['consent' => 'Le consentement est déjà recueilli pour cette intervention.']);
+        }
+        $validated = $request->validate([
+            'signer_name' => ['required', 'string', 'min:3', 'max:120'],
+            'signer_relation' => ['required', 'string', Rule::in(SurgicalConsent::RELATIONS)],
+            'information_text' => ['required', 'string', 'min:30', 'max:4000'],
+        ], [
+            'information_text.min' => 'Décrivez au patient l’intervention, ses risques et ses alternatives (30 caractères minimum).',
+        ]);
+
+        $consent = SurgicalConsent::query()->create([
+            'clinic_id' => $surgery->clinic_id,
+            'surgery_id' => $surgery->id,
+            'patient_id' => $surgery->patient_id,
+            ...$validated,
+            'recorded_by' => $request->user()->id,
+            'signed_at' => Carbon::now(),
+        ]);
+
+        return response()->json(['data' => ['id' => $consent->id, 'signer_name' => $consent->signer_name, 'signed_at' => $consent->signed_at->toIso8601String()], 'message' => 'Consentement éclairé recueilli.'], 201);
+    }
+
+    /** Pre-operative checklist, updated by the team (surgeon, anesthetist or an operating nurse). */
+    public function checklist(Request $request, Surgery $surgery): JsonResponse
+    {
+        if (!$surgery->isReportAuthor($request->user()) && !$surgery->staff->contains('id', $request->user()->id)) {
+            return response()->json(['message' => 'Seule l’équipe opératoire peut remplir la check-list.'], 403);
+        }
+        if (in_array($surgery->status, ['COMPLETED', 'CANCELLED'], true)) {
+            throw ValidationException::withMessages(['checklist' => 'Cette intervention est close : la check-list n’est plus modifiable.']);
+        }
+        $items = array_keys(self::CHECKLIST);
+        $validated = $request->validate(collect($items)->mapWithKeys(fn ($item) => [$item => ['required', 'boolean']])->all());
+        $surgery->update(['preop_checklist' => $validated]);
+
+        return response()->json(['data' => $this->present($surgery->fresh()->load(self::RELATIONS), $request), 'message' => 'Check-list enregistrée.']);
+    }
+
+    /** Invoice of the operation, through the normal invoice flow (same numbering, same rules). */
+    public function invoice(Request $request, Surgery $surgery): JsonResponse
+    {
+        if ($surgery->invoice_id) {
+            throw ValidationException::withMessages(['invoice' => 'Cette intervention est déjà facturée.']);
+        }
+        $validated = $request->validate(['amount' => ['required', 'numeric', 'min:0', 'max:99999999.99']]);
+
+        $request->merge([
+            'patient_id' => $surgery->patient_id,
+            'items' => [['description' => 'Intervention : '.$surgery->operation_type, 'amount' => $validated['amount']]],
+            'status' => 'ISSUED',
+        ]);
+        $response = app(InvoiceController::class)->store($request);
+        if ($response->getStatusCode() !== 201) {
+            return $response;
+        }
+        $payload = json_decode($response->getContent(), true);
+        $surgery->update(['invoice_id' => $payload['data']['id']]);
+
+        return response()->json(['data' => ['invoice_id' => $payload['data']['id'], 'invoice_number' => $payload['data']['invoice_number'] ?? null], 'message' => 'Facture de l’intervention émise.'], 201);
+    }
+
+    /** Pre-operative items still missing before the operation can start (empty list = ready). */
+    private function missingBeforeStart(Surgery $surgery): array
+    {
+        $missing = [];
+        if (!$surgery->consent()->exists()) {
+            $missing[] = 'consentement éclairé du patient';
+        }
+        $checklist = (array) $surgery->preop_checklist;
+        foreach (self::CHECKLIST as $key => $label) {
+            if (($checklist[$key] ?? false) !== true) {
+                $missing[] = 'check-list : '.$label;
+            }
+        }
+
+        return $missing;
     }
 
     private function assertReportAuthor(Request $request, Surgery $surgery): void
@@ -204,6 +317,17 @@ class SurgeryController extends Controller
             'post_op_followup' => $inTeam ? $surgery->post_op_followup : null,
             'can_edit_report' => $surgery->isReportAuthor($user) && $surgery->report_signed_at === null,
             'can_sign_report' => (int) $surgery->surgeon_id === (int) $user->id && $surgery->report_signed_at === null,
+            'estimated_minutes' => $surgery->estimated_minutes,
+            'preop_checklist' => $inTeam ? (object) ((array) $surgery->preop_checklist) : null,
+            'checklist_items' => self::CHECKLIST,
+            'consent' => $inTeam && $surgery->consent ? [
+                'signer_name' => $surgery->consent->signer_name,
+                'signer_relation' => $surgery->consent->signer_relation,
+                'signed_at' => $surgery->consent->signed_at?->toIso8601String(),
+            ] : null,
+            'ready_to_start' => $this->missingBeforeStart($surgery) === [],
+            'missing_before_start' => $inTeam ? $this->missingBeforeStart($surgery) : [],
+            'invoice_id' => $surgery->invoice_id,
         ];
     }
 }

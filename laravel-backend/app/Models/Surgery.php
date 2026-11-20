@@ -15,17 +15,22 @@ class Surgery extends Model
     public const STATUSES = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 
     protected $fillable = [
-        'clinic_id', 'patient_id', 'operation_type', 'scheduled_at', 'room', 'status',
+        'clinic_id', 'patient_id', 'operation_type', 'scheduled_at', 'estimated_minutes', 'room', 'status',
         'surgeon_id', 'anesthetist_id', 'created_by', 'report', 'post_op_followup', 'report_signed_at',
+        'preop_checklist', 'invoice_id',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
         'report_signed_at' => 'datetime',
+        'preop_checklist' => 'array',
         // Medical content: encrypted at rest
         'report' => 'encrypted',
         'post_op_followup' => 'encrypted',
     ];
+
+    public function consent(): \Illuminate\Database\Eloquent\Relations\HasOne { return $this->hasOne(SurgicalConsent::class); }
+    public function invoice(): BelongsTo { return $this->belongsTo(Invoice::class); }
 
     public function patient(): BelongsTo { return $this->belongsTo(Patient::class); }
     public function surgeon(): BelongsTo { return $this->belongsTo(User::class, 'surgeon_id'); }
