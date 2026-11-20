@@ -109,6 +109,10 @@ class LabRequestController extends Controller
 
     public function store(Request $request)
     {
+        // Only the prescribing doctor asks for analyses: nursing and laboratory staff do not prescribe.
+        if ($request->user()->role?->name !== 'DOCTOR') {
+            return response()->json(['message' => 'Seul le médecin peut demander des analyses.'], 403);
+        }
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
             return response()->json(['message' => 'Choisissez une clinique avant de demander des analyses.'], 422);

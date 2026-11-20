@@ -176,6 +176,10 @@ class AppointmentController extends Controller
 
     public function store(Request $request)
     {
+        // Appointments are booked by reception, the administration or the doctor: not by nursing staff.
+        if ($request->user()->role?->name === 'NURSE') {
+            return response()->json(['message' => 'Les rendez-vous sont pris par l’accueil ou le médecin, pas par le personnel soignant.'], 403);
+        }
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
             return response()->json(['message' => 'Choisissez une clinique avant de créer des rendez-vous.'], 422);
