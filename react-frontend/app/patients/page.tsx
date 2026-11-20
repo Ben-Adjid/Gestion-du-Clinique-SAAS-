@@ -3,13 +3,20 @@
 import { can, useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { ConfirmDialog, EmptyState, Loading, Notice, PageHeader, Pagination, SearchInput, buttonClass, inputClass, useDebouncedValue } from '../components/ui';
 import { apiFetch } from '../lib/api';
 import { ageFrom, formatDate } from '../lib/format';
 import { GENDER_LABELS, initials, type Patient } from '../lib/patients';
 
 type Page = { data: Patient[]; current_page: number; last_page: number; total: number };
+
+function patientsQuery(page: number, search: string, gender: string): string {
+  const query = new URLSearchParams({ page: String(page), per_page: '20' });
+  if (search.trim()) query.set('search', search.trim());
+  if (gender) query.set('gender', gender);
+  return query.toString();
+}
 
 export default function PatientsPage() {
   return (
@@ -28,7 +35,8 @@ function PatientsContent() {
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<Page | null>(null);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  // A notice left by the previous page (e.g. after an archive), shown once.
+  const [notice, setNotice] = useState(() => (typeof window === 'undefined' ? '' : sessionStorage.getItem('patient_notice') ?? ''));
   const [archiving, setArchiving] = useState<Patient | null>(null);
   const [busy, setBusy] = useState(false);
   const debouncedSearch = useDebouncedValue(search);
@@ -37,27 +45,27 @@ function PatientsContent() {
   const canImport = can(user, 'import:patients');
   const canBook = can(user, 'create:appointment');
 
-  const load = useCallback(async () => {
+  useEffect(() => {
     if (!token) return;
-    const query = new URLSearchParams({ page: String(page), per_page: '20' });
-    if (debouncedSearch.trim()) query.set('search', debouncedSearch.trim());
-    if (gender) query.set('gender', gender);
+    let active = true;
+    apiFetch<Page>(`/patients?${patientsQuery(page, debouncedSearch, gender)}`, token)
+      .then((response) => { if (active) { setResult(response); setError(''); } })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Impossible de charger les patients.'); });
+    return () => { active = false; };
+  }, [token, page, debouncedSearch, gender]);
+
+  const load = async () => {
+    if (!token) return;
     try {
-      setResult(await apiFetch<Page>(`/patients?${query.toString()}`, token));
+      setResult(await apiFetch<Page>(`/patients?${patientsQuery(page, debouncedSearch, gender)}`, token));
       setError('');
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Impossible de charger les patients.');
     }
-  }, [token, page, debouncedSearch, gender]);
+  };
 
-  useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setPage(1); }, [debouncedSearch, gender]);
   useEffect(() => {
-    const stored = sessionStorage.getItem('patient_notice');
-    if (stored) {
-      setNotice(stored);
-      sessionStorage.removeItem('patient_notice');
-    }
+    sessionStorage.removeItem('patient_notice');
   }, []);
 
   const archive = async () => {
@@ -96,8 +104,8 @@ function PatientsContent() {
         {error && <Notice tone="error" onClose={() => setError('')}>{error}</Notice>}
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <SearchInput value={search} onChange={setSearch} placeholder="Nom, téléphone, n° de dossier…" label="Rechercher un patient" />
-          <select aria-label="Filtrer par sexe" value={gender} onChange={(event) => setGender(event.target.value)} className={`${inputClass} w-auto`}>
+          <SearchInput value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Nom, téléphone, n° de dossier…" label="Rechercher un patient" />
+          <select aria-label="Filtrer par sexe" value={gender} onChange={(event) => { setGender(event.target.value); setPage(1); }} className={`${inputClass} w-auto`}>
             <option value="">Tous les sexes</option>
             <option value="F">Femmes</option>
             <option value="M">Hommes</option>
