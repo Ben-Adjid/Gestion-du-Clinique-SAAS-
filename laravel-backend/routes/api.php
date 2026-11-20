@@ -388,6 +388,8 @@ Route::prefix('v1')->group(function () {
                     Route::get('/imaging-requests/{imagingRequest}', 'imaging')->middleware('audit');
                     Route::get('/invoices', 'invoices');
                     Route::get('/invoices/{invoice}', 'invoice');
+                    // The patient's own official receipt (quittance): only for a confirmed payment of his invoice.
+                    Route::get('/payments/{payment}/receipt', 'receipt')->middleware('audit');
                     Route::get('/rights', 'rights');
                     Route::put('/consents', 'updateConsents');
                     Route::get('/export', 'export')->middleware('audit');

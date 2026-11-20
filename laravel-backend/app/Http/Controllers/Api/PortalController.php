@@ -118,7 +118,7 @@ class PortalController extends Controller
     {
         $patient = $this->patient($request);
         $invoices = Invoice::query()->where('patient_id', $patient->id)->where('status', '!=', 'DRAFT')
-            ->with('items:id,invoice_id,description,amount')
+            ->with(['items:id,invoice_id,description,amount', 'payments' => fn ($query) => $query->where('status', 'CONFIRMED')->select('id', 'invoice_id', 'amount', 'payment_method', 'receipt_number', 'payment_datetime', 'status')->latest('payment_datetime')])
             ->withSum(['payments as paid_amount' => fn ($query) => $query->where('status', 'CONFIRMED')], 'amount')
             ->latest()->paginate(20);
         $invoices->getCollection()->each(function (Invoice $invoice) {
@@ -130,6 +130,21 @@ class PortalController extends Controller
         });
 
         return response()->json($invoices);
+    }
+
+    /** Official receipt of one of the patient's own confirmed payments (PDF). */
+    public function receipt(Request $request, \App\Models\Payment $payment)
+    {
+        $patient = $this->patient($request);
+        if ((int) $payment->invoice?->patient_id !== (int) $patient->id || $payment->status !== 'CONFIRMED') {
+            return response()->json(['message' => 'Quittance introuvable.'], 404);
+        }
+
+        return response(\App\Services\Receipts\ReceiptPdf::render($payment), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$payment->receipt_number.'.pdf"',
+            'Cache-Control' => 'no-store, private',
+        ]);
     }
 
     public function invoice(Request $request, Invoice $invoice)

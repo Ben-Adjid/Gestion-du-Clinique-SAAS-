@@ -37,6 +37,22 @@ interface PortalInvoice {
   created_at: string;
   due_date: string | null;
   items: { description: string }[];
+  payments?: { id: number; amount: string; payment_method: string; receipt_number: string | null; payment_datetime: string }[];
+}
+
+/** Downloads one of the patient's own receipts (PDF) with his session token. */
+async function downloadReceipt(paymentId: number, receiptNumber: string, token: string) {
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8100/api/v1').replace(/\/$/, '');
+  const response = await fetch(`${base}/portal/payments/${paymentId}/receipt`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' },
+  });
+  if (!response.ok) throw new Error('La quittance ne peut pas être téléchargée. Réessayez dans un instant.');
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${receiptNumber}.pdf`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 const DOCUMENT_LINK: Record<PortalDocument['type'], (id: number) => string> = {
@@ -154,6 +170,12 @@ export default function PortalPage() {
                   <div>
                     <p className="font-semibold text-slate-900">{invoice.invoice_number} <span className="font-normal text-slate-500">· {formatDate(invoice.created_at)}</span></p>
                     <p className="text-sm text-slate-600">{invoice.items.map((item) => item.description).join(' · ')}</p>
+                    {(invoice.payments ?? []).filter((payment) => payment.receipt_number).map((payment) => (
+                      <p key={payment.id} className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                        <span className="tabular-nums">{payment.receipt_number} · {formatMoney(payment.amount)} · {formatDate(payment.payment_datetime)}</span>
+                        <button type="button" onClick={() => token && downloadReceipt(payment.id, payment.receipt_number as string, token).catch((err: Error) => setError(err.message))} className="font-semibold text-emerald-800 hover:underline">Télécharger la quittance</button>
+                      </p>
+                    ))}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm">{formatMoney(invoice.total_amount)}{invoice.outstanding_amount > 0 && <span className="block text-xs font-semibold text-amber-800">reste {formatMoney(invoice.outstanding_amount)}</span>}</span>
