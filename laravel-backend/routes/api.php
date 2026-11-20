@@ -119,6 +119,11 @@ Route::prefix('v1')->group(function () {
                 ->middleware(['permission:view:reports', 'plan:reports']);
             Route::get('/reports/overview', [ReportController::class, 'overview'])
                 ->middleware(['permission:view:reports', 'plan:reports']);
+            // Accounting and insurance exports (Enterprise plan): OHADA journal, insurance bordereau (CSV)
+            Route::get('/exports/ohada-journal', [\App\Http\Controllers\Api\ExportController::class, 'ohadaJournal'])
+                ->middleware(['permission:view:reports', 'plan:reports', 'audit']);
+            Route::get('/exports/insurance-bordereau', [\App\Http\Controllers\Api\ExportController::class, 'insuranceBordereau'])
+                ->middleware(['permission:view:reports', 'plan:reports', 'audit']);
             Route::get('/users/roles', [\App\Http\Controllers\Api\UserController::class, 'roles'])
                 ->middleware('permission:manage:users');
             Route::apiResource('users', \App\Http\Controllers\Api\UserController::class)
