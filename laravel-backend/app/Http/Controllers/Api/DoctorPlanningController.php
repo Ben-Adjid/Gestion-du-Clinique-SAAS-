@@ -80,6 +80,28 @@ class DoctorPlanningController extends Controller
         return response()->json(['data' => $profile, 'message' => 'Profil du médecin mis à jour.']);
     }
 
+    /** The signed-in doctor records his own registration number (numéro d’ordre). */
+    public function updateOwnLicence(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if ($user->role?->name !== 'DOCTOR' || $user->clinic_id === null) {
+            return response()->json(['message' => 'Seul un médecin peut renseigner son numéro d’ordre.'], 403);
+        }
+        $validated = $request->validate([
+            'license_number' => ['required', 'string', 'max:40'],
+        ], [
+            'license_number.required' => 'Saisissez votre numéro d’ordre.',
+            'license_number.max' => 'Le numéro d’ordre ne doit pas dépasser 40 caractères.',
+        ]);
+
+        $profile = DoctorProfile::query()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['clinic_id' => $user->clinic_id, 'license_number' => trim($validated['license_number'])],
+        );
+
+        return response()->json(['message' => 'Numéro d’ordre enregistré.', 'data' => ['license_number' => $profile->license_number]]);
+    }
+
     /** Specialties in use in the clinic, with the platform's standard list. */
     public function specialties(Request $request): JsonResponse
     {

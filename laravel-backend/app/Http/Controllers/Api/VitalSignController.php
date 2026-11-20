@@ -16,7 +16,7 @@ class VitalSignController extends Controller
     public function index(Request $request, Patient $patient)
     {
         if (!$this->inClinic($request, $patient)) {
-            return response()->json(['message' => 'Patient not found.'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
 
         $vitals = VitalSign::query()
@@ -32,7 +32,7 @@ class VitalSignController extends Controller
     public function store(Request $request, Patient $patient)
     {
         if (!$this->inClinic($request, $patient)) {
-            return response()->json(['message' => 'Patient not found.'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
 
         $validated = $request->validate([

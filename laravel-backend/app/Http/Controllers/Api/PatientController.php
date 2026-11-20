@@ -30,7 +30,7 @@ class PatientController extends Controller
 
         $isUnlinkedLookup = $request->boolean('unlinked');
         if ($isUnlinkedLookup && !in_array($user->role?->name, ['SUPER_ADMIN', 'ADMIN_CLINIC'], true)) {
-            return response()->json(['message' => 'Only clinic administrators can select patients for an account.'], 403);
+            return response()->json(['message' => 'Seul le directeur de clinique peut choisir les patients pour un compte.'], 403);
         }
         $validated = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'max:100'],
@@ -147,13 +147,13 @@ class PatientController extends Controller
     {
         if ($request->user()->role?->name === 'PATIENT') {
             if ((int) $patient->user_id !== (int) $request->user()->id) {
-                return response()->json(['message' => 'Patient not found'], 404);
+                return response()->json(['message' => 'Patient introuvable.'], 404);
             }
 
             return response()->json(['data' => $this->present($request, $patient)], 200);
         }
         if (!$this->inClinic($request, $patient)) {
-            return response()->json(['message' => 'Patient not found'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
 
         return response()->json(['data' => $this->present($request, $patient)], 200);
@@ -162,7 +162,7 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient)
     {
         if (!$this->inClinic($request, $patient)) {
-            return response()->json(['message' => 'Patient not found'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
 
         $rules = collect($this->identityRules($request, $patient))
@@ -181,10 +181,10 @@ class PatientController extends Controller
     public function destroy(Request $request, Patient $patient)
     {
         if (!$this->inClinic($request, $patient)) {
-            return response()->json(['message' => 'Patient not found'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
         if ($patient->user()->exists()) {
-            return response()->json(['message' => 'Remove the linked patient account before deleting this record.'], 409);
+            return response()->json(['message' => 'Supprimez d’abord le compte patient lié à ce dossier.'], 409);
         }
         $patient->delete();
 
@@ -194,7 +194,7 @@ class PatientController extends Controller
     public function uploadPhoto(Request $request, Patient $patient)
     {
         if (!$this->inClinic($request, $patient)) {
-            return response()->json(['message' => 'Patient not found'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
         $request->validate(['photo' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:2048']], [
             'photo.max' => 'La photo ne doit pas dépasser 2 Mo.',
@@ -226,7 +226,7 @@ class PatientController extends Controller
     public function deletePhoto(Request $request, Patient $patient)
     {
         if (!$this->inClinic($request, $patient)) {
-            return response()->json(['message' => 'Patient not found'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
         if ($patient->photo_path) {
             Storage::disk('local')->delete($patient->photo_path);

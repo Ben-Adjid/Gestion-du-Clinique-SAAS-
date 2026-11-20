@@ -53,7 +53,7 @@ class AppointmentRequestController extends Controller
         ]);
         $doctor = User::query()->with('role')->findOrFail($validated['doctor_id']);
         if ($doctor->role?->name !== 'DOCTOR' || $doctor->status !== 'ACTIVE') {
-            return response()->json(['message' => 'Select an active doctor from this clinic.'], 422);
+            return response()->json(['message' => 'Choisissez un médecin actif de cette clinique.'], 422);
         }
 
         $requestedAt = Carbon::createFromFormat(
@@ -99,23 +99,23 @@ class AppointmentRequestController extends Controller
     public function approve(Request $request, AppointmentRequest $appointmentRequest)
     {
         if (!$this->inClinic($request, $appointmentRequest)) {
-            return response()->json(['message' => 'Appointment request not found.'], 404);
+            return response()->json(['message' => 'Demande de rendez-vous introuvable.'], 404);
         }
         if ($appointmentRequest->status !== 'PENDING') {
-            return response()->json(['message' => 'This appointment request has already been reviewed.'], 422);
+            return response()->json(['message' => 'Cette demande de rendez-vous a déjà été traitée.'], 422);
         }
 
         $appointment = DB::transaction(function () use ($request, $appointmentRequest) {
             $lockedRequest = AppointmentRequest::query()->lockForUpdate()->findOrFail($appointmentRequest->id);
             if ($lockedRequest->status !== 'PENDING') {
-                abort(422, 'This appointment request has already been reviewed.');
+                abort(422, 'Cette demande de rendez-vous a déjà été traitée.');
             }
             $doctor = User::query()->with('role')->lockForUpdate()->findOrFail($lockedRequest->doctor_id);
             if ($doctor->status !== 'ACTIVE' || $doctor->role?->name !== 'DOCTOR') {
-                abort(422, 'The requested doctor is no longer active.');
+                abort(422, 'Le médecin demandé n’est plus actif.');
             }
             if ($lockedRequest->requested_datetime->isPast()) {
-                abort(422, 'The requested time has already passed.');
+                abort(422, 'Le créneau demandé est déjà passé.');
             }
 
             $appointment = Appointment::query()
@@ -129,7 +129,7 @@ class AppointmentRequestController extends Controller
                 ->where('appointment_datetime', '<', $lockedRequest->requested_datetime->copy()->addMinutes((int) config('clinic.appointment_slot_minutes')))
                 ->exists();
             if ($appointment) {
-                abort(422, 'The requested time is no longer available. Contact the patient to choose another time.');
+                abort(422, 'Ce créneau n’est plus disponible. Contactez le patient pour en choisir un autre.');
             }
 
             $appointment = Appointment::create([
@@ -170,10 +170,10 @@ class AppointmentRequestController extends Controller
     public function reject(Request $request, AppointmentRequest $appointmentRequest)
     {
         if (!$this->inClinic($request, $appointmentRequest)) {
-            return response()->json(['message' => 'Appointment request not found.'], 404);
+            return response()->json(['message' => 'Demande de rendez-vous introuvable.'], 404);
         }
         if ($appointmentRequest->status !== 'PENDING') {
-            return response()->json(['message' => 'This appointment request has already been reviewed.'], 422);
+            return response()->json(['message' => 'Cette demande de rendez-vous a déjà été traitée.'], 422);
         }
         $validated = $request->validate([
             'review_note' => ['required', 'string', 'max:2000'],

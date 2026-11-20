@@ -101,7 +101,7 @@ class InvoiceController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
-            return response()->json(['message' => 'Select a clinic before creating invoices.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de créer des factures.'], 422);
         }
 
         // Single-line invoices (description + subtotal) are still accepted.
@@ -183,7 +183,7 @@ class InvoiceController extends Controller
     public function show(Request $request, Invoice $invoice)
     {
         if (!$this->canAccessInvoice($request, $invoice)) {
-            return response()->json(['message' => 'Invoice not found.'], 404);
+            return response()->json(['message' => 'Facture introuvable.'], 404);
         }
         $invoice->load([
             ...self::RELATIONS,
@@ -200,10 +200,10 @@ class InvoiceController extends Controller
     public function update(Request $request, Invoice $invoice)
     {
         if (!$this->canAccessInvoice($request, $invoice)) {
-            return response()->json(['message' => 'Invoice not found.'], 404);
+            return response()->json(['message' => 'Facture introuvable.'], 404);
         }
         if ($invoice->status !== 'DRAFT') {
-            return response()->json(['message' => 'Only draft invoices can be edited.'], 422);
+            return response()->json(['message' => 'Seule une facture brouillon peut être modifiée.'], 422);
         }
         $validated = $request->validate([
             'due_date' => ['sometimes', 'required', 'date', 'after_or_equal:today'],
@@ -226,7 +226,7 @@ class InvoiceController extends Controller
     public function cancel(Request $request, Invoice $invoice)
     {
         if (!$this->canAccessInvoice($request, $invoice)) {
-            return response()->json(['message' => 'Invoice not found.'], 404);
+            return response()->json(['message' => 'Facture introuvable.'], 404);
         }
         $validated = $request->validate(['reason' => ['required', 'string', 'min:5', 'max:2000']]);
         if (!in_array($invoice->status, ['DRAFT', 'ISSUED', 'OVERDUE'], true)) {
@@ -248,7 +248,7 @@ class InvoiceController extends Controller
     public function recordPayment(Request $request, Invoice $invoice)
     {
         if (!$this->canAccessInvoice($request, $invoice)) {
-            return response()->json(['message' => 'Invoice not found.'], 404);
+            return response()->json(['message' => 'Facture introuvable.'], 404);
         }
 
         $validated = $request->validate([
@@ -275,7 +275,7 @@ class InvoiceController extends Controller
         $payment = DB::transaction(function () use ($invoice, $request, $validated): Payment {
             $lockedInvoice = Invoice::query()->whereKey($invoice->id)->lockForUpdate()->firstOrFail();
             if (!in_array($lockedInvoice->status, ['ISSUED', 'OVERDUE'], true)) {
-                abort(422, 'Only issued invoices can receive payments.');
+                abort(422, 'Seule une facture émise peut recevoir un paiement.');
             }
 
             if ($validated['payment_method'] === 'INSURANCE') {
@@ -286,7 +286,7 @@ class InvoiceController extends Controller
             $remaining = round((float) $lockedInvoice->total_amount - $paidAmount, 2);
             $amount = round((float) $validated['amount'], 2);
             if ($amount > $remaining) {
-                abort(422, 'Payment exceeds the remaining invoice balance.');
+                abort(422, 'Le paiement dépasse le reste dû de la facture.');
             }
 
             $payment = Payment::create([
@@ -322,10 +322,10 @@ class InvoiceController extends Controller
     public function destroy(Request $request, Invoice $invoice)
     {
         if (!$this->canAccessInvoice($request, $invoice)) {
-            return response()->json(['message' => 'Invoice not found.'], 404);
+            return response()->json(['message' => 'Facture introuvable.'], 404);
         }
         if ($invoice->status !== 'DRAFT') {
-            return response()->json(['message' => 'Only draft invoices can be deleted.'], 422);
+            return response()->json(['message' => 'Seule une facture brouillon peut être supprimée.'], 422);
         }
         $invoice->delete();
 

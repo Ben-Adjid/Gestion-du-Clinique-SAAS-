@@ -46,7 +46,7 @@ class ImagingRequestController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
-            return response()->json(['message' => 'Select a clinic before managing its imaging catalogue.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de gérer son catalogue d’imagerie.'], 422);
         }
         $validated = $request->validate($this->examRules($clinicId));
 
@@ -104,7 +104,7 @@ class ImagingRequestController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
-            return response()->json(['message' => 'Select a clinic before requesting imaging.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de demander une imagerie.'], 422);
         }
         $validated = $request->validate([
             'consultation_id' => ['required', 'integer', Rule::exists('consultations', 'id')->where('clinic_id', $clinicId)],
@@ -115,7 +115,7 @@ class ImagingRequestController extends Controller
 
         $consultation = Consultation::query()->whereKey($validated['consultation_id'])->firstOrFail();
         if ($request->user()->role?->name === 'DOCTOR' && (int) $consultation->doctor_id !== (int) $request->user()->id) {
-            return response()->json(['message' => 'You can only request imaging for your own consultations.'], 403);
+            return response()->json(['message' => 'Vous ne pouvez demander une imagerie que pour vos consultations.'], 403);
         }
 
         $imagingRequest = ImagingRequest::create([
@@ -136,7 +136,7 @@ class ImagingRequestController extends Controller
     public function show(Request $request, ImagingRequest $imagingRequest)
     {
         if (!$this->canAccess($request, $imagingRequest)) {
-            return response()->json(['message' => 'Imaging request not found.'], 404);
+            return response()->json(['message' => 'Demande d’imagerie introuvable.'], 404);
         }
 
         return response()->json(['data' => [
@@ -149,14 +149,14 @@ class ImagingRequestController extends Controller
     public function update(Request $request, ImagingRequest $imagingRequest)
     {
         if (!$this->canAccess($request, $imagingRequest)) {
-            return response()->json(['message' => 'Imaging request not found.'], 404);
+            return response()->json(['message' => 'Demande d’imagerie introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'RADIOLOGIST') {
-            return response()->json(['message' => 'Only radiology staff can update imaging request status.'], 403);
+            return response()->json(['message' => 'Seul le personnel d’imagerie peut modifier le statut de la demande.'], 403);
         }
         $validated = $request->validate(['status' => ['required', Rule::in(['IN_PROGRESS'])]]);
         if ($imagingRequest->status !== 'PENDING') {
-            return response()->json(['message' => 'This imaging request status transition is not allowed.'], 422);
+            return response()->json(['message' => 'Ce changement de statut de demande d’imagerie n’est pas autorisé.'], 422);
         }
         $imagingRequest->update($validated);
 
@@ -166,7 +166,7 @@ class ImagingRequestController extends Controller
     public function uploadFile(Request $request, ImagingRequest $imagingRequest)
     {
         if (!$this->canAccess($request, $imagingRequest)) {
-            return response()->json(['message' => 'Imaging request not found.'], 404);
+            return response()->json(['message' => 'Demande d’imagerie introuvable.'], 404);
         }
         if (!in_array($imagingRequest->status, ['IN_PROGRESS', 'READY'], true)) {
             return response()->json(['message' => $imagingRequest->status === 'PENDING'
@@ -232,10 +232,10 @@ class ImagingRequestController extends Controller
     public function saveReport(Request $request, ImagingRequest $imagingRequest)
     {
         if (!$this->canAccess($request, $imagingRequest)) {
-            return response()->json(['message' => 'Imaging request not found.'], 404);
+            return response()->json(['message' => 'Demande d’imagerie introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'RADIOLOGIST' || !in_array($imagingRequest->status, ['IN_PROGRESS', 'READY'], true)) {
-            return response()->json(['message' => 'Only radiologists can report imaging in progress.'], 403);
+            return response()->json(['message' => 'Seul le radiologue peut rédiger un compte rendu en cours.'], 403);
         }
         $validated = $request->validate(['report_text' => ['required', 'string', 'min:20', 'max:50000']], [
             'report_text.min' => 'Le compte rendu est trop court.',
@@ -264,10 +264,10 @@ class ImagingRequestController extends Controller
     public function signReport(Request $request, ImagingRequest $imagingRequest)
     {
         if (!$this->canAccess($request, $imagingRequest)) {
-            return response()->json(['message' => 'Imaging request not found.'], 404);
+            return response()->json(['message' => 'Demande d’imagerie introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'RADIOLOGIST') {
-            return response()->json(['message' => 'Only radiologists can sign imaging reports.'], 403);
+            return response()->json(['message' => 'Seul le radiologue peut signer les comptes rendus.'], 403);
         }
         $report = DB::table('imaging_reports')->where('request_id', $imagingRequest->id)->first();
         if (!$report || $report->signed_at !== null || $imagingRequest->status !== 'READY') {
@@ -297,10 +297,10 @@ class ImagingRequestController extends Controller
     public function destroy(Request $request, ImagingRequest $imagingRequest)
     {
         if (!$this->canAccess($request, $imagingRequest)) {
-            return response()->json(['message' => 'Imaging request not found.'], 404);
+            return response()->json(['message' => 'Demande d’imagerie introuvable.'], 404);
         }
         if ($imagingRequest->status !== 'PENDING') {
-            return response()->json(['message' => 'Only pending imaging requests can be cancelled.'], 422);
+            return response()->json(['message' => 'Seule une demande d’imagerie en attente peut être annulée.'], 422);
         }
         $billed = DB::table('invoice_items')
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')

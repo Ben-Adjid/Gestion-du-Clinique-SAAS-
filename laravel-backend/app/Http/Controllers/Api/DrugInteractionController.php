@@ -26,7 +26,7 @@ class DrugInteractionController extends Controller
     {
         $clinicId = $request->attributes->get('clinic_id');
         if ($clinicId === null) {
-            return response()->json(['message' => 'Select a clinic before managing drug interactions.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de gérer les interactions médicamenteuses.'], 422);
         }
 
         $validated = $request->validate([
@@ -56,7 +56,7 @@ class DrugInteractionController extends Controller
         $clinicId = $request->attributes->get('clinic_id');
         $drugInteraction->load('firstDrug');
         if ($clinicId !== null && (int) $drugInteraction->firstDrug?->clinic_id !== (int) $clinicId) {
-            return response()->json(['message' => 'Interaction not found.'], 404);
+            return response()->json(['message' => 'Interaction introuvable.'], 404);
         }
 
         $drugInteraction->delete();

@@ -78,7 +78,8 @@ class ClinicalServiceWorkflowTest extends TestCase
         ]);
 
         $this->postJson("/api/v1/prescriptions/{$prescription->id}/dispense")
-            ->assertUnprocessable();
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Seule une ordonnance signée peut être délivrée, et une seule fois.');
         $this->assertDatabaseCount('pharmacy_sales', 1);
         $this->assertDatabaseHas('pharmacy_inventory', ['id' => $inventory->id, 'quantity' => 5]);
 

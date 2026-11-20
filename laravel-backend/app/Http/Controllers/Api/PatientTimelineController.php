@@ -27,7 +27,7 @@ class PatientTimelineController extends Controller
     {
         $current = $request->attributes->get('clinic_id');
         if ($current !== null && (int) $current !== (int) $patient->clinic_id) {
-            return response()->json(['message' => 'Patient not found.'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
 
         $events = collect()

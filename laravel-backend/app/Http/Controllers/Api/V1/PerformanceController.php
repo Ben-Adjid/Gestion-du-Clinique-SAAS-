@@ -35,11 +35,11 @@ class PerformanceController extends Controller
     public function flushCache(Request $request)
     {
         if ($request->user()->role?->name !== 'SUPER_ADMIN') {
-            return response()->json(['message' => 'Only a super administrator can flush the shared cache.'], 403);
+            return response()->json(['message' => 'Seul le super administrateur peut vider le cache partagé.'], 403);
         }
 
         Cache::flush();
-        return response()->json(['message' => 'Cache flushed successfully']);
+        return response()->json(['message' => 'Cache vidé.']);
     }
 
     public function databaseIndexes()

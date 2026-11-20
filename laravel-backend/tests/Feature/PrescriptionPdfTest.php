@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Clinic;
 use App\Models\Consultation;
+use App\Models\DoctorProfile;
 use App\Models\Patient;
 use App\Models\Prescription;
 use App\Models\Role;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Services\Prescriptions\PrescriptionPdf;
 use App\Services\SubscriptionService;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -110,6 +112,46 @@ class PrescriptionPdfTest extends TestCase
 
         $response = $this->actingAs($this->doctor, 'sanctum')->get("/api/v1/prescriptions/{$prescription->id}/pdf")->assertOk();
         $this->assertLessThan(100 * 1024, strlen($response->getContent()));
+    }
+
+    public function test_a_prescription_cannot_be_signed_without_the_doctors_licence_number(): void
+    {
+        $draft = $this->prescription('DRAFT');
+
+        $this->actingAs($this->doctor, 'sanctum')->postJson("/api/v1/prescriptions/{$draft->id}/sign")
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'LICENCE_REQUIRED')
+            ->assertJsonPath('message', 'Renseignez votre numéro d’ordre dans vos paramètres avant de signer une ordonnance.');
+        $this->assertSame('DRAFT', $draft->fresh()->status);
+    }
+
+    public function test_a_prescription_is_signed_once_the_licence_number_is_set(): void
+    {
+        DoctorProfile::create(['clinic_id' => $this->clinic->id, 'user_id' => $this->doctor->id, 'license_number' => 'ONM-2026-0417']);
+        $draft = $this->prescription('DRAFT');
+
+        $this->actingAs($this->doctor, 'sanctum')->postJson("/api/v1/prescriptions/{$draft->id}/sign")->assertOk();
+        $this->assertSame('SIGNED', $draft->fresh()->status);
+        $this->assertStringContainsString('N° d’ordre : ONM-2026-0417', PrescriptionPdf::html($draft->fresh()));
+    }
+
+    public function test_the_doctor_records_his_own_licence_and_then_signs(): void
+    {
+        $draft = $this->prescription('DRAFT');
+        $this->actingAs($this->doctor, 'sanctum')->putJson('/api/v1/me/doctor-licence', ['license_number' => ''])
+            ->assertUnprocessable()->assertJsonValidationErrors('license_number');
+
+        $this->actingAs($this->doctor, 'sanctum')->putJson('/api/v1/me/doctor-licence', ['license_number' => 'ONM-2026-0417'])
+            ->assertOk()->assertJsonPath('data.license_number', 'ONM-2026-0417');
+        $this->actingAs($this->doctor, 'sanctum')->postJson("/api/v1/prescriptions/{$draft->id}/sign")->assertOk();
+        $this->assertSame('SIGNED', $draft->fresh()->status);
+    }
+
+    public function test_a_nurse_cannot_record_a_licence_number(): void
+    {
+        $nurse = User::factory()->create(['clinic_id' => $this->clinic->id, 'role_id' => Role::where('name', 'NURSE')->value('id'), 'status' => 'ACTIVE']);
+
+        $this->actingAs($nurse, 'sanctum')->putJson('/api/v1/me/doctor-licence', ['license_number' => 'ONM-1'])->assertForbidden();
     }
 
     private function prescription(string $status): Prescription

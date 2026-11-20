@@ -26,7 +26,7 @@ class ClinicController extends Controller
     public function store(Request $request)
     {
         if ($request->user()->role?->name !== 'SUPER_ADMIN') {
-            return response()->json(['message' => 'Only a super administrator can create clinics.'], 403);
+            return response()->json(['message' => 'Seul le super administrateur peut créer une clinique.'], 403);
         }
 
         $validated = $request->validate([
@@ -55,7 +55,7 @@ class ClinicController extends Controller
 
         // Check access
         if ($user->role && $user->role->name !== 'SUPER_ADMIN' && $clinic->id !== $user->clinic_id) {
-            return response()->json(['message' => 'Access denied'], 403);
+            return response()->json(['message' => 'Accès refusé.'], 403);
         }
 
         return response()->json(['data' => $clinic], 200);
@@ -68,12 +68,12 @@ class ClinicController extends Controller
 
         // Only ADMIN_CLINIC or SUPER_ADMIN can update
         if (!$user->role || !in_array($user->role->name, ['ADMIN_CLINIC', 'SUPER_ADMIN'])) {
-            return response()->json(['message' => 'Permission denied'], 403);
+            return response()->json(['message' => 'Vous n’avez pas l’autorisation d’effectuer cette action.'], 403);
         }
 
         // Non-super-admin users can only update their own clinic
         if ($user->role->name !== 'SUPER_ADMIN' && $clinic->id !== $user->clinic_id) {
-            return response()->json(['message' => 'Access denied'], 403);
+            return response()->json(['message' => 'Accès refusé.'], 403);
         }
 
         $rules = [
@@ -107,11 +107,11 @@ class ClinicController extends Controller
 
         $clinic->update($validated);
 
-        return response()->json(['message' => 'Clinic updated successfully', 'data' => $clinic], 200);
+        return response()->json(['message' => 'Clinique mise à jour.', 'data' => $clinic], 200);
     }
 
     public function destroy(string $id)
     {
-        return response()->json(['message' => 'Operation not allowed'], 403);
+        return response()->json(['message' => 'Opération non autorisée.'], 403);
     }
 }

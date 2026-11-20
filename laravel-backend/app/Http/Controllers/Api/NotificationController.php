@@ -51,7 +51,7 @@ class NotificationController extends Controller
             (int) $notification->user_id !== (int) $request->user()->id
             || (int) $notification->clinic_id !== (int) ($request->attributes->get('clinic_id') ?? $request->user()->clinic_id)
         ) {
-            return response()->json(['message' => 'Notification not found.'], 404);
+            return response()->json(['message' => 'Notification introuvable.'], 404);
         }
 
         $notification->update(['read_at' => $notification->read_at ?? now()]);

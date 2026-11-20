@@ -19,7 +19,7 @@ class PrescriptionController extends Controller
     public function medications(Request $request)
     {
         if ($request->user()->role?->name === 'PATIENT') {
-            return response()->json(['message' => 'Patients can only view medicines included in their prescriptions.'], 403);
+            return response()->json(['message' => 'Les patients ne voient que les médicaments de leurs ordonnances.'], 403);
         }
 
         $clinicId = $this->clinicId($request);
@@ -63,7 +63,7 @@ class PrescriptionController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
-            return response()->json(['message' => 'Select a clinic before writing prescriptions.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de rédiger des ordonnances.'], 422);
         }
 
         $validated = $request->validate([
@@ -81,7 +81,7 @@ class PrescriptionController extends Controller
 
         $consultation = Consultation::query()->whereKey($validated['consultation_id'])->firstOrFail();
         if ($request->user()->role?->name === 'DOCTOR' && (int) $consultation->doctor_id !== (int) $request->user()->id) {
-            return response()->json(['message' => 'You can only prescribe for your own consultations.'], 403);
+            return response()->json(['message' => 'Vous ne pouvez prescrire que pour vos consultations.'], 403);
         }
         if ($consultation->status === 'SIGNED') {
             return response()->json(['message' => 'A signed consultation cannot receive new prescriptions.'], 422);
@@ -142,7 +142,7 @@ class PrescriptionController extends Controller
     public function show(Request $request, Prescription $prescription)
     {
         if (!$this->canAccess($request, $prescription)) {
-            return response()->json(['message' => 'Prescription not found.'], 404);
+            return response()->json(['message' => 'Ordonnance introuvable.'], 404);
         }
 
         $prescription->load(['consultation.patient', 'doctor:id,name', 'doctor.doctorProfile:id,user_id,license_number', 'items.medication', 'clinic:id,name,city,country,admin_phone,admin_email']);
@@ -156,7 +156,7 @@ class PrescriptionController extends Controller
     public function pdf(Request $request, Prescription $prescription)
     {
         if (!$this->canAccess($request, $prescription)) {
-            return response()->json(['message' => 'Prescription not found.'], 404);
+            return response()->json(['message' => 'Ordonnance introuvable.'], 404);
         }
         if (!in_array($prescription->status, ['SIGNED', 'DISPENSED'], true)) {
             return response()->json(['message' => 'Seule une ordonnance signée peut être imprimée.'], 422);
@@ -172,13 +172,21 @@ class PrescriptionController extends Controller
     public function sign(Request $request, Prescription $prescription)
     {
         if (!$this->canAccess($request, $prescription)) {
-            return response()->json(['message' => 'Prescription not found.'], 404);
+            return response()->json(['message' => 'Ordonnance introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'DOCTOR' || (int) $prescription->doctor_id !== (int) $request->user()->id) {
-            return response()->json(['message' => 'Only the prescribing doctor can sign this prescription.'], 403);
+            return response()->json(['message' => 'Seul le médecin prescripteur peut signer cette ordonnance.'], 403);
         }
         if ($prescription->status !== 'DRAFT') {
-            return response()->json(['message' => 'Only draft prescriptions can be signed.'], 422);
+            return response()->json(['message' => 'Seule une ordonnance brouillon peut être signée.'], 422);
+        }
+        // A signed prescription is a legal document: the prescriber's registration number must be on it.
+        $licence = $request->user()->doctorProfile?->license_number;
+        if (blank($licence)) {
+            return response()->json([
+                'message' => 'Renseignez votre numéro d’ordre dans vos paramètres avant de signer une ordonnance.',
+                'code' => 'LICENCE_REQUIRED',
+            ], 422);
         }
 
         $prescription->update(['status' => 'SIGNED']);
@@ -190,13 +198,13 @@ class PrescriptionController extends Controller
     public function update(Request $request, Prescription $prescription)
     {
         if (!$this->canAccess($request, $prescription)) {
-            return response()->json(['message' => 'Prescription not found.'], 404);
+            return response()->json(['message' => 'Ordonnance introuvable.'], 404);
         }
         if ($prescription->status !== 'DRAFT') {
-            return response()->json(['message' => 'Only draft prescriptions can be modified.'], 422);
+            return response()->json(['message' => 'Seule une ordonnance brouillon peut être modifiée.'], 422);
         }
         if ($request->user()->role?->name !== 'DOCTOR' || (int) $prescription->doctor_id !== (int) $request->user()->id) {
-            return response()->json(['message' => 'Only the prescribing doctor can modify this prescription.'], 403);
+            return response()->json(['message' => 'Seul le médecin prescripteur peut modifier cette ordonnance.'], 403);
         }
 
         $validated = $request->validate([
@@ -210,10 +218,10 @@ class PrescriptionController extends Controller
     public function destroy(Request $request, Prescription $prescription)
     {
         if (!$this->canAccess($request, $prescription)) {
-            return response()->json(['message' => 'Prescription not found.'], 404);
+            return response()->json(['message' => 'Ordonnance introuvable.'], 404);
         }
         if ($prescription->status !== 'DRAFT') {
-            return response()->json(['message' => 'Only draft prescriptions can be deleted.'], 422);
+            return response()->json(['message' => 'Seule une ordonnance brouillon peut être supprimée.'], 422);
         }
 
         $prescription->delete();

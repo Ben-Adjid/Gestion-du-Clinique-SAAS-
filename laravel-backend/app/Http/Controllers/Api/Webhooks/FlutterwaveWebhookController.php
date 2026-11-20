@@ -20,7 +20,7 @@ class FlutterwaveWebhookController extends Controller
         if (!$flutterwave->validSignature($request->header('verif-hash'))) {
             Log::warning('Webhook Flutterwave rejeté : signature invalide.', ['ip' => $request->ip()]);
 
-            return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 401);
+            return response()->json(['status' => 'error', 'message' => 'Signature invalide.'], 401);
         }
 
         $event = (string) ($request->input('event') ?? $request->input('event.type') ?? '');

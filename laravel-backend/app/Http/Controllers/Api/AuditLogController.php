@@ -16,7 +16,7 @@ class AuditLogController extends Controller
         if ($clinicId !== null) {
             $query->where('clinic_id', $clinicId);
         } elseif ($request->user()->role?->name !== 'SUPER_ADMIN') {
-            return response()->json(['message' => 'Clinic context is required.'], 422);
+            return response()->json(['message' => 'Le contexte de la clinique est requis.'], 422);
         }
 
         $validated = $request->validate([

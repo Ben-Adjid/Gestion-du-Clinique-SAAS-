@@ -20,7 +20,7 @@ class RateLimitMiddleware
 
         if ($this->limiter->tooManyAttempts($key, $maxAttempts, $decayMinutes)) {
             return response()->json([
-                'message' => 'Too many requests. Please try again later.',
+                'message' => 'Trop de tentatives. Réessayez dans une minute.',
                 'retry_after' => $this->limiter->availableIn($key),
             ], 429);
         }

@@ -19,7 +19,7 @@ class CheckPermission
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => 'Authentification requise.'], 401);
         }
 
         if (!$permission) {
@@ -27,7 +27,7 @@ class CheckPermission
         }
 
         if (!$user->role) {
-            return response()->json(['message' => 'User has no role assigned'], 403);
+            return response()->json(['message' => 'Aucun rôle n’est attribué à cet utilisateur.'], 403);
         }
 
         // "a|b" grants access with either permission.
@@ -44,7 +44,7 @@ class CheckPermission
 
         if (!$roleHasPermission && !$userHasPermission) {
             Log::warning("Permission denied: {$user->id} tried to access {$permission}");
-            return response()->json(['message' => 'Permission denied'], 403);
+            return response()->json(['message' => 'Vous n’avez pas l’autorisation d’effectuer cette action.'], 403);
         }
 
         return $next($request);

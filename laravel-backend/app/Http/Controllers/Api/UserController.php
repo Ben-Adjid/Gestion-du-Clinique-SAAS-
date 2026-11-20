@@ -108,7 +108,7 @@ class UserController extends Controller
         if ($isPatient) {
             $patient = Patient::query()->whereKey($validated['patient_id'])->first();
             if (!$patient || (int) $patient->clinic_id !== (int) $clinicId) {
-                return response()->json(['message' => 'Select a patient from this clinic.'], 422);
+                return response()->json(['message' => 'Choisissez un patient de cette clinique.'], 422);
             }
         }
 
@@ -128,7 +128,7 @@ class UserController extends Controller
                     ->lockForUpdate()
                     ->first();
                 if (!$patient) {
-                    abort(422, 'This patient already has an account or is no longer available.');
+                    abort(422, 'Ce patient a déjà un compte ou n’est plus disponible.');
                 }
             }
 
@@ -158,7 +158,7 @@ class UserController extends Controller
     public function show(Request $request, User $user)
     {
         if (!$this->canManageUser($request, $user)) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'Utilisateur introuvable.'], 404);
         }
 
         return response()->json([
@@ -169,7 +169,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         if (!$this->canManageUser($request, $user)) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'Utilisateur introuvable.'], 404);
         }
 
         $isSuperAdmin = $request->user()->role?->name === 'SUPER_ADMIN';
@@ -187,17 +187,17 @@ class UserController extends Controller
             && isset($validated['status'])
             && $validated['status'] !== 'ACTIVE'
         ) {
-            return response()->json(['message' => 'You cannot deactivate your own account.'], 422);
+            return response()->json(['message' => 'Vous ne pouvez pas désactiver votre propre compte.'], 422);
         }
         if ($request->user()->is($user) && isset($validated['role_id'])) {
-            return response()->json(['message' => 'You cannot change your own role.'], 422);
+            return response()->json(['message' => 'Vous ne pouvez pas modifier votre propre rôle.'], 422);
         }
 
         if (isset($validated['role_id'])) {
             $newRole = Role::findOrFail($validated['role_id']);
             $this->ensureAssignableRole($request, $newRole);
             if ($newRole->name === 'PATIENT') {
-                return response()->json(['message' => 'Create patient accounts from an existing patient record.'], 422);
+                return response()->json(['message' => 'Créez les comptes patients à partir d’un dossier existant.'], 422);
             }
         }
 
@@ -221,10 +221,10 @@ class UserController extends Controller
     public function destroy(Request $request, User $user)
     {
         if (!$this->canManageUser($request, $user)) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'Utilisateur introuvable.'], 404);
         }
         if ($request->user()->is($user)) {
-            return response()->json(['message' => 'You cannot delete your own account.'], 422);
+            return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], 422);
         }
         if ($user->role?->name === 'SUPER_ADMIN') {
             return response()->json(['message' => 'A super-admin account cannot be deleted here.'], 403);
@@ -258,7 +258,7 @@ class UserController extends Controller
             $request->user()->role?->name !== 'SUPER_ADMIN'
             && !in_array($role->name, self::CLINIC_ROLES, true)
         ) {
-            abort(403, 'Clinic administrators cannot assign this role.');
+            abort(403, 'Le directeur de clinique ne peut pas attribuer ce rôle.');
         }
     }
 
@@ -277,6 +277,7 @@ class UserController extends Controller
             'status' => $user->status,
             'totp_enabled' => $user->totp_enabled,
             'totp_required' => $user->requiresTotp(),
+            'doctor_license' => $user->role?->name === 'DOCTOR' ? $user->doctorProfile?->license_number : null,
             'modules' => ModuleAccess::forUser($user),
             'permissions' => ModuleAccess::effectivePermissions($user),
         ];

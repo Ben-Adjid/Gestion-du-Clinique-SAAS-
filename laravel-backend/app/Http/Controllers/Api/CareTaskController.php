@@ -57,7 +57,7 @@ class CareTaskController extends Controller
     {
         $user = $request->user();
         if (!$this->inClinic($request, $consultation->clinic_id)) {
-            return response()->json(['message' => 'Consultation not found.'], 404);
+            return response()->json(['message' => 'Consultation introuvable.'], 404);
         }
         if ($user->role?->name !== 'DOCTOR' || (int) $consultation->doctor_id !== (int) $user->id) {
             return response()->json(['message' => 'Seul le médecin de la consultation peut prescrire une tâche de soins.'], 403);
@@ -93,7 +93,7 @@ class CareTaskController extends Controller
     {
         $task->load('consultation');
         if (!$this->inClinic($request, $task->consultation->clinic_id)) {
-            return response()->json(['message' => 'Task not found.'], 404);
+            return response()->json(['message' => 'Tâche introuvable.'], 404);
         }
         if ((int) $task->assigned_to !== (int) $request->user()->id) {
             return response()->json(['message' => 'Seul l’infirmier assigné peut mettre à jour cette tâche.'], 403);

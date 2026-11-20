@@ -12,7 +12,7 @@ class PatientClinicalProfileController extends Controller
     public function show(Request $request, Patient $patient)
     {
         if (!$this->canAccessPatient($request, $patient)) {
-            return response()->json(['message' => 'Patient not found'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
 
         return response()->json([
@@ -23,7 +23,7 @@ class PatientClinicalProfileController extends Controller
     public function update(Request $request, Patient $patient)
     {
         if (!$this->canAccessPatient($request, $patient)) {
-            return response()->json(['message' => 'Patient not found'], 404);
+            return response()->json(['message' => 'Patient introuvable.'], 404);
         }
 
         $validated = $request->validate([

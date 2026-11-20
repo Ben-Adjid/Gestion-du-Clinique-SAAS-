@@ -60,7 +60,7 @@ class AppointmentController extends Controller
     public function queue(Request $request)
     {
         if ($request->user()->role?->name === 'PATIENT') {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Vous n’avez pas l’autorisation d’effectuer cette action.'], 403);
         }
         $clinicId = $this->clinicId($request);
         $filters = $request->validate(['doctor_id' => ['sometimes', 'nullable', 'integer']]);
@@ -122,7 +122,7 @@ class AppointmentController extends Controller
     public function checkIn(Request $request, Appointment $appointment)
     {
         if ((int) $appointment->clinic_id !== (int) $this->clinicId($request)) {
-            return response()->json(['message' => 'Appointment not found'], 404);
+            return response()->json(['message' => 'Rendez-vous introuvable.'], 404);
         }
         if ($appointment->status !== 'SCHEDULED') {
             return response()->json(['message' => 'Ce rendez-vous est clôturé.'], 422);
@@ -142,7 +142,7 @@ class AppointmentController extends Controller
     public function call(Request $request, Appointment $appointment)
     {
         if ((int) $appointment->clinic_id !== (int) $this->clinicId($request)) {
-            return response()->json(['message' => 'Appointment not found'], 404);
+            return response()->json(['message' => 'Rendez-vous introuvable.'], 404);
         }
         if ((int) $appointment->doctor_id !== (int) $request->user()->id) {
             return response()->json(['message' => 'Seul le médecin du rendez-vous peut appeler ce patient.'], 403);
@@ -178,7 +178,7 @@ class AppointmentController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
-            return response()->json(['message' => 'Select a clinic before creating appointments.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de créer des rendez-vous.'], 422);
         }
 
         $walkIn = $request->boolean('is_walk_in');
@@ -196,7 +196,7 @@ class AppointmentController extends Controller
 
         $doctor = User::with('role')->findOrFail($validated['doctor_id']);
         if ($doctor->role?->name !== 'DOCTOR' || $doctor->status !== 'ACTIVE') {
-            return response()->json(['message' => 'Select an active doctor from this clinic.'], 422);
+            return response()->json(['message' => 'Choisissez un médecin actif de cette clinique.'], 422);
         }
 
         // The planning protects the day: an unscheduled doctor cannot receive an appointment.
@@ -213,7 +213,7 @@ class AppointmentController extends Controller
             ? now()->startOfMinute()
             : Carbon::createFromFormat('Y-m-d H:i', $validated['appointment_date'].' '.$validated['appointment_time']);
         if (!$walkIn && $appointmentDateTime->isPast()) {
-            return response()->json(['message' => 'An appointment cannot be scheduled in the past.'], 422);
+            return response()->json(['message' => 'Un rendez-vous ne peut pas être fixé dans le passé.'], 422);
         }
 
         $appointment = DB::transaction(function () use ($clinicId, $validated, $appointmentDateTime, $walkIn) {
@@ -269,7 +269,7 @@ class AppointmentController extends Controller
         $isPatientOutsideOwnCase = $request->user()->role?->name === 'PATIENT'
             && (int) $appointment->patient_id !== (int) ($request->user()->patient?->id ?? 0);
         if ((int) $appointment->clinic_id !== (int) $this->clinicId($request) || $isPatientOutsideOwnCase) {
-            return response()->json(['message' => 'Appointment not found'], 404);
+            return response()->json(['message' => 'Rendez-vous introuvable.'], 404);
         }
 
         return response()->json([
@@ -280,7 +280,7 @@ class AppointmentController extends Controller
     public function update(Request $request, Appointment $appointment)
     {
         if ((int) $appointment->clinic_id !== (int) $this->clinicId($request)) {
-            return response()->json(['message' => 'Appointment not found'], 404);
+            return response()->json(['message' => 'Rendez-vous introuvable.'], 404);
         }
 
         $validated = $request->validate([
@@ -308,7 +308,7 @@ class AppointmentController extends Controller
             $time = $validated['appointment_time'] ?? $appointment->appointment_time;
             $appointmentDateTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} {$time}");
             if ($appointmentDateTime->isPast()) {
-                return response()->json(['message' => 'An appointment cannot be scheduled in the past.'], 422);
+                return response()->json(['message' => 'Un rendez-vous ne peut pas être fixé dans le passé.'], 422);
             }
             $validated['appointment_datetime'] = $appointmentDateTime;
             $validated['checked_in_at'] = null;
@@ -355,7 +355,7 @@ class AppointmentController extends Controller
     public function destroy(Request $request, Appointment $appointment)
     {
         if ((int) $appointment->clinic_id !== (int) $this->clinicId($request)) {
-            return response()->json(['message' => 'Appointment not found'], 404);
+            return response()->json(['message' => 'Rendez-vous introuvable.'], 404);
         }
 
         if ($appointment->status !== 'SCHEDULED') {

@@ -55,7 +55,7 @@ class ConsultationController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
-            return response()->json(['message' => 'Select a clinic before creating a consultation.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de créer une consultation.'], 422);
         }
 
         $validated = $request->validate([
@@ -74,7 +74,7 @@ class ConsultationController extends Controller
 
         $doctor = User::query()->with('role')->whereKey($doctorId)->firstOrFail();
         if ($doctor->status !== 'ACTIVE' || $doctor->role?->name !== 'DOCTOR') {
-            return response()->json(['message' => 'Select an active doctor from this clinic.'], 422);
+            return response()->json(['message' => 'Choisissez un médecin actif de cette clinique.'], 422);
         }
 
         $appointment = null;
@@ -127,7 +127,7 @@ class ConsultationController extends Controller
     public function show(Request $request, Consultation $consultation)
     {
         if (!$this->canAccess($request, $consultation)) {
-            return response()->json(['message' => 'Consultation not found.'], 404);
+            return response()->json(['message' => 'Consultation introuvable.'], 404);
         }
 
         return response()->json(['data' => $consultation->load([
@@ -140,7 +140,7 @@ class ConsultationController extends Controller
     public function update(Request $request, Consultation $consultation)
     {
         if (!$this->canAccess($request, $consultation)) {
-            return response()->json(['message' => 'Consultation not found.'], 404);
+            return response()->json(['message' => 'Consultation introuvable.'], 404);
         }
         if ($consultation->status === 'SIGNED') {
             return response()->json(['message' => 'A signed consultation cannot be modified.'], 422);
@@ -170,7 +170,7 @@ class ConsultationController extends Controller
     public function destroy(Request $request, Consultation $consultation)
     {
         if (!$this->canAccess($request, $consultation)) {
-            return response()->json(['message' => 'Consultation not found.'], 404);
+            return response()->json(['message' => 'Consultation introuvable.'], 404);
         }
         if ($consultation->status === 'SIGNED') {
             return response()->json(['message' => 'A signed consultation cannot be deleted.'], 422);
@@ -183,13 +183,13 @@ class ConsultationController extends Controller
     public function sign(Request $request, Consultation $consultation)
     {
         if (!$this->canAccess($request, $consultation)) {
-            return response()->json(['message' => 'Consultation not found.'], 404);
+            return response()->json(['message' => 'Consultation introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'DOCTOR' || (int) $consultation->doctor_id !== (int) $request->user()->id) {
-            return response()->json(['message' => 'Only the assigned doctor can sign this consultation.'], 403);
+            return response()->json(['message' => 'Seul le médecin assigné peut signer cette consultation.'], 403);
         }
         if ($consultation->status !== 'COMPLETED') {
-            return response()->json(['message' => 'Complete the consultation before signing it.'], 422);
+            return response()->json(['message' => 'Terminez la consultation avant de la signer.'], 422);
         }
         $this->assertCompletable($consultation);
 

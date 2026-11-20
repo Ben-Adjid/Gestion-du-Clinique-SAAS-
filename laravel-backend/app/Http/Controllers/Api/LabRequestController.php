@@ -44,7 +44,7 @@ class LabRequestController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
-            return response()->json(['message' => 'Select a clinic before managing its exam catalogue.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de gérer son catalogue d’examens.'], 422);
         }
         $validated = $request->validate($this->examRules($clinicId));
 
@@ -111,7 +111,7 @@ class LabRequestController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if (!$clinicId) {
-            return response()->json(['message' => 'Select a clinic before requesting laboratory tests.'], 422);
+            return response()->json(['message' => 'Choisissez une clinique avant de demander des analyses.'], 422);
         }
 
         $validated = $request->validate([
@@ -123,7 +123,7 @@ class LabRequestController extends Controller
         ], ['exam_ids.required' => 'Choisissez au moins un examen.']);
         $consultation = Consultation::query()->whereKey($validated['consultation_id'])->firstOrFail();
         if ($request->user()->role?->name === 'DOCTOR' && (int) $consultation->doctor_id !== (int) $request->user()->id) {
-            return response()->json(['message' => 'You can only request tests for your own consultations.'], 403);
+            return response()->json(['message' => 'Vous ne pouvez demander des analyses que pour vos consultations.'], 403);
         }
 
         $labRequest = DB::transaction(function () use ($clinicId, $consultation, $validated): LabRequest {
@@ -151,7 +151,7 @@ class LabRequestController extends Controller
     public function show(Request $request, LabRequest $labRequest)
     {
         if (!$this->canAccess($request, $labRequest)) {
-            return response()->json(['message' => 'Laboratory request not found.'], 404);
+            return response()->json(['message' => 'Demande de laboratoire introuvable.'], 404);
         }
 
         return response()->json(['data' => [
@@ -164,7 +164,7 @@ class LabRequestController extends Controller
     public function collect(Request $request, LabRequest $labRequest)
     {
         if (!$this->canAccess($request, $labRequest)) {
-            return response()->json(['message' => 'Laboratory request not found.'], 404);
+            return response()->json(['message' => 'Demande de laboratoire introuvable.'], 404);
         }
         $validated = $request->validate([
             'sample_type' => ['required', 'string', 'max:100'],
@@ -201,16 +201,16 @@ class LabRequestController extends Controller
     public function update(Request $request, LabRequest $labRequest)
     {
         if (!$this->canAccess($request, $labRequest)) {
-            return response()->json(['message' => 'Laboratory request not found.'], 404);
+            return response()->json(['message' => 'Demande de laboratoire introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'LABORATORY_TECHNICIAN') {
-            return response()->json(['message' => 'Only laboratory staff can update request status.'], 403);
+            return response()->json(['message' => 'Seul le personnel du laboratoire peut modifier le statut de la demande.'], 403);
         }
         $validated = $request->validate([
             'status' => ['required', Rule::in(['IN_PROGRESS'])],
         ]);
         if ($labRequest->status !== 'RECEIVED') {
-            return response()->json(['message' => 'This laboratory request status transition is not allowed.'], 422);
+            return response()->json(['message' => 'Ce changement de statut de demande de laboratoire n’est pas autorisé.'], 422);
         }
         $labRequest->update($validated);
 
@@ -221,7 +221,7 @@ class LabRequestController extends Controller
     public function recordResult(Request $request, LabRequest $labRequest)
     {
         if (!$this->canAccess($request, $labRequest)) {
-            return response()->json(['message' => 'Laboratory request not found.'], 404);
+            return response()->json(['message' => 'Demande de laboratoire introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'LABORATORY_TECHNICIAN') {
             return response()->json(['message' => 'Seul le personnel du laboratoire saisit les résultats.'], 403);
@@ -277,15 +277,15 @@ class LabRequestController extends Controller
     public function signResults(Request $request, LabRequest $labRequest)
     {
         if (!$this->canAccess($request, $labRequest)) {
-            return response()->json(['message' => 'Laboratory request not found.'], 404);
+            return response()->json(['message' => 'Demande de laboratoire introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'LABORATORY_TECHNICIAN' || $labRequest->status !== 'READY') {
-            return response()->json(['message' => 'Only laboratory staff can sign ready results.'], 403);
+            return response()->json(['message' => 'Seul le personnel du laboratoire peut signer les résultats prêts.'], 403);
         }
         $expectedCount = $labRequest->exams()->count();
         $resultCount = $labRequest->results()->count();
         if ($expectedCount === 0 || $expectedCount !== $resultCount) {
-            return response()->json(['message' => 'Record a result for every requested exam before signing.'], 422);
+            return response()->json(['message' => 'Saisissez un résultat pour chaque examen demandé avant de signer.'], 422);
         }
 
         $abnormal = DB::transaction(function () use ($labRequest, $request): int {
@@ -310,10 +310,10 @@ class LabRequestController extends Controller
     public function destroy(Request $request, LabRequest $labRequest)
     {
         if (!$this->canAccess($request, $labRequest)) {
-            return response()->json(['message' => 'Laboratory request not found.'], 404);
+            return response()->json(['message' => 'Demande de laboratoire introuvable.'], 404);
         }
         if ($labRequest->status !== 'PENDING') {
-            return response()->json(['message' => 'Only pending laboratory requests can be cancelled.'], 422);
+            return response()->json(['message' => 'Seule une demande de laboratoire en attente peut être annulée.'], 422);
         }
         if ($this->isBilled('lab:'.$labRequest->id)) {
             return response()->json(['message' => 'Cette demande est déjà facturée : annulez d’abord la facture.'], 422);

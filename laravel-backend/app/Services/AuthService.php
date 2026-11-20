@@ -178,7 +178,7 @@ class AuthService
             $token->delete();
         }
 
-        return ['message' => 'Logged out successfully'];
+        return ['message' => 'Déconnexion réussie.'];
     }
 
     public function refresh(User $user): array

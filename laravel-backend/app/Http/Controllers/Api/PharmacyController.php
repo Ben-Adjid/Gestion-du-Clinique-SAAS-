@@ -256,10 +256,10 @@ class PharmacyController extends Controller
     {
         $clinicId = $this->clinicId($request);
         if ((int) $prescription->clinic_id !== $clinicId) {
-            return response()->json(['message' => 'Prescription not found.'], 404);
+            return response()->json(['message' => 'Ordonnance introuvable.'], 404);
         }
         if ($request->user()->role?->name !== 'PHARMACIST') {
-            return response()->json(['message' => 'Only pharmacy staff can dispense prescriptions.'], 403);
+            return response()->json(['message' => 'Seul le personnel de la pharmacie peut délivrer les ordonnances.'], 403);
         }
         $validated = $request->validate([
             'items' => ['sometimes', 'array', 'min:1'],
@@ -270,11 +270,11 @@ class PharmacyController extends Controller
         $sale = DB::transaction(function () use ($prescription, $validated, $request, $clinicId) {
             $locked = Prescription::query()->whereKey($prescription->id)->lockForUpdate()->firstOrFail();
             if ($locked->status !== 'SIGNED') {
-                abort(422, 'Only signed prescriptions can be dispensed, and a prescription can only be dispensed once.');
+                abort(422, 'Seule une ordonnance signée peut être délivrée, et une seule fois.');
             }
             $items = $locked->items()->with('medication')->get()->keyBy('id');
             if ($items->isEmpty()) {
-                abort(422, 'This prescription contains no items.');
+                abort(422, 'Cette ordonnance ne contient aucun médicament.');
             }
             $requested = isset($validated['items'])
                 ? collect($validated['items'])->mapWithKeys(fn (array $line) => [$line['prescription_item_id'] => (int) $line['quantity']])

@@ -19,7 +19,7 @@ class EnsureUserClinicMatch
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => 'Authentification requise.'], 401);
         }
 
         // A clinic selector is available only to the super administrator.
@@ -29,7 +29,7 @@ class EnsureUserClinicMatch
 
         if ($user->role && $user->role->name === 'SUPER_ADMIN') {
             if ($clinicId !== null && !\App\Models\Clinic::whereKey($clinicId)->exists()) {
-                return response()->json(['message' => 'Clinic not found'], 404);
+                return response()->json(['message' => 'Clinique introuvable.'], 404);
             }
             $request->attributes->add(['clinic_id' => $clinicId]);
             CurrentClinic::set($clinicId === null ? null : (int) $clinicId);
@@ -42,7 +42,7 @@ class EnsureUserClinicMatch
         // Other users can only access their own clinic
         if ($clinicId && $clinicId != $user->clinic_id) {
             \Illuminate\Support\Facades\Log::warning("Clinic access denied: User {$user->id} tried to access clinic {$clinicId}");
-            return response()->json(['message' => 'Access to this clinic denied'], 403);
+            return response()->json(['message' => 'Accès à cette clinique refusé.'], 403);
         }
 
         $request->attributes->add(['clinic_id' => $user->clinic_id]);

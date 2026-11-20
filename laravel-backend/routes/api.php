@@ -43,6 +43,8 @@ Route::prefix('v1')->group(function () {
         Route::delete('/auth/2fa', [AuthController::class, 'disableTotp'])->middleware('throttle:5,1');
         Route::get('/me', [\App\Http\Controllers\Api\UserController::class, 'me']);
         Route::patch('/me', [\App\Http\Controllers\Api\UserController::class, 'updateMe']);
+        // A doctor records his own registration number: it must be on every signed prescription.
+        Route::put('/me/doctor-licence', [\App\Http\Controllers\Api\DoctorPlanningController::class, 'updateOwnLicence'])->middleware('audit');
 
         // Clinic subscription: reachable even when the clinic is suspended, so it can pay and be reactivated.
         Route::middleware(['clinic.ensure:allow-suspended', 'totp.enrolled'])->group(function () {
