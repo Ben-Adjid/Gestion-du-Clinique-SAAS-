@@ -388,7 +388,8 @@ Route::prefix('v1')->group(function () {
                 Route::post('/surgeries/{surgery}/sign-report', 'signReport')->middleware(['permission:edit:surgery_report', 'audit']);
                 Route::post('/surgeries/{surgery}/consent', 'consent')->middleware(['permission:edit:surgery_report', 'audit']);
                 Route::put('/surgeries/{surgery}/checklist', 'checklist')->middleware(['permission:read:surgery', 'audit']);
-                Route::post('/surgeries/{surgery}/invoice', 'invoice')->middleware(['permission:create:invoice', 'audit']);
+                // Who may bill is decided in the controller: the assigned surgeon or anesthetist, or invoicing staff.
+                Route::post('/surgeries/{surgery}/invoice', 'invoice')->middleware('audit');
             });
 
             // Traceability of printed documents: the browser prints only after this call succeeds

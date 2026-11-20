@@ -234,6 +234,12 @@ class SurgeryController extends Controller
     /** Invoice of the operation, through the normal invoice flow (same numbering, same rules). */
     public function invoice(Request $request, Surgery $surgery): JsonResponse
     {
+        // Billed by the surgeon or anesthetist who knows the act, or by a user allowed to issue invoices.
+        $canInvoice = $surgery->isReportAuthor($request->user())
+            || $request->user()->role?->permissions()->where('permissions.name', 'create:invoice')->exists();
+        if (!$canInvoice) {
+            return response()->json(['message' => 'Seuls le chirurgien ou l’anesthésiste assigné, ou la facturation, peuvent facturer cette intervention.'], 403);
+        }
         if ($surgery->invoice_id) {
             throw ValidationException::withMessages(['invoice' => 'Cette intervention est déjà facturée.']);
         }
@@ -328,6 +334,7 @@ class SurgeryController extends Controller
             'ready_to_start' => $this->missingBeforeStart($surgery) === [],
             'missing_before_start' => $inTeam ? $this->missingBeforeStart($surgery) : [],
             'invoice_id' => $surgery->invoice_id,
+            'can_invoice' => $surgery->isReportAuthor($user) || $user->role?->permissions()->where('permissions.name', 'create:invoice')->exists(),
         ];
     }
 }

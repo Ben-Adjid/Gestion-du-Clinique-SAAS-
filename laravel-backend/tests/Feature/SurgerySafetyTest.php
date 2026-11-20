@@ -128,6 +128,16 @@ class SurgerySafetyTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('invoice');
     }
 
+    public function test_a_nurse_cannot_bill_the_operation_but_the_surgeon_can(): void
+    {
+        $surgery = $this->surgery();
+
+        $this->actingAs($this->nurse, 'sanctum')->postJson("/api/v1/surgeries/{$surgery->id}/invoice", ['amount' => 50000])
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Seuls le chirurgien ou l’anesthésiste assigné, ou la facturation, peuvent facturer cette intervention.');
+        $this->actingAs($this->surgeon, 'sanctum')->postJson("/api/v1/surgeries/{$surgery->id}/invoice", ['amount' => 50000])->assertCreated();
+    }
+
     public function test_the_estimated_duration_is_kept(): void
     {
         $surgery = $this->surgery(90);
