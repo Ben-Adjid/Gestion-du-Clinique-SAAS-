@@ -114,6 +114,7 @@ function PlanSurgery({ token, onCreated }: { token: string; onCreated: (message:
   const [operationType, setOperationType] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [room, setRoom] = useState('');
+  const [estimatedMinutes, setEstimatedMinutes] = useState('');
   const [surgeonId, setSurgeonId] = useState('');
   const [anesthetistId, setAnesthetistId] = useState('');
   const [staff, setStaff] = useState<string[]>([]);
@@ -146,6 +147,7 @@ function PlanSurgery({ token, onCreated }: { token: string; onCreated: (message:
           operation_type: operationType.trim(),
           scheduled_at: scheduledAt.replace('T', ' '),
           room: room.trim() || null,
+          estimated_minutes: estimatedMinutes ? Number(estimatedMinutes) : null,
           surgeon_id: Number(surgeonId),
           anesthetist_id: anesthetistId ? Number(anesthetistId) : null,
           staff: staff.map(Number),
@@ -190,6 +192,9 @@ function PlanSurgery({ token, onCreated }: { token: string; onCreated: (message:
           </Field>
           <Field label="Salle" error={errors.room}>
             <input value={room} onChange={(event) => setRoom(event.target.value)} maxLength={60} className={inputClass} />
+          </Field>
+          <Field label="Durée estimée (minutes)" error={errors.estimated_minutes} hint="Entre 15 et 720 minutes.">
+            <input type="number" min={15} max={720} step="5" value={estimatedMinutes} onChange={(event) => setEstimatedMinutes(event.target.value)} className={inputClass} />
           </Field>
           <Field label="Personnel de bloc (infirmiers)" error={errors.staff} className="sm:col-span-2">
             <select multiple value={staff} onChange={(event) => setStaff(Array.from(event.target.selectedOptions).map((option) => option.value))} className={`${inputClass} min-h-28`}>

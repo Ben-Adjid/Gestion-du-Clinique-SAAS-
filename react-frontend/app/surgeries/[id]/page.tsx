@@ -6,6 +6,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { ApiError, apiFetch } from '@/app/lib/api';
 import { doctorName, formatDateTime } from '@/app/lib/format';
 import { ConfirmDialog, Field, Loading, Notice, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '@/app/components/ui';
+import { PreOpSection, SurgeryInvoice } from '@/app/components/SurgerySafety';
 
 interface SurgeryDossier {
   id: number;
@@ -22,6 +23,14 @@ interface SurgeryDossier {
   post_op_followup: string | null;
   can_edit_report: boolean;
   can_sign_report: boolean;
+  estimated_minutes: number | null;
+  preop_checklist: Record<string, boolean> | null;
+  checklist_items: Record<string, string>;
+  consent: { signer_name: string; signer_relation: string; signed_at: string } | null;
+  ready_to_start: boolean;
+  missing_before_start: string[];
+  invoice_id: number | null;
+  can_invoice: boolean;
 }
 
 export default function SurgeryDossierPage() {
@@ -147,6 +156,8 @@ export default function SurgeryDossierPage() {
           </dl>
         </Section>
 
+        {token && <PreOpSection token={token} dossier={dossier} onChanged={load} />}
+
         <Section
           title="Compte rendu opératoire"
           description={dossier.can_edit_report ? 'Rédigé par le chirurgien ou l’anesthésiste assigné. Une fois signé, il ne peut plus être modifié.' : undefined}
@@ -182,6 +193,8 @@ export default function SurgeryDossierPage() {
             </div>
           )}
         </Section>
+
+        {token && dossier.can_invoice && <SurgeryInvoice token={token} dossier={dossier} onChanged={load} />}
 
         <ConfirmDialog
           open={confirmSign}
