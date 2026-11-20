@@ -1,8 +1,8 @@
 'use client';
 
-import { PageSkeleton, ListSkeleton } from '../components/ui';
+import { PageSkeleton, ListSkeleton, Skeleton } from '../components/ui';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth, type AuthUser } from '@/app/context/AuthContext';
 import { ApiError, apiFetch } from '@/app/lib/api';
 import { ROLE_LABELS, type Role } from '@/app/lib/permissions';
@@ -56,6 +56,7 @@ export default function SettingsPage() {
         {!(user.totp_required && !user.totp_enabled) && (
           <Link href="/dashboard" className="inline-block text-sm font-semibold text-emerald-700 hover:text-emerald-900">← Retour au tableau de bord</Link>
         )}
+        {user.role === 'ADMIN_CLINIC' && user.clinic_id && token && <TermsSection clinicId={user.clinic_id} token={token} />}
         {user.role === 'ADMIN_CLINIC' && user.clinic_id && token && <ClinicLegalSection clinicId={user.clinic_id} token={token} />}
         {user.role === 'DOCTOR' && token && <DoctorLicenceSection key={user.doctor_license ?? 'vide'} token={token} initial={user.doctor_license ?? ''} onSaved={(licence) => updateUser({ doctor_license: licence })} />}
         <h1 className="text-3xl font-bold text-slate-900">Paramètres</h1>
@@ -424,6 +425,76 @@ function DoctorLicenceSection({ token, initial, onSaved }: { token: string; init
         </label>
         <button type="submit" disabled={saving || !licence.trim()} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
       </form>
+    </section>
+  );
+}
+
+/** Terms of use (CGU) of the clinic: the director accepts the current version before any clinical record is opened. */
+function TermsSection({ clinicId, token }: { clinicId: number; token: string }) {
+  const [version, setVersion] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
+  const [acceptedAt, setAcceptedAt] = useState<string | null>(null);
+  const [agree, setAgree] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(() => apiFetch<{ data: { terms_current_version: string; terms_accepted: boolean; terms_accepted_at: string | null } }>(`/clinics/${clinicId}`, token)
+    .then((response) => {
+      setVersion(response.data.terms_current_version);
+      setAccepted(response.data.terms_accepted);
+      setAcceptedAt(response.data.terms_accepted_at);
+    })
+    .catch((err: Error) => setError(err.message)), [clinicId, token]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const accept = async () => {
+    if (!version) return;
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await apiFetch<{ message: string }>('/clinic/terms', token, { method: 'POST', body: JSON.stringify({ terms_version: version, accepted: true }) });
+      setMessage(response.message);
+      setAgree(false);
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 className="text-base font-semibold text-slate-900">Conditions générales d’utilisation</h2>
+      {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
+      {message && <p role="status" className="mt-3 text-sm text-emerald-700">{message}</p>}
+      {version === null && !error ? (
+        <div className="mt-2" aria-busy="true"><span className="sr-only">Chargement de l’état des conditions…</span><Skeleton className="h-4 w-2/3" /></div>
+      ) : accepted ? (
+        <p className="mt-2 flex items-center gap-2 text-sm text-slate-800">
+          <span className="h-2 w-2 rounded-full bg-emerald-600" aria-hidden="true" />
+          Acceptées, version {version}, le {acceptedAt ? new Date(acceptedAt).toLocaleString('fr-FR') : '—'}.
+        </p>
+      ) : (
+        <div className="mt-2 space-y-3">
+          <p className="flex items-center gap-2 text-sm text-amber-900">
+            <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
+            Non acceptées : les dossiers patients restent fermés tant que la version {version} n’est pas acceptée.
+          </p>
+          <label className="flex min-h-[44px] items-center gap-3 text-sm text-slate-800">
+            <input type="checkbox" checked={agree} onChange={(event) => setAgree(event.target.checked)} className="h-5 w-5 accent-emerald-700" />
+            J’ai lu et j’accepte les conditions générales d’utilisation (version {version}).
+          </label>
+          <button type="button" disabled={!agree || saving} onClick={accept} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">
+            {saving ? 'Enregistrement…' : 'Accepter les conditions'}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
