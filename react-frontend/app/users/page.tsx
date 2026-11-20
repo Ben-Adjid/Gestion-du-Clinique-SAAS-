@@ -43,6 +43,7 @@ export default function UsersPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [pickedPatient, setPickedPatient] = useState<PickedPatient | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<{ record: UserRecord; status: UserRecord['status'] } | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -130,11 +131,7 @@ export default function UsersPage() {
     }
   };
 
-  const handleStatusChange = async (record: UserRecord, status: UserRecord['status']) => {
-    if (status !== 'ACTIVE' && !window.confirm(`Confirmer la désactivation du compte de ${record.name} ? Ses sessions actives seront révoquées.`)) {
-      await fetchData();
-      return;
-    }
+  const applyStatusChange = async (record: UserRecord, status: UserRecord['status']) => {
     setError('');
     setSuccess('');
     try {
@@ -148,6 +145,15 @@ export default function UsersPage() {
       setError(requestError instanceof Error ? requestError.message : 'Impossible de modifier le statut du compte.');
       await fetchData();
     }
+  };
+
+  // Activating is immediate; deactivating or suspending asks for confirmation in the page (no native dialog).
+  const handleStatusChange = (record: UserRecord, status: UserRecord['status']) => {
+    if (status === 'ACTIVE') {
+      void applyStatusChange(record, status);
+      return;
+    }
+    setPendingStatus({ record, status });
   };
 
   if (loading || !isAuthenticated) {
@@ -170,6 +176,18 @@ export default function UsersPage() {
 
         {error && <div role="alert" className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
         {success && <div role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>}
+        {pendingStatus && (
+          <div role="alertdialog" aria-labelledby="status-confirm-title" className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <p id="status-confirm-title" className="font-semibold">
+              Passer le compte de {pendingStatus.record.name} en « {pendingStatus.status === 'SUSPENDED' ? 'Suspendu' : 'Inactif'} » ?
+            </p>
+            <p className="mt-1 text-xs">Ses sessions actives seront révoquées.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" onClick={() => { const pending = pendingStatus; setPendingStatus(null); void applyStatusChange(pending.record, pending.status); }} className="min-h-[44px] rounded-lg bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-700">Confirmer</button>
+              <button type="button" onClick={() => setPendingStatus(null)} className="min-h-[44px] rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Annuler</button>
+            </div>
+          </div>
+        )}
 
         {showForm && (
           <section className="mb-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
