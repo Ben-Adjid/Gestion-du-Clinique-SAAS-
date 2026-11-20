@@ -73,14 +73,15 @@ class BedManagementTest extends TestCase
         $this->actingAs($this->nurse, 'sanctum')->postJson("/api/v1/beds/{$bed->id}/ready")->assertOk()->assertJsonPath('data.status', 'AVAILABLE');
     }
 
-    public function test_only_nursing_and_administration_manage_beds_and_doctors_only_read_them(): void
+    public function test_doctors_nurses_and_administration_install_patients_and_others_cannot(): void
     {
         $bed = $this->bed('M1-01');
-        $doctor = $this->user('DOCTOR');
 
-        $this->actingAs($doctor, 'sanctum')->getJson('/api/v1/beds')->assertOk();
-        $this->actingAs($doctor, 'sanctum')->postJson("/api/v1/beds/{$bed->id}/assign", ['patient_id' => $this->patient->id])->assertForbidden();
+        // Decided: the doctor, the nurse and the clinic administrator may install a patient in a bed.
+        $this->actingAs($this->user('DOCTOR'), 'sanctum')->getJson('/api/v1/beds')->assertOk();
+        $this->actingAs($this->user('DOCTOR'), 'sanctum')->postJson("/api/v1/beds/{$bed->id}/assign", ['patient_id' => $this->patient->id])->assertOk();
         $this->actingAs($this->user('CASHIER'), 'sanctum')->getJson('/api/v1/beds')->assertForbidden();
+        $this->actingAs($this->user('RECEPTIONIST'), 'sanctum')->postJson("/api/v1/beds/{$bed->id}/assign", ['patient_id' => $this->patient->id])->assertForbidden();
     }
 
     public function test_a_bed_of_another_clinic_is_not_found(): void

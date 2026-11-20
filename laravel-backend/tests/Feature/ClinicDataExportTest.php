@@ -41,10 +41,14 @@ class ClinicDataExportTest extends TestCase
         $this->assertStringContainsString('Amina', $patients);
         $this->assertStringNotContainsString('Stranger', $patients, 'another clinic\'s patient must never be exported');
 
-        // Clinical tables are reserved to doctors and nurses by medical secrecy: they are not in the archive.
-        $this->assertFalse($zip->locateName('consultations.csv'));
-        $this->assertFalse($zip->locateName('vital_signs.csv'));
-        $this->assertFalse($zip->locateName('prescriptions.csv'));
+        // Every table of the clinic is in the archive, clinical ones included (the administrator's decision).
+        foreach (['consultations', 'vital_signs', 'prescriptions', 'admissions', 'beds', 'invoices', 'invoice_items'] as $table) {
+            $this->assertNotFalse($zip->locateName($table.'.csv'), "$table.csv manque dans l'export");
+        }
+        // Credentials are never written to the archive.
+        $users = $zip->getFromName('users.csv');
+        $this->assertNotFalse($users);
+        $this->assertStringNotContainsString('password', strtok($users, "\n"));
 
         $zip->close();
         @unlink($archive);
