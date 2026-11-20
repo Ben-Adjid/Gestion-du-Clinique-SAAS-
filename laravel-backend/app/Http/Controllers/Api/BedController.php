@@ -22,6 +22,8 @@ class BedController extends Controller
         $beds = Bed::query()->with('patient:id,first_name,last_name,patient_unique_id')->orderBy('ward')->orderBy('code')->get();
         $total = $beds->count();
         $occupied = $beds->where('status', 'OCCUPIED')->count();
+        // The active stay of each occupied bed, so that the discharge can be signed from the bed.
+        $stayByBed = Admission::query()->whereIn('status', Admission::ACTIVE)->pluck('id', 'bed_id');
 
         return response()->json(['data' => [
             'occupancy' => [
@@ -39,6 +41,8 @@ class BedController extends Controller
                     'status' => $bed->status,
                     'note' => $bed->note,
                     'admitted_at' => $bed->admitted_at?->toIso8601String(),
+                    'admission_id' => $stayByBed[$bed->id] ?? null,
+                    'room_id' => $bed->room_id,
                     'patient' => $bed->patient ? [
                         'id' => $bed->patient->id,
                         'name' => trim($bed->patient->first_name.' '.$bed->patient->last_name),
