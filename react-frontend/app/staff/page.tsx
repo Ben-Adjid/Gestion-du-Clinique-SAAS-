@@ -188,7 +188,7 @@ function LeaveForm({ token, onCancel, onDone }: { token: string; onCancel: () =>
   };
 
   return (
-    <form onSubmit={(event) => void submit(event)} className="space-y-3 rounded-2xl border border-teal-200 bg-white p-5 shadow-sm">
+    <form onSubmit={(event) => void submit(event)} className="space-y-3 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
       <h2 className="font-semibold">Demande de congé</h2>
       {error && <Notice tone="error">{error}</Notice>}
       <div className="grid gap-3 sm:grid-cols-3">

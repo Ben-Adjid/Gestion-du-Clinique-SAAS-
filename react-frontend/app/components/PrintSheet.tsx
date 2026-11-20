@@ -79,9 +79,9 @@ export function PrintSheet({ clinic, title, number, children, signature, log }: 
       )}
 
       <article className="mx-auto flex min-h-[297mm] max-w-[210mm] flex-col bg-white px-[18mm] py-[16mm] text-[13px] leading-relaxed text-slate-900 shadow-lg print:min-h-0 print:shadow-none">
-        <header className="flex items-start justify-between border-b-2 border-teal-700 pb-4">
+        <header className="flex items-start justify-between border-b-2 border-emerald-700 pb-4">
           <div>
-            <p className="text-lg font-bold text-teal-800">{clinic?.name ?? 'Clinique'}</p>
+            <p className="text-lg font-bold text-emerald-800">{clinic?.name ?? 'Clinique'}</p>
             <p className="text-xs text-slate-600">{[clinic?.city, clinic?.country].filter(Boolean).join(' – ')}</p>
             <p className="text-xs text-slate-600">{[clinic?.admin_phone, clinic?.admin_email].filter(Boolean).join(' · ')}</p>
           </div>

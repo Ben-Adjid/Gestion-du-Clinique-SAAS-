@@ -32,6 +32,8 @@ export interface AuthUser {
   totp_enabled?: boolean;
   totp_required?: boolean;
   permissions?: string[];
+  /** Numéro d’ordre du médecin, imprimé sur ses ordonnances (null pour les autres rôles). */
+  doctor_license?: string | null;
 }
 
 export function can(user: AuthUser | null, permission: string): boolean {

@@ -246,7 +246,7 @@ function PrescriptionForm({ token, presetConsultation, onCancel, onSaved }: { to
   const blocked = interactions.some((interaction) => interaction.severity === 'HIGH') && !acknowledge;
 
   return (
-    <form onSubmit={(event) => void submit(event)} className="mb-6 space-y-4 rounded-2xl border border-teal-200 bg-white p-5 shadow-sm sm:p-6">
+    <form onSubmit={(event) => void submit(event)} className="mb-6 space-y-4 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="text-base font-semibold">Nouvelle ordonnance</h2>
       {error && <Notice tone="error" onClose={() => setError('')}>{error}</Notice>}
       <Field label="Consultation" required hint="Seules vos consultations non signées peuvent recevoir une ordonnance.">

@@ -44,7 +44,7 @@ function ResetPasswordForm() {
     }
   };
 
-  const input = 'mt-1.5 block h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15';
+  const input = 'mt-1.5 block h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15';
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f6f8fc] px-5 py-12">
@@ -68,14 +68,14 @@ function ResetPasswordForm() {
               <input type="password" required minLength={12} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} autoComplete="new-password" className={input} />
             </label>
             {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
-            <button type="submit" disabled={saving} className="h-12 w-full rounded-xl bg-teal-600 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">
+            <button type="submit" disabled={saving} className="h-12 w-full rounded-xl bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
               {saving ? 'Enregistrement…' : 'Modifier le mot de passe'}
             </button>
           </form>
         )}
 
         <div className="mt-6 flex justify-between text-sm font-semibold">
-          <Link href="/login" className="text-teal-700 hover:text-teal-900">← Connexion</Link>
+          <Link href="/login" className="text-emerald-700 hover:text-emerald-900">← Connexion</Link>
           <Link href="/forgot-password" className="text-slate-500 hover:text-slate-800">Nouveau lien</Link>
         </div>
       </div>

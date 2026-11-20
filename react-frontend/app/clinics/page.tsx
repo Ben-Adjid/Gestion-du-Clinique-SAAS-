@@ -99,7 +99,7 @@ function ClinicsList() {
             {Object.entries(SUBSCRIPTION_STATUS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
           </select>
           {filtered && (
-            <button type="button" onClick={() => { setSearch(''); setStatus(''); setPlan(''); setSubscriptionStatus(''); }} className="text-sm font-semibold text-teal-700 hover:text-teal-900">
+            <button type="button" onClick={() => { setSearch(''); setStatus(''); setPlan(''); setSubscriptionStatus(''); }} className="text-sm font-semibold text-emerald-700 hover:text-emerald-900">
               Effacer les filtres
             </button>
           )}

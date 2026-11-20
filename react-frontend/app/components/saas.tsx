@@ -77,7 +77,7 @@ export function PaymentDialog({ invoice, token, mode, onClose, onDone }: {
         <p className="mt-1 text-sm text-slate-600">
           Facture {invoice.number} · période du {formatDate(invoice.period_start)} au {formatDate(invoice.period_end)} · reste à payer <strong>{formatMoney(invoice.balance)}</strong>
         </p>
-        {mode === 'declare' && <p className="mt-2 rounded-lg bg-sky-50 px-3 py-2 text-xs text-sky-800">Votre déclaration sera vérifiée par l’équipe Clinique+ avant d’être validée.</p>}
+        {mode === 'declare' && <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-800">Votre déclaration sera vérifiée par l’équipe Clinique+ avant d’être validée.</p>}
         {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -112,7 +112,7 @@ export function PaymentDialog({ invoice, token, mode, onClose, onDone }: {
 
 export function UsageBar({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const ratio = limit ? Math.min(used / limit, 1) : 0;
-  const tone = ratio >= 1 ? 'bg-rose-600' : ratio >= 0.85 ? 'bg-amber-500' : 'bg-teal-600';
+  const tone = ratio >= 1 ? 'bg-rose-600' : ratio >= 0.85 ? 'bg-amber-500' : 'bg-emerald-600';
 
   return (
     <div>

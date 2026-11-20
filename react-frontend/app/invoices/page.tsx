@@ -58,7 +58,7 @@ function Cashier() {
         <div role="tablist" className="mb-5 inline-flex flex-wrap gap-1 rounded-xl border border-slate-300 bg-white p-1">
           {tabs.map((item) => (
             <button key={item.key} type="button" role="tab" aria-selected={tab === item.key} onClick={() => router.replace(`/invoices?tab=${item.key}`)}
-              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === item.key ? 'bg-teal-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === item.key ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
               {item.label}
             </button>
           ))}
@@ -163,7 +163,7 @@ function InvoiceList({ token }: { token: string }) {
             <tbody className="divide-y divide-slate-100">
               {result.data.map((invoice) => (
                 <tr key={invoice.id} className="cursor-pointer hover:bg-slate-50/70" onClick={() => router.push(`/invoices/${invoice.id}`)}>
-                  <td className="px-4 py-3"><Link href={`/invoices/${invoice.id}`} className="font-mono text-xs font-semibold text-teal-800">{invoice.invoice_number}</Link><span className="block text-xs text-slate-500">{formatDate(invoice.created_at)}</span></td>
+                  <td className="px-4 py-3"><Link href={`/invoices/${invoice.id}`} className="font-mono text-xs font-semibold text-emerald-800">{invoice.invoice_number}</Link><span className="block text-xs text-slate-500">{formatDate(invoice.created_at)}</span></td>
                   <td className="px-4 py-3">{invoice.patient.last_name.toUpperCase()} {invoice.patient.first_name}<span className="block text-xs text-slate-500">{invoice.patient.patient_unique_id}</span></td>
                   <td className="px-4 py-3 text-right">{formatMoney(invoice.total_amount)}</td>
                   <td className={`px-4 py-3 text-right font-semibold ${invoice.outstanding_amount > 0 ? 'text-slate-900' : 'text-slate-400'}`}>{formatMoney(invoice.outstanding_amount)}</td>
@@ -250,7 +250,7 @@ function CashRegister({ token, isAdmin, onNotice }: { token: string; isAdmin: bo
                   {summary.payments.map((payment) => (
                     <tr key={payment.id}>
                       <td className="px-4 py-2 text-slate-600">{new Date(payment.payment_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</td>
-                      <td className="px-4 py-2"><Link href={`/invoices/${payment.invoice?.id}`} className="font-mono text-xs text-teal-800">{payment.invoice?.invoice_number}</Link> <span className="text-slate-600">{payment.invoice?.patient?.last_name.toUpperCase()} {payment.invoice?.patient?.first_name}</span></td>
+                      <td className="px-4 py-2"><Link href={`/invoices/${payment.invoice?.id}`} className="font-mono text-xs text-emerald-800">{payment.invoice?.invoice_number}</Link> <span className="text-slate-600">{payment.invoice?.patient?.last_name.toUpperCase()} {payment.invoice?.patient?.first_name}</span></td>
                       <td className="px-4 py-2">{PAYMENT_METHODS[payment.payment_method]}{payment.payment_reference && <span className="block text-xs text-slate-400">{payment.payment_reference}</span>}</td>
                       <td className="px-4 py-2 text-right font-semibold">{formatMoney(payment.amount)}</td>
                       {isAdmin && <td className="px-4 py-2 text-slate-600">{receiverName(payment)}</td>}

@@ -121,7 +121,7 @@ export default function PortalPage() {
           <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filtrer les documents">
             {FILTERS.map(([key, label]) => (
               <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)}
-                className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${filter === key ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 text-slate-600'}`}>
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${filter === key ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-slate-300 text-slate-600'}`}>
                 {label}
               </button>
             ))}

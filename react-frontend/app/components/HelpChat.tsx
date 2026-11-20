@@ -87,7 +87,7 @@ export default function HelpChat() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-teal-700 px-4 text-sm font-semibold text-white shadow-lg transition hover:bg-teal-800 print:hidden"
+        className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-800 print:hidden"
       >
         <span aria-hidden="true">?</span> Aide
       </button>
@@ -110,7 +110,7 @@ export default function HelpChat() {
           <div className="space-y-3">
             <p className="font-semibold text-slate-900">{selected.question}</p>
             <p className="leading-6 text-slate-700">{selected.answer}</p>
-            <button type="button" onClick={() => setSelected(null)} className="text-xs font-semibold text-teal-700 hover:text-teal-900">← Autres questions</button>
+            <button type="button" onClick={() => setSelected(null)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">← Autres questions</button>
           </div>
         ) : (
           <>
@@ -118,7 +118,7 @@ export default function HelpChat() {
             <ul className="space-y-2">
               {entries.map((entry) => (
                 <li key={entry.question}>
-                  <button type="button" onClick={() => setSelected(entry)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-left text-slate-800 transition hover:border-teal-300 hover:bg-teal-50">
+                  <button type="button" onClick={() => setSelected(entry)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-left text-slate-800 transition hover:border-emerald-300 hover:bg-emerald-50">
                     {entry.question}
                   </button>
                 </li>

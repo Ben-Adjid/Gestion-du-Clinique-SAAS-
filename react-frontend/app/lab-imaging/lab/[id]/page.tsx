@@ -102,7 +102,7 @@ export default function LabRequestPage() {
         <ol className="mb-6 grid grid-cols-5 gap-1 text-center text-[11px] font-semibold" aria-label="Étapes">
           {(Object.keys(LAB_STATUS) as (keyof typeof LAB_STATUS)[]).map((step, index) => {
             const reached = Object.keys(LAB_STATUS).indexOf(request.status) >= index;
-            return <li key={step} className={`rounded-lg px-2 py-2 ${reached ? 'bg-teal-700 text-white' : 'bg-white text-slate-400 ring-1 ring-slate-200'}`}>{LAB_STATUS[step].label}</li>;
+            return <li key={step} className={`rounded-lg px-2 py-2 ${reached ? 'bg-emerald-700 text-white' : 'bg-white text-slate-400 ring-1 ring-slate-200'}`}>{LAB_STATUS[step].label}</li>;
           })}
         </ol>
 
@@ -173,8 +173,8 @@ export default function LabRequestPage() {
                 )}
               </form>
               {canSign && (
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3">
-                  <span className="text-sm text-teal-900">Tous les résultats sont saisis. La validation les transmet au médecin et les rend définitifs.</span>
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                  <span className="text-sm text-emerald-900">Tous les résultats sont saisis. La validation les transmet au médecin et les rend définitifs.</span>
                   <button type="button" disabled={busy} onClick={() => setConfirmSign(true)} className={buttonClass.primary}>Valider les résultats</button>
                 </div>
               )}

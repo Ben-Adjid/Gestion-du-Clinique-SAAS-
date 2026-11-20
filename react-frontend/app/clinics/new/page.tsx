@@ -136,7 +136,7 @@ export default function NewClinicPage() {
         <ol className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Étapes">
           {STEPS.map((label, index) => (
             <li key={label} aria-current={index === step ? 'step' : undefined}
-              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${index === step ? 'border-teal-600 bg-teal-50 text-teal-900' : index < step ? 'border-emerald-200 bg-white text-emerald-700' : 'border-slate-200 bg-white text-slate-400'}`}>
+              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${index === step ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : index < step ? 'border-emerald-200 bg-white text-emerald-700' : 'border-slate-200 bg-white text-slate-400'}`}>
               {index + 1}. {label}
             </li>
           ))}
@@ -180,7 +180,7 @@ export default function NewClinicPage() {
                       const selected = plan.code === form.plan_code;
                       return (
                         <button type="button" key={plan.code} onClick={() => set('plan_code', plan.code)} aria-pressed={selected}
-                          className={`rounded-2xl border-2 p-4 text-left transition ${selected ? 'border-teal-600 bg-teal-50/60' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                          className={`rounded-2xl border-2 p-4 text-left transition ${selected ? 'border-emerald-600 bg-emerald-50/60' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                           <p className="text-base font-semibold text-slate-900">{plan.name}</p>
                           <p className="mt-1 text-xl font-semibold text-slate-900">{formatMoney(form.billing_cycle === 'YEARLY' ? plan.yearly_price : plan.monthly_price)}</p>
                           <p className="text-xs text-slate-500">{form.billing_cycle === 'YEARLY' ? 'par an' : 'par mois'}</p>
@@ -200,15 +200,15 @@ export default function NewClinicPage() {
                       <legend className="mb-1.5 text-sm font-semibold text-slate-700">Facturation</legend>
                       <div className="flex gap-2">
                         {(Object.keys(BILLING_CYCLES) as BillingCycle[]).map((cycle) => (
-                          <label key={cycle} className={`flex-1 cursor-pointer rounded-xl border px-3 py-2.5 text-sm font-medium ${form.billing_cycle === cycle ? 'border-teal-600 bg-teal-50 text-teal-900' : 'border-slate-300 text-slate-700'}`}>
+                          <label key={cycle} className={`flex-1 cursor-pointer rounded-xl border px-3 py-2.5 text-sm font-medium ${form.billing_cycle === cycle ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}`}>
                             <input type="radio" name="billing_cycle" value={cycle} checked={form.billing_cycle === cycle} onChange={() => set('billing_cycle', cycle)} className="sr-only" />
                             {BILLING_CYCLES[cycle]}
                           </label>
                         ))}
                       </div>
                     </fieldset>
-                    <div className="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm">
-                      <span aria-hidden="true" className="mt-0.5 text-teal-700">✓</span>
+                    <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm">
+                      <span aria-hidden="true" className="mt-0.5 text-emerald-700">✓</span>
                       <p>
                         <span className="font-semibold text-slate-800">Essai gratuit de {selectedPlan?.trial_days ?? 90} jours, automatique.</span>
                         <span className="block text-xs text-slate-600">À la fin de l’essai, l’administrateur de la clinique reçoit la première facture et doit la régler pour garder l’accès.</span>
@@ -236,7 +236,7 @@ export default function NewClinicPage() {
               <label className="mt-5 flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm">
                 <input type="checkbox" checked={form.accepted_terms} onChange={(event) => set('accepted_terms', event.target.checked)} className="mt-1" />
                 <span className="text-slate-700">
-                  J’accepte les <a href="/cgu" target="_blank" rel="noreferrer" className="font-semibold text-teal-700 underline">conditions générales d’utilisation</a> (décharge de responsabilité médicale, secret professionnel, propriété des données).
+                  J’accepte les <a href="/cgu" target="_blank" rel="noreferrer" className="font-semibold text-emerald-700 underline">conditions générales d’utilisation</a> (décharge de responsabilité médicale, secret professionnel, propriété des données).
                 </span>
               </label>
             </Section>

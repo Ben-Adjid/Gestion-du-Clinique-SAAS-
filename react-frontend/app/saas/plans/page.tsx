@@ -118,7 +118,7 @@ function PlanForm({ plan, modules, token, onCancel, onSaved }: { plan: Plan; mod
   }));
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border-2 border-teal-500 bg-white p-5 shadow-sm">
+    <form onSubmit={submit} className="rounded-2xl border-2 border-emerald-500 bg-white p-5 shadow-sm">
       <h2 className="text-base font-semibold text-slate-900">Modifier « {plan.name} »</h2>
       <div className="mt-4 grid gap-3">
         <Field label="Nom" required error={errors.name}><input className={inputClass} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>

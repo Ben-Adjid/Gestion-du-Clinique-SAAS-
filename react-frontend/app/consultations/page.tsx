@@ -83,13 +83,13 @@ export default function ConsultationsPage() {
                         <td className="whitespace-nowrap px-5 py-3 text-slate-600">{formatDateTime(consultation.consultation_datetime)}</td>
                         {!isPatient && (
                           <td className="px-5 py-3">
-                            <Link href={`/consultations/${consultation.id}`} className="font-semibold text-slate-900 hover:text-teal-800">{consultation.patient.last_name.toUpperCase()} {consultation.patient.first_name}</Link>
+                            <Link href={`/consultations/${consultation.id}`} className="font-semibold text-slate-900 hover:text-emerald-800">{consultation.patient.last_name.toUpperCase()} {consultation.patient.first_name}</Link>
                             <p className="text-xs text-slate-500">{consultation.patient.patient_unique_id}</p>
                           </td>
                         )}
                         <td className="px-5 py-3 text-slate-600">{doctorName(consultation.doctor.name)}</td>
                         <td className="max-w-xs px-5 py-3 text-slate-700">
-                          {primary ? <>{primary.cim10_code !== 'NON_CODE' && <span className="mr-1 font-mono text-xs text-teal-700">{primary.cim10_code}</span>}{primary.cim10_description}</> : <span className="text-slate-400">—</span>}
+                          {primary ? <>{primary.cim10_code !== 'NON_CODE' && <span className="mr-1 font-mono text-xs text-emerald-700">{primary.cim10_code}</span>}{primary.cim10_description}</> : <span className="text-slate-400">—</span>}
                         </td>
                         <td className="px-5 py-3"><StatusBadge tone={STATUS_LABELS[consultation.status].tone} label={STATUS_LABELS[consultation.status].label} /></td>
                       </tr>

@@ -37,7 +37,7 @@ interface AppointmentRequest {
 type Doctor = { id: number; name: string };
 
 const STATUS: Record<Appointment['status'], { label: string; tone: 'blue' | 'slate' | 'green' | 'amber'; block: string }> = {
-  SCHEDULED: { label: 'Programmé', tone: 'blue', block: 'border-sky-300 bg-sky-50 text-sky-900' },
+  SCHEDULED: { label: 'Programmé', tone: 'blue', block: 'border-slate-300 bg-slate-50 text-slate-900' },
   COMPLETED: { label: 'Terminé', tone: 'green', block: 'border-emerald-300 bg-emerald-50 text-emerald-900' },
   NO_SHOW: { label: 'Absent', tone: 'amber', block: 'border-amber-300 bg-amber-50 text-amber-900' },
   CANCELLED: { label: 'Annulé', tone: 'slate', block: 'border-slate-200 bg-slate-50 text-slate-400 line-through' },
@@ -223,7 +223,7 @@ function AppointmentsContent() {
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <div className="inline-flex rounded-xl border border-slate-300 bg-white p-1" role="group" aria-label="Affichage">
               {(['week', 'list'] as const).map((mode) => (
-                <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${view === mode ? 'bg-teal-700 text-white' : 'text-slate-600'}`}>
+                <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${view === mode ? 'bg-emerald-700 text-white' : 'text-slate-600'}`}>
                   {mode === 'week' ? 'Semaine' : 'Liste à venir'}
                 </button>
               ))}
@@ -252,7 +252,7 @@ function AppointmentsContent() {
                   {days.map((day) => {
                     const isToday = isoDate(day) === isoDate(now);
                     return (
-                      <th key={day.toISOString()} scope="col" className={`border-b border-l border-slate-200 py-2 text-center font-semibold ${isToday ? 'bg-teal-50 text-teal-800' : 'bg-slate-50 text-slate-600'}`}>
+                      <th key={day.toISOString()} scope="col" className={`border-b border-l border-slate-200 py-2 text-center font-semibold ${isToday ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-50 text-slate-600'}`}>
                         {new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }).format(day)}
                       </th>
                     );
@@ -280,7 +280,7 @@ function AppointmentsContent() {
                           {cell.length === 0 && future && canCreate && (
                             <button type="button" aria-label={`Programmer le ${formatDate(date)} à ${slot}`}
                               onClick={() => setBooking({ date, time: slot, doctorId: doctorFilter, patient: null })}
-                              className="h-full min-h-8 w-full rounded-md text-transparent transition hover:bg-teal-50 hover:text-teal-700 focus:bg-teal-50 focus:text-teal-700">
+                              className="h-full min-h-8 w-full rounded-md text-transparent transition hover:bg-emerald-50 hover:text-emerald-700 focus:bg-emerald-50 focus:text-emerald-700">
                               +
                             </button>
                           )}
@@ -411,7 +411,7 @@ function BookingForm({ token, doctors, initial, asRequest, onClose, onSaved }: {
   };
 
   return (
-    <form ref={formRef} onSubmit={(event) => void submit(event)} className="mb-6 scroll-mt-4 rounded-2xl border border-teal-200 bg-white p-5 shadow-sm sm:p-6">
+    <form ref={formRef} onSubmit={(event) => void submit(event)} className="mb-6 scroll-mt-4 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="mb-1 text-base font-semibold">{asRequest ? 'Demander un rendez-vous' : 'Programmer un rendez-vous'}</h2>
       <p className="mb-4 text-xs text-slate-500">{asRequest ? 'La clinique doit confirmer votre demande.' : 'Les conflits d’horaire du médecin et du patient sont vérifiés automatiquement.'}</p>
       {error && <Notice tone="error" onClose={() => setError('')}>{error}</Notice>}
@@ -480,13 +480,13 @@ function AppointmentPanel({ appointment, canUpdate, canCancel, isPatient, onClos
       <aside role="dialog" aria-modal="true" aria-labelledby="appointment-title" className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">{appointment.is_walk_in ? 'Sans rendez-vous' : 'Rendez-vous'}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{appointment.is_walk_in ? 'Sans rendez-vous' : 'Rendez-vous'}</p>
             <h2 id="appointment-title" className="mt-1 text-lg font-semibold">{formatDate(appointment.appointment_date)} à {appointment.appointment_time}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="text-2xl leading-none text-slate-400 hover:text-slate-700">×</button>
         </div>
         <dl className="mt-5 space-y-3 text-sm">
-          {!isPatient && <div><dt className="text-xs text-slate-400">Patient</dt><dd className="font-semibold"><Link href={`/patients/${appointment.patient_id}`} className="text-teal-800 hover:underline">{appointment.patient?.last_name.toUpperCase()} {appointment.patient?.first_name}</Link> <span className="font-normal text-slate-500">{appointment.patient?.patient_unique_id}</span></dd></div>}
+          {!isPatient && <div><dt className="text-xs text-slate-400">Patient</dt><dd className="font-semibold"><Link href={`/patients/${appointment.patient_id}`} className="text-emerald-800 hover:underline">{appointment.patient?.last_name.toUpperCase()} {appointment.patient?.first_name}</Link> <span className="font-normal text-slate-500">{appointment.patient?.patient_unique_id}</span></dd></div>}
           <div><dt className="text-xs text-slate-400">Médecin</dt><dd className="font-semibold">{doctorName(appointment.doctor?.name)}</dd></div>
           <div><dt className="text-xs text-slate-400">Motif</dt><dd>{appointment.reason ?? '—'}</dd></div>
           <div><dt className="text-xs text-slate-400">Statut</dt><dd className="flex flex-wrap gap-2"><StatusBadge tone={STATUS[appointment.status].tone} label={STATUS[appointment.status].label} />{appointment.checked_in_at && <StatusBadge tone="teal" label={`Arrivé à ${formatDateTime(appointment.checked_in_at).slice(-5)}`} />}</dd></div>

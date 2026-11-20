@@ -232,7 +232,7 @@ export default function ConsultationEditorPage() {
               <ul className="mb-4 space-y-2">
                 {diagnoses.map((diagnosis, index) => (
                   <li key={`${diagnosis.cim10_code}-${index}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 px-3 py-2">
-                    <span className="font-mono text-xs font-semibold text-teal-700">{diagnosis.cim10_code === 'NON_CODE' ? 'non codé' : diagnosis.cim10_code}</span>
+                    <span className="font-mono text-xs font-semibold text-emerald-700">{diagnosis.cim10_code === 'NON_CODE' ? 'non codé' : diagnosis.cim10_code}</span>
                     <span className="flex-1 text-sm text-slate-800">{diagnosis.cim10_description}</span>
                     {editable ? (
                       <>
@@ -258,7 +258,7 @@ export default function ConsultationEditorPage() {
             </Section>
 
             {editable && (
-              <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+              <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-lg ">
                 <span className="text-xs text-slate-500">{dirty ? 'Modifications non enregistrées' : 'Tout est enregistré'}</span>
                 <div className="flex flex-wrap gap-2">
                   {consultation.status === 'DRAFT' && <button type="button" disabled={saving} onClick={() => setConfirm('delete')} className={buttonClass.danger}>Supprimer le brouillon</button>}
@@ -268,8 +268,8 @@ export default function ConsultationEditorPage() {
               </div>
             )}
             {isAuthor && consultation.status === 'COMPLETED' && (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3">
-                <span className="text-sm text-teal-900">Consultation terminée. La signature la rend définitive et visible par le patient.</span>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <span className="text-sm text-emerald-900">Consultation terminée. La signature la rend définitive et visible par le patient.</span>
                 <div className="flex gap-2">
                   <button type="button" disabled={saving} onClick={() => void simpleAction(`/consultations/${consultation.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'IN_PROGRESS' }) }, 'Consultation rouverte.')} className={buttonClass.secondary}>Rouvrir</button>
                   <button type="button" disabled={saving} onClick={() => setConfirm('sign')} className={buttonClass.primary}>Signer</button>
@@ -292,7 +292,7 @@ export default function ConsultationEditorPage() {
                       <li key={prescription.id} className="rounded-lg bg-slate-50 px-3 py-2">
                         <p className="font-semibold">Ordonnance #{prescription.id} <span className="font-normal text-slate-500">· {prescription.status === 'DRAFT' ? 'brouillon' : prescription.status === 'SIGNED' ? 'signée' : prescription.status === 'DISPENSED' ? 'délivrée' : 'annulée'}</span></p>
                         <p className="text-xs text-slate-600">{prescription.items.map((item) => item.medication.name).join(', ')}</p>
-                        {['SIGNED', 'DISPENSED'].includes(prescription.status) && <a href={`/prescriptions/${prescription.id}/print`} target="_blank" rel="noopener" className="text-xs font-semibold text-teal-700">Imprimer</a>}
+                        {['SIGNED', 'DISPENSED'].includes(prescription.status) && <a href={`/prescriptions/${prescription.id}/print`} target="_blank" rel="noopener" className="text-xs font-semibold text-emerald-700">Imprimer</a>}
                       </li>
                     ))}
                   </ul>

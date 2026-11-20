@@ -141,12 +141,12 @@ export function CertificatesSection({ token, patientId, consultationId, canCreat
         {error && <Notice tone="error" onClose={() => setError('')}>{error}</Notice>}
 
         {showForm && (
-          <form onSubmit={(event) => void submit(event)} className="mb-6 space-y-4 rounded-xl border border-teal-200 bg-teal-50/40 p-4">
+          <form onSubmit={(event) => void submit(event)} className="mb-6 space-y-4 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
             <Field label="Type de certificat" required>
               <div className="flex flex-wrap gap-2">
                 {(Object.keys(CERTIFICATE_TYPES) as Certificate['type'][]).map((value) => (
                   <button key={value} type="button" aria-pressed={type === value} onClick={() => chooseType(value)}
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold ${type === value ? 'border-teal-600 bg-white text-teal-800' : 'border-slate-300 bg-white/60 text-slate-600'}`}>
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold ${type === value ? 'border-emerald-600 bg-white text-emerald-800' : 'border-slate-300 bg-white/60 text-slate-600'}`}>
                     {CERTIFICATE_TYPES[value].label}
                   </button>
                 ))}

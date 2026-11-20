@@ -43,7 +43,7 @@ function SaasInvoices() {
         <div role="tablist" aria-label="Vues" className="mb-5 inline-flex rounded-xl border border-slate-200 bg-white p-1">
           {([['invoices', 'Factures'], ['payments', 'Paiements déclarés']] as const).map(([key, label]) => (
             <button key={key} role="tab" type="button" aria-selected={tab === key} onClick={() => setTab(key)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold ${tab === key ? 'bg-teal-700 text-white' : 'text-slate-600 hover:text-slate-900'}`}>
+              className={`rounded-lg px-4 py-2 text-sm font-semibold ${tab === key ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:text-slate-900'}`}>
               {label}
             </button>
           ))}
@@ -95,7 +95,7 @@ function InvoicesTab({ token, initialStatus, onMessage, onError }: { token: stri
                 {result.data.map((invoice) => (
                   <tr key={invoice.id}>
                     <td className="px-4 py-3 font-medium text-slate-900">{invoice.number}</td>
-                    <td className="px-4 py-3">{invoice.clinic ? <Link href={`/clinics/${invoice.clinic.id}`} className="text-teal-800 hover:underline">{invoice.clinic.name}</Link> : '—'}</td>
+                    <td className="px-4 py-3">{invoice.clinic ? <Link href={`/clinics/${invoice.clinic.id}`} className="text-emerald-800 hover:underline">{invoice.clinic.name}</Link> : '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{formatDate(invoice.period_start)} → {formatDate(invoice.period_end)}</td>
                     <td className="px-4 py-3 text-right">{formatMoney(invoice.amount)}</td>
                     <td className={`px-4 py-3 text-right font-medium ${invoice.balance > 0 ? 'text-rose-700' : 'text-slate-500'}`}>{formatMoney(invoice.balance)}</td>

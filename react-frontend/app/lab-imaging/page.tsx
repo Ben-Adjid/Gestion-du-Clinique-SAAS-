@@ -47,7 +47,7 @@ function Worklists() {
           <div role="tablist" className="mb-5 inline-flex rounded-xl border border-slate-300 bg-white p-1">
             {(['lab', 'imaging'] as const).map((key) => (
               <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => router.replace(`/lab-imaging?tab=${key}`)}
-                className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === key ? 'bg-teal-700 text-white' : 'text-slate-600'}`}>
+                className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === key ? 'bg-emerald-700 text-white' : 'text-slate-600'}`}>
                 {key === 'lab' ? 'Laboratoire' : 'Imagerie'}
               </button>
             ))}
@@ -100,8 +100,8 @@ function StatusChips({ statuses, counts, value, onChange }: {
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par étape">
       {chips.map(([key, label, count]) => (
         <button key={key} type="button" aria-pressed={value === key} onClick={() => onChange(key)}
-          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${value === key ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}`}>
-          {label} <span className={value === key ? 'text-teal-100' : 'text-slate-400'}>{count}</span>
+          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${value === key ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}`}>
+          {label} <span className={value === key ? 'text-emerald-100' : 'text-slate-400'}>{count}</span>
         </button>
       ))}
     </div>

@@ -66,7 +66,7 @@ export default function NotificationsPage() {
 
         <ul className="mt-6 space-y-3">
           {items.map((notification) => (
-            <li key={notification.id} className={`rounded-2xl border bg-white p-5 ${notification.read ? 'border-slate-200' : 'border-teal-300'}`}>
+            <li key={notification.id} className={`rounded-2xl border bg-white p-5 ${notification.read ? 'border-slate-200' : 'border-emerald-300'}`}>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-semibold text-slate-900">{notification.title}</p>

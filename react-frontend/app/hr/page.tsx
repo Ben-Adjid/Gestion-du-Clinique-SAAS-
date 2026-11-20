@@ -58,7 +58,7 @@ function HrContent() {
         <div role="tablist" className="mb-5 inline-flex flex-wrap gap-1 rounded-xl border border-slate-300 bg-white p-1">
           {visible.map((item) => (
             <button key={item.key} type="button" role="tab" aria-selected={tab === item.key} onClick={() => { setNotice(''); router.replace(`/hr?tab=${item.key}`); }}
-              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === item.key ? 'bg-teal-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === item.key ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
               {item.label}
             </button>
           ))}
@@ -152,7 +152,7 @@ function AttendanceTab({ token, onNotice }: { token: string; onNotice: (message:
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="inline-flex rounded-xl border border-slate-300 bg-white p-1">
           {(['day', 'month'] as const).map((mode) => (
-            <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${view === mode ? 'bg-teal-700 text-white' : 'text-slate-600'}`}>{mode === 'day' ? 'Feuille du jour' : 'Bilan du mois'}</button>
+            <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${view === mode ? 'bg-emerald-700 text-white' : 'text-slate-600'}`}>{mode === 'day' ? 'Feuille du jour' : 'Bilan du mois'}</button>
           ))}
         </div>
         {view === 'day'
@@ -242,7 +242,7 @@ function AttendanceForm({ token, date, row, onClose, onSaved }: { token: string;
         <Field label="Statut" required>
           <div className="grid grid-cols-3 gap-2">
             {(Object.keys(ATTENDANCE_STATUS) as AttendanceRecord['status'][]).map((value) => (
-              <button key={value} type="button" aria-pressed={status === value} onClick={() => setStatus(value)} className={`rounded-xl border px-3 py-2 text-sm font-semibold ${status === value ? 'border-teal-600 bg-teal-50 text-teal-800' : 'border-slate-300 text-slate-600'}`}>{ATTENDANCE_STATUS[value].label}</button>
+              <button key={value} type="button" aria-pressed={status === value} onClick={() => setStatus(value)} className={`rounded-xl border px-3 py-2 text-sm font-semibold ${status === value ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-slate-300 text-slate-600'}`}>{ATTENDANCE_STATUS[value].label}</button>
             ))}
           </div>
         </Field>

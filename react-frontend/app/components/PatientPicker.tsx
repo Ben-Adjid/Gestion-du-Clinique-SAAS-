@@ -80,7 +80,7 @@ export function PatientPicker({ token, value, onChange, query = '', placeholder 
           {value.patient_unique_id && <span className="ml-2 text-xs text-slate-500">{value.patient_unique_id}</span>}
         </span>
         {!disabled && (
-          <button type="button" onClick={() => onChange(null)} className="shrink-0 text-xs font-semibold text-teal-700 hover:text-teal-900">
+          <button type="button" onClick={() => onChange(null)} className="shrink-0 text-xs font-semibold text-emerald-700 hover:text-emerald-900">
             Changer
           </button>
         )}
@@ -124,7 +124,7 @@ export function PatientPicker({ token, value, onChange, query = '', placeholder 
               aria-selected={index === active}
               onMouseDown={(event) => { event.preventDefault(); pick(patient); }}
               onMouseEnter={() => setActive(index)}
-              className={`cursor-pointer px-3.5 py-2 text-sm ${index === active ? 'bg-teal-50' : ''}`}
+              className={`cursor-pointer px-3.5 py-2 text-sm ${index === active ? 'bg-emerald-50' : ''}`}
             >
               <span className="font-semibold text-slate-900">{patient.last_name.toUpperCase()} {patient.first_name}</span>
               <span className="block text-xs text-slate-500">

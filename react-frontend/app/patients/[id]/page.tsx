@@ -141,7 +141,7 @@ function PatientDetailContent() {
               {photoUrl
                 // eslint-disable-next-line @next/next/no-img-element -- protected blob URL, not optimisable by next/image
                 ? <img src={photoUrl} alt={`Photo de ${patient.first_name} ${patient.last_name}`} className="h-28 w-28 rounded-2xl object-cover" />
-                : <span aria-hidden="true" className="flex h-28 w-28 items-center justify-center rounded-2xl bg-teal-50 text-3xl font-bold text-teal-800">{initials(patient)}</span>}
+                : <span aria-hidden="true" className="flex h-28 w-28 items-center justify-center rounded-2xl bg-emerald-50 text-3xl font-bold text-emerald-800">{initials(patient)}</span>}
               {canEdit && (
                 <div className="flex gap-1">
                   <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Choisir une photo"
@@ -296,7 +296,7 @@ function PatientClinicalProfile({ patientId, token, canEdit }: { patientId: stri
           <p className="mt-1 text-sm text-gray-500">Informations sensibles du dossier, modifiables par le personnel clinique autorisé.</p>
         </div>
         {canEdit && !editing && (
-          <button type="button" onClick={() => setEditing(true)} className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">
+          <button type="button" onClick={() => setEditing(true)} className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
             Modifier
           </button>
         )}
@@ -317,7 +317,7 @@ function PatientClinicalProfile({ patientId, token, canEdit }: { patientId: stri
                 </div>
               </div>
             ))}
-            <button type="button" onClick={() => setProfile((current) => ({ ...current, emergency_contacts: [...current.emergency_contacts, { emergency_contact_name: '', emergency_contact_phone: '', relationship: null }] }))} className="text-sm font-semibold text-teal-700">+ Ajouter un contact</button>
+            <button type="button" onClick={() => setProfile((current) => ({ ...current, emergency_contacts: [...current.emergency_contacts, { emergency_contact_name: '', emergency_contact_phone: '', relationship: null }] }))} className="text-sm font-semibold text-emerald-700">+ Ajouter un contact</button>
           </fieldset>
 
           <fieldset className="space-y-3">
@@ -334,7 +334,7 @@ function PatientClinicalProfile({ patientId, token, canEdit }: { patientId: stri
                 </div>
               </div>
             ))}
-            <button type="button" onClick={() => setProfile((current) => ({ ...current, allergies: [...current.allergies, { allergen: '', severity: 'MEDIUM', notes: null }] }))} className="text-sm font-semibold text-teal-700">+ Ajouter une allergie</button>
+            <button type="button" onClick={() => setProfile((current) => ({ ...current, allergies: [...current.allergies, { allergen: '', severity: 'MEDIUM', notes: null }] }))} className="text-sm font-semibold text-emerald-700">+ Ajouter une allergie</button>
           </fieldset>
 
           <fieldset className="space-y-3">
@@ -350,12 +350,12 @@ function PatientClinicalProfile({ patientId, token, canEdit }: { patientId: stri
                 <textarea aria-label="Notes sur l’antécédent" maxLength={2000} placeholder="Notes" value={entry.notes ?? ''} onChange={(event) => updateHistory(index, { notes: event.target.value || null })} className="rounded-lg border border-slate-300 px-3 py-2 text-sm sm:col-span-2" />
               </div>
             ))}
-            <button type="button" onClick={() => setProfile((current) => ({ ...current, medical_history: [...current.medical_history, { condition: '', start_date: null, end_date: null, notes: null }] }))} className="text-sm font-semibold text-teal-700">+ Ajouter un antécédent</button>
+            <button type="button" onClick={() => setProfile((current) => ({ ...current, medical_history: [...current.medical_history, { condition: '', start_date: null, end_date: null, notes: null }] }))} className="text-sm font-semibold text-emerald-700">+ Ajouter un antécédent</button>
           </fieldset>
 
           <div className="flex justify-end gap-3">
             <button type="button" onClick={() => setEditing(false)} className="rounded border px-4 py-2">Annuler</button>
-            <button type="submit" disabled={saving} className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
+            <button type="submit" disabled={saving} className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
           </div>
         </form>
       ) : (
@@ -393,10 +393,10 @@ interface TimelineEvent {
 }
 
 const EVENT_STYLE: Record<TimelineEvent['type'], string> = {
-  consultation: 'bg-teal-500',
+  consultation: 'bg-emerald-500',
   prescription: 'bg-rose-500',
   lab: 'bg-amber-500',
-  imaging: 'bg-violet-500',
+  imaging: 'bg-slate-500',
   vitals: 'bg-blue-500',
   invoice: 'bg-emerald-500',
 };

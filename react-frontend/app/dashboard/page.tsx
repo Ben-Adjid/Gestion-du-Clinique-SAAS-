@@ -33,9 +33,9 @@ const iconPaths: Record<string, React.ReactNode> = {
 };
 
 const toneClasses: Record<string, string> = {
-  violet: 'bg-violet-50 text-violet-600',
+  violet: 'bg-slate-50 text-slate-600',
   blue: 'bg-blue-50 text-blue-600',
-  teal: 'bg-teal-50 text-teal-700',
+  teal: 'bg-emerald-50 text-emerald-700',
   rose: 'bg-rose-50 text-rose-600',
   amber: 'bg-amber-50 text-amber-600',
   green: 'bg-emerald-50 text-emerald-600',
@@ -101,7 +101,7 @@ export default function DashboardPage() {
   if (loading || !isAuthenticated || modules === null) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f6f8fc] text-sm font-medium text-slate-500">
-        <span className="mr-3 h-2 w-2 animate-pulse rounded-full bg-teal-500" />
+        <span className="mr-3 h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
         Préparation de votre espace…
       </div>
     );
@@ -125,10 +125,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#f6f8fc] text-slate-900">
       <main className="min-h-screen">
-        <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/90 backdrop-blur-xl">
+        <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/90 ">
           <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-5 sm:px-8 xl:px-10">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold tracking-tight text-slate-900 lg:hidden">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-600 text-white"><ClinicMark /></span>Clinique+
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white"><ClinicMark /></span>Clinique+
             </Link>
             <div className="hidden text-sm text-slate-500 lg:block">Espace de travail <span className="px-2 text-slate-300">/</span><span className="font-semibold text-slate-800">Vue d’ensemble</span></div>
             <div className="ml-auto flex items-center gap-3 sm:gap-5">
@@ -148,8 +148,8 @@ export default function DashboardPage() {
 
         <div className="mx-auto max-w-[1440px] px-5 pb-14 pt-8 sm:px-8 sm:pt-10 xl:px-10">
           <div className="mb-8">
-            <p className="mb-2 text-xs font-semibold capitalize tracking-wide text-teal-700">{today}</p>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-[34px]">{firstName ? `Bonjour ${firstName}` : 'Bonjour'}<span className="text-teal-600">.</span></h1>
+            <p className="mb-2 text-xs font-semibold capitalize tracking-wide text-emerald-700">{today}</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-[34px]">{firstName ? `Bonjour ${firstName}` : 'Bonjour'}<span className="text-emerald-600">.</span></h1>
             {profile && (
               <>
                 <p className="mt-3 text-base font-semibold text-slate-800">{profile.title}</p>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
                   );
                   const className = 'rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.025)]';
                   return widget.href ? (
-                    <Link key={widget.key} href={widget.href} className={`${className} transition hover:border-teal-200`}>{card}</Link>
+                    <Link key={widget.key} href={widget.href} className={`${className} transition hover:border-emerald-200`}>{card}</Link>
                   ) : (
                     <div key={widget.key} className={className}>{card}</div>
                   );
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Rechercher un espace…"
                 aria-label="Rechercher un espace"
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-4 pr-4 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10"
+                className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-4 pr-4 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10"
               />
             </label>
           </div>
@@ -223,7 +223,7 @@ export default function DashboardPage() {
             {visibleGroups.length > 0 && filteredGroups.length === 0 && (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
                 <h2 className="text-sm font-semibold text-slate-800">Aucun espace trouvé</h2>
-                <button type="button" onClick={() => setSearch('')} className="mt-4 text-xs font-semibold text-teal-700 hover:text-teal-800">Effacer la recherche</button>
+                <button type="button" onClick={() => setSearch('')} className="mt-4 text-xs font-semibold text-emerald-700 hover:text-emerald-800">Effacer la recherche</button>
               </div>
             )}
           </div>
@@ -236,15 +236,15 @@ export default function DashboardPage() {
 
 function ModuleCard({ module }: { module: Module }) {
   return (
-    <Link href={module.href} className="group flex min-h-[114px] items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.025)] transition duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.07)] sm:p-5">
+    <Link href={module.href} className="group flex min-h-[114px] items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.025)] transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.07)] sm:p-5">
       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] ${toneClasses[module.tone]}`}>
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="h-[21px] w-[21px]">{iconPaths[module.icon]}</svg>
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-semibold text-slate-800 transition group-hover:text-teal-800">{module.title}</span>
+        <span className="block text-[13px] font-semibold text-slate-800 transition group-hover:text-emerald-800">{module.title}</span>
         <span className="mt-1 block text-[11px] leading-[1.55] text-slate-500">{module.description}</span>
       </span>
-      <span aria-hidden="true" className="text-lg text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-teal-600">→</span>
+      <span aria-hidden="true" className="text-lg text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-600">→</span>
     </Link>
   );
 }

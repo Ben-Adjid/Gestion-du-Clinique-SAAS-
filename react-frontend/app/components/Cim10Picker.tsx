@@ -71,8 +71,8 @@ export function Cim10Picker({ token, onPick }: { token: string; onPick: (code: s
             <li key={result.code} role="option" aria-selected={index === active}
               onMouseDown={(event) => { event.preventDefault(); pick(result.code, result.label); }}
               onMouseEnter={() => setActive(index)}
-              className={`cursor-pointer px-3.5 py-2 text-sm ${index === active ? 'bg-teal-50' : ''}`}>
-              <span className="mr-2 font-mono text-xs font-semibold text-teal-700">{result.code}</span>
+              className={`cursor-pointer px-3.5 py-2 text-sm ${index === active ? 'bg-emerald-50' : ''}`}>
+              <span className="mr-2 font-mono text-xs font-semibold text-emerald-700">{result.code}</span>
               <span className="text-slate-900">{result.label}</span>
               <span className="block text-xs text-slate-400">{result.chapter}</span>
             </li>

@@ -158,11 +158,11 @@ export default function UsersPage() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-teal-700">Administration clinique</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Administration clinique</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">Utilisateurs</h1>
             <p className="mt-2 text-sm text-slate-500">Gérez les comptes de l’équipe et créez un accès patient depuis un dossier existant.</p>
           </div>
-          <button type="button" onClick={() => { setError(''); setShowForm((visible) => !visible); }} className="rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-600/15 transition hover:bg-teal-700">
+          <button type="button" onClick={() => { setError(''); setShowForm((visible) => !visible); }} className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/15 transition hover:bg-emerald-700">
             {showForm ? 'Annuler' : '+ Ajouter un utilisateur'}
           </button>
         </div>
@@ -205,7 +205,7 @@ export default function UsersPage() {
               )}
               <Field label="Mot de passe provisoire"><input required type="password" minLength={12} autoComplete="new-password" value={formData.password} onChange={(event) => setFormData({ ...formData, password: event.target.value })} className={inputClass} /></Field>
               <div className="flex items-end sm:col-span-2">
-                <button type="submit" disabled={submitting} className="rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60">{submitting ? 'Création…' : 'Créer le compte'}</button>
+                <button type="submit" disabled={submitting} className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60">{submitting ? 'Création…' : 'Créer le compte'}</button>
               </div>
             </form>
           </section>
@@ -214,7 +214,7 @@ export default function UsersPage() {
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4 sm:px-6">
             <div><h2 className="text-sm font-semibold">Comptes de la plateforme</h2><p className="mt-1 text-xs text-slate-400">{loadingData ? 'Chargement…' : `${totalUsers} compte${totalUsers > 1 ? 's' : ''}`}</p></div>
-            <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Rechercher nom, e-mail…" aria-label="Rechercher un utilisateur" className="h-10 w-full max-w-xs rounded-lg border border-slate-200 px-3 text-xs outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-500/10" />
+            <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Rechercher nom, e-mail…" aria-label="Rechercher un utilisateur" className="h-10 w-full max-w-xs rounded-lg border border-slate-200 px-3 text-xs outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10" />
           </div>
           {loadingData ? <div className="p-12 text-center text-sm text-slate-500">Chargement des comptes…</div> : users.length === 0 ? (
             <div className="p-12 text-center"><p className="text-sm font-semibold text-slate-800">Aucun utilisateur trouvé</p><p className="mt-1 text-xs text-slate-500">Créez un compte pour inviter un membre de l’équipe.</p></div>
@@ -241,7 +241,7 @@ export default function UsersPage() {
   );
 }
 
-const inputClass = 'h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10';
+const inputClass = 'h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-xs font-semibold text-slate-700">{label}<span className="mt-2 block">{children}</span></label>;

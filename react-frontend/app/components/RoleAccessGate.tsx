@@ -128,7 +128,7 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
             <div className="max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
               <h1 className="text-xl font-semibold text-slate-900">Choisir une clinique</h1>
               <p className="mt-2 text-sm text-slate-600">Sélectionnez la clinique à administrer dans le menu avant d’ouvrir ses dossiers et activités.</p>
-              <Link href="/dashboard" className="mt-5 inline-flex rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white">Retour au tableau de bord</Link>
+              <Link href="/dashboard" className="mt-5 inline-flex rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">Retour au tableau de bord</Link>
             </div>
           </main>
         ) : children}

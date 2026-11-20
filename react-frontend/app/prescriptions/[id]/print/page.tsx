@@ -64,7 +64,7 @@ export default function PrescriptionPrintPage() {
       </p>
       <ol className="mt-8 space-y-5">
         {prescription.items.map((item, index) => (
-          <li key={item.id} className="border-l-2 border-teal-700 pl-4">
+          <li key={item.id} className="border-l-2 border-emerald-700 pl-4">
             <p className="font-bold">{index + 1}. {item.medication.name} {item.medication.dosage} <span className="font-normal text-slate-600">{item.medication.form}</span></p>
             <p>{item.dosage_prescribed} — {item.frequency}, pendant {item.duration_days} jour{item.duration_days > 1 ? 's' : ''}</p>
             <p className="text-xs text-slate-600">Quantité à délivrer : {item.quantity}</p>

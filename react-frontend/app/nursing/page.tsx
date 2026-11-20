@@ -135,7 +135,7 @@ export default function NursingPage() {
     <div className="min-h-screen bg-slate-50 px-5 py-8 sm:px-8">
       <div className="mx-auto max-w-6xl space-y-8">
         <header>
-          <p className="text-xs font-semibold uppercase tracking-wider text-teal-700">Parcours de soins</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Parcours de soins</p>
           <h1 className="mt-1 text-3xl font-bold text-slate-900">Soins infirmiers</h1>
         </header>
 
@@ -176,7 +176,7 @@ export default function NursingPage() {
                         <td className="px-5 py-3">
                           <div className="flex gap-2">
                             {task.status === 'PENDING' && <button type="button" disabled={busy} onClick={() => updateTask(task, 'IN_PROGRESS')} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-50">Commencer</button>}
-                            {task.status !== 'COMPLETED' && <button type="button" disabled={busy} onClick={() => updateTask(task, 'COMPLETED')} className="rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">Terminer</button>}
+                            {task.status !== 'COMPLETED' && <button type="button" disabled={busy} onClick={() => updateTask(task, 'COMPLETED')} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">Terminer</button>}
                             {task.status === 'COMPLETED' && <span className="text-xs text-slate-400">{task.completed_at ? new Date(task.completed_at).toLocaleString('fr-FR') : ''}</span>}
                           </div>
                         </td>
@@ -216,7 +216,7 @@ export default function NursingPage() {
                   <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={2} maxLength={2000} className="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900" />
                 </label>
                 <div className="sm:col-span-2 lg:col-span-4">
-                  <button type="submit" disabled={busy} className="rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50">Enregistrer les constantes</button>
+                  <button type="submit" disabled={busy} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">Enregistrer les constantes</button>
                 </div>
               </form>
             )}

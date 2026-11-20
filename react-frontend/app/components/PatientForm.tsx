@@ -106,9 +106,9 @@ export function PatientForm({ token, patient, onSaved, cancelHref }: {
             role="tab"
             aria-selected={tab === item.key}
             onClick={() => setTab(item.key)}
-            className={`flex shrink-0 items-center gap-2 rounded-t-xl px-4 py-2.5 text-sm font-semibold transition ${tab === item.key ? 'border border-b-white border-slate-200 bg-white text-teal-800 -mb-px' : 'text-slate-500 hover:text-slate-800'}`}
+            className={`flex shrink-0 items-center gap-2 rounded-t-xl px-4 py-2.5 text-sm font-semibold transition ${tab === item.key ? 'border border-b-white border-slate-200 bg-white text-emerald-800 -mb-px' : 'text-slate-500 hover:text-slate-800'}`}
           >
-            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${tabHasError(item.key) ? 'bg-rose-600 text-white' : tab === item.key ? 'bg-teal-700 text-white' : 'bg-slate-200 text-slate-600'}`}>{index + 1}</span>
+            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${tabHasError(item.key) ? 'bg-rose-600 text-white' : tab === item.key ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-600'}`}>{index + 1}</span>
             {item.label}
             {item.key === 'emergency' && contacts.length > 0 && <span className="text-xs text-slate-400">({contacts.length})</span>}
             {item.key === 'allergies' && allergies.length > 0 && <span className="text-xs text-slate-400">({allergies.length})</span>}
@@ -132,7 +132,7 @@ export function PatientForm({ token, patient, onSaved, cancelHref }: {
               <div className="flex gap-2">
                 {[['F', 'Femme'], ['M', 'Homme'], ['OTHER', 'Autre']].map(([value, label]) => (
                   <button key={value} type="button" aria-pressed={form.gender === value} onClick={() => set('gender')(form.gender === value ? '' : value)}
-                    className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${form.gender === value ? 'border-teal-600 bg-teal-50 text-teal-800' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}>
+                    className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${form.gender === value ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}>
                     {label}
                   </button>
                 ))}
@@ -161,7 +161,7 @@ export function PatientForm({ token, patient, onSaved, cancelHref }: {
             </Field>
             {!editing && (
               <Field label="Photo (facultatif)" hint="JPEG, PNG ou WEBP, 2 Mo maximum." className="sm:col-span-2">
-                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setPhoto(event.target.files?.[0] ?? null)} className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-teal-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal-800" />
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setPhoto(event.target.files?.[0] ?? null)} className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-emerald-800" />
               </Field>
             )}
           </div>

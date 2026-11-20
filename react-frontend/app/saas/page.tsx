@@ -103,7 +103,7 @@ export default function SaasDashboardPage() {
                 <ul className="divide-y divide-slate-100">
                   {(Object.keys(SUBSCRIPTION_STATUS) as SubscriptionStatus[]).map((status) => (
                     <li key={status}>
-                      <Link href={`/clinics?subscription_status=${status}`} className="flex items-center justify-between py-2.5 text-sm hover:text-teal-800">
+                      <Link href={`/clinics?subscription_status=${status}`} className="flex items-center justify-between py-2.5 text-sm hover:text-emerald-800">
                         <StatusBadge label={SUBSCRIPTION_STATUS[status].label} tone={SUBSCRIPTION_STATUS[status].tone} />
                         <span className="font-semibold text-slate-900">{data.clinics_by_status[status] ?? 0}</span>
                       </Link>
@@ -134,7 +134,7 @@ export default function SaasDashboardPage() {
                     <tbody className="divide-y divide-slate-100">
                       {data.upcoming_renewals.map((renewal) => (
                         <tr key={renewal.clinic_id}>
-                          <td className="py-2.5 pr-4"><Link href={`/clinics/${renewal.clinic_id}`} className="font-medium text-teal-800 hover:underline">{renewal.clinic}</Link></td>
+                          <td className="py-2.5 pr-4"><Link href={`/clinics/${renewal.clinic_id}`} className="font-medium text-emerald-800 hover:underline">{renewal.clinic}</Link></td>
                           <td className="py-2.5 pr-4 text-slate-600">{renewal.plan}</td>
                           <td className="py-2.5 pr-4"><StatusBadge label={SUBSCRIPTION_STATUS[renewal.status].label} tone={SUBSCRIPTION_STATUS[renewal.status].tone} /></td>
                           <td className="py-2.5 pr-4 text-slate-600">{formatDate(renewal.period_end)}</td>
@@ -175,7 +175,7 @@ function Kpi({ label, value, hint, href, highlight }: { label: string; value: st
   );
   const className = `block rounded-2xl border bg-white p-5 shadow-sm ${highlight ? 'border-amber-300' : 'border-slate-200'}`;
 
-  return href ? <Link href={href} className={`${className} transition hover:border-teal-300`}>{content}</Link> : <div className={className}>{content}</div>;
+  return href ? <Link href={href} className={`${className} transition hover:border-emerald-300`}>{content}</Link> : <div className={className}>{content}</div>;
 }
 
 function MonthlyBars({ data }: { data: { month: string; label: string; amount: number }[] }) {
@@ -206,7 +206,7 @@ function MonthlyBars({ data }: { data: { month: string; label: string; amount: n
                 className="flex h-full w-full max-w-[44px] items-end justify-center focus:outline-none"
               >
                 <span
-                  className={`block w-full rounded-t-[4px] transition-colors ${active === point.month ? 'bg-teal-800' : 'bg-teal-600'}`}
+                  className={`block w-full rounded-t-[4px] transition-colors ${active === point.month ? 'bg-emerald-800' : 'bg-emerald-600'}`}
                   style={{ height: `${height}%` }}
                 />
               </button>

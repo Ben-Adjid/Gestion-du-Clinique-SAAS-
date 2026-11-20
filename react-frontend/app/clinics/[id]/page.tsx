@@ -239,7 +239,7 @@ export default function ClinicDetailsPage() {
             <ol className="space-y-3 border-l-2 border-slate-200 pl-5">
               {clinic.events.map((event) => (
                 <li key={event.id} className="relative">
-                  <span className="absolute -left-[27px] top-1.5 h-2.5 w-2.5 rounded-full bg-teal-600" aria-hidden="true" />
+                  <span className="absolute -left-[27px] top-1.5 h-2.5 w-2.5 rounded-full bg-emerald-600" aria-hidden="true" />
                   <p className="text-xs text-slate-500">{formatDateTime(event.created_at)}{event.user ? ` · ${event.user.name}` : ' · automatique'}</p>
                   <p className="text-sm"><span className="font-semibold text-slate-900">{EVENT_LABELS[event.type] ?? event.type}</span> — {event.description}</p>
                 </li>

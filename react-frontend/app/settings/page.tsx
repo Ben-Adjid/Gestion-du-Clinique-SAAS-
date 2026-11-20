@@ -53,9 +53,10 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-slate-50 p-6 sm:p-10">
       <div className="mx-auto max-w-2xl space-y-6">
         {!(user.totp_required && !user.totp_enabled) && (
-          <Link href="/dashboard" className="inline-block text-sm font-semibold text-teal-700 hover:text-teal-900">← Retour au tableau de bord</Link>
+          <Link href="/dashboard" className="inline-block text-sm font-semibold text-emerald-700 hover:text-emerald-900">← Retour au tableau de bord</Link>
         )}
         {user.role === 'ADMIN_CLINIC' && user.clinic_id && token && <ClinicLegalSection clinicId={user.clinic_id} token={token} />}
+        {user.role === 'DOCTOR' && token && <DoctorLicenceSection key={user.doctor_license ?? 'vide'} token={token} initial={user.doctor_license ?? ''} onSaved={(licence) => updateUser({ doctor_license: licence })} />}
         <h1 className="text-3xl font-bold text-slate-900">Paramètres</h1>
 
         {user.totp_required && !user.totp_enabled && (
@@ -91,7 +92,7 @@ export default function SettingsPage() {
               <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
             </Field>
             {message && <p className="text-sm text-slate-700">{message}</p>}
-            <button type="submit" disabled={saving} className="rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">
+            <button type="submit" disabled={saving} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
               {saving ? 'Enregistrement…' : 'Enregistrer'}
             </button>
           </form>
@@ -101,7 +102,7 @@ export default function SettingsPage() {
   );
 }
 
-const inputClass = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15';
+const inputClass = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15';
 
 function TwoFactorSection({ token, enabled, required, onChange }: {
   token: string;
@@ -171,13 +172,13 @@ function TwoFactorSection({ token, enabled, required, onChange }: {
         <div role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
           <p>{message}</p>
           {enabled && required && (
-            <Link href="/dashboard" className="mt-3 inline-block rounded-lg bg-teal-700 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-800">Aller au tableau de bord →</Link>
+            <Link href="/dashboard" className="mt-3 inline-block rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800">Aller au tableau de bord →</Link>
           )}
         </div>
       )}
 
       {!enabled && !setup && (
-        <button type="button" onClick={start} disabled={busy} className="mt-4 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">
+        <button type="button" onClick={start} disabled={busy} className="mt-4 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
           Activer la double authentification
         </button>
       )}
@@ -189,7 +190,7 @@ function TwoFactorSection({ token, enabled, required, onChange }: {
             <li>
               Choisissez « Saisir une clé de configuration » et entrez cette clé :
               <code className="mt-2 block break-all rounded-lg bg-slate-100 px-3 py-2 font-mono text-sm tracking-wider text-slate-900">{setup.secret.match(/.{1,4}/g)?.join(' ')}</code>
-              <a href={setup.otpauth_uri} className="mt-2 inline-block text-xs font-semibold text-teal-700 underline">Ouvrir directement dans l’application (sur téléphone)</a>
+              <a href={setup.otpauth_uri} className="mt-2 inline-block text-xs font-semibold text-emerald-700 underline">Ouvrir directement dans l’application (sur téléphone)</a>
             </li>
             <li>Saisissez le code à 6 chiffres affiché par l’application. La clé expire après 10 minutes.</li>
           </ol>
@@ -197,7 +198,7 @@ function TwoFactorSection({ token, enabled, required, onChange }: {
             <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" className={inputClass} required pattern="\d{6}" />
           </Field>
           <div className="flex gap-3">
-            <button type="submit" disabled={busy || code.length !== 6} className="rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">Confirmer</button>
+            <button type="submit" disabled={busy || code.length !== 6} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">Confirmer</button>
             <button type="button" onClick={() => setSetup(null)} className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700">Annuler</button>
           </div>
         </form>
@@ -376,6 +377,51 @@ function ClinicLegalSection({ clinicId, token }: { clinicId: number; token: stri
         <div className="flex items-end justify-end sm:col-span-2">
           <button type="submit" disabled={saving} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
         </div>
+      </form>
+    </section>
+  );
+}
+
+/** Registration number (numéro d’ordre) of the signed-in doctor: required before signing a prescription. */
+function DoctorLicenceSection({ token, initial, onSaved }: { token: string; initial: string; onSaved: (licence: string) => void }) {
+  const [licence, setLicence] = useState(initial);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+    setSaving(true);
+    try {
+      const response = await apiFetch<{ message: string; data: { license_number: string } }>('/me/doctor-licence', token, {
+        method: 'PUT',
+        body: JSON.stringify({ license_number: licence.trim() }),
+      });
+      onSaved(response.data.license_number);
+      setMessage(response.message);
+    } catch (err) {
+      if (err instanceof ApiError && err.errors?.license_number) setError(err.errors.license_number[0]);
+      else setError(err instanceof Error ? err.message : 'Enregistrement impossible.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 className="text-base font-semibold text-slate-900">Mon numéro d’ordre</h2>
+      <p className="mt-1 text-sm text-slate-500">Il est imprimé sur vos ordonnances. Une ordonnance ne peut pas être signée sans ce numéro.</p>
+      {!initial && <p role="alert" className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">Numéro d’ordre non renseigné : la signature des ordonnances est bloquée.</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
+      {message && <p role="status" className="mt-3 text-sm text-emerald-700">{message}</p>}
+      <form onSubmit={save} className="mt-4 flex flex-wrap items-end gap-3">
+        <label className="block min-w-[14rem] flex-1 text-sm font-semibold text-slate-700">
+          Numéro d’ordre
+          <input value={licence} maxLength={40} onChange={(event) => setLicence(event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm tabular-nums" />
+        </label>
+        <button type="submit" disabled={saving || !licence.trim()} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
       </form>
     </section>
   );

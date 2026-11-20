@@ -6,7 +6,7 @@ export default function TermsPage() {
     <main className="min-h-screen bg-slate-50 px-5 py-10 sm:px-8">
       <article className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-slate-200 bg-white p-6 text-sm leading-7 text-slate-700 shadow-sm sm:p-10">
         <header>
-          <p className="text-xs font-semibold uppercase tracking-wider text-teal-700">Clinique+</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Clinique+</p>
           <h1 className="mt-1 text-2xl font-bold text-slate-900">Conditions générales d’utilisation</h1>
           <p className="mt-2 text-xs text-slate-500">Version 2026-11. Document de travail : il doit être validé par un juriste avant toute mise en production.</p>
         </header>
@@ -37,7 +37,7 @@ export default function TermsPage() {
         </section>
 
         <footer className="border-t border-slate-100 pt-4">
-          <Link href="/" className="text-sm font-semibold text-teal-700 hover:text-teal-900">← Retour à l’accueil</Link>
+          <Link href="/" className="text-sm font-semibold text-emerald-700 hover:text-emerald-900">← Retour à l’accueil</Link>
         </footer>
       </article>
     </main>

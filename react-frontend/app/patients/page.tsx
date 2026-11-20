@@ -128,7 +128,7 @@ function PatientsContent() {
                     <tr key={patient.id} className="cursor-pointer hover:bg-slate-50/70" onClick={() => router.push(`/patients/${patient.id}`)}>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-bold text-teal-800">{initials(patient)}</span>
+                          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-800">{initials(patient)}</span>
                           <div>
                             <p className="font-semibold text-slate-900">{patient.last_name.toUpperCase()} {patient.first_name}</p>
                             <p className="text-xs text-slate-500">{patient.city ?? patient.address ?? ''}</p>

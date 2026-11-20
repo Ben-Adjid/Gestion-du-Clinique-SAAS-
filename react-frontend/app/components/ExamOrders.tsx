@@ -140,7 +140,7 @@ function OrderForm({ kind, token, consultationId, onCancel, onDone, onError }: {
   const groups = exams.reduce<Record<string, (LabExam | ImagingExam)[]>>((acc, exam) => ({ ...acc, [exam.exam_type]: [...(acc[exam.exam_type] ?? []), exam] }), {});
 
   return (
-    <form onSubmit={(event) => void submit(event)} className="space-y-3 rounded-xl border border-teal-200 bg-teal-50/40 p-3">
+    <form onSubmit={(event) => void submit(event)} className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3">
       <p className="text-sm font-semibold">{kind === 'lab' ? 'Analyses à demander' : 'Examen d’imagerie'}</p>
       <div className="max-h-64 space-y-2 overflow-y-auto">
         {Object.entries(groups).map(([type, list]) => (

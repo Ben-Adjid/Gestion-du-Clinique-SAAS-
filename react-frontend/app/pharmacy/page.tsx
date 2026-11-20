@@ -45,7 +45,7 @@ function PharmacyContent() {
         <div role="tablist" className="mb-5 flex flex-wrap gap-1 rounded-xl border border-slate-300 bg-white p-1">
           {tabs.map((item) => (
             <button key={item.key} type="button" role="tab" aria-selected={tab === item.key} onClick={() => { setNotice(''); router.replace(`/pharmacy?tab=${item.key}`); }}
-              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === item.key ? 'bg-teal-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === item.key ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
               {item.label}
             </button>
           ))}
@@ -202,7 +202,7 @@ function Stock({ token, onNotice }: { token: string; onNotice: (message: string)
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {tiles.map((tile) => (
             <button key={tile.label} type="button" aria-pressed={alert === tile.key} onClick={() => setAlert(tile.key)}
-              className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition ${alert === tile.key ? 'border-teal-600 ring-2 ring-teal-600/20' : 'border-slate-200 hover:border-slate-300'}`}>
+              className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition ${alert === tile.key ? 'border-emerald-600 ring-2 ring-emerald-600/20' : 'border-slate-200 hover:border-slate-300'}`}>
               <p className="text-xs text-slate-500">{tile.label}</p>
               <p className={`mt-1 text-2xl font-bold ${tile.tone}`}>{tile.value}</p>
             </button>

@@ -4,15 +4,15 @@ import Link from 'next/link';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 export const inputClass =
-  'block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 disabled:bg-slate-50 disabled:text-slate-500';
+  'block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 disabled:bg-slate-50 disabled:text-slate-500';
 
 export const buttonClass = {
-  primary: 'inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50',
+  primary: 'inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50',
   secondary: 'inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50',
   danger: 'inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50',
   small: 'inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50',
   smallDanger: 'inline-flex items-center justify-center rounded-lg border border-rose-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50',
-  smallPrimary: 'inline-flex items-center justify-center rounded-lg bg-teal-700 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50',
+  smallPrimary: 'inline-flex items-center justify-center rounded-lg bg-emerald-700 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50',
 };
 
 export function PageHeader({ eyebrow, title, description, backHref, backLabel = 'Retour', actions }: {
@@ -26,13 +26,13 @@ export function PageHeader({ eyebrow, title, description, backHref, backLabel = 
   return (
     <header className="mb-6">
       {backHref && (
-        <Link href={backHref} className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-teal-700 hover:text-teal-900">
+        <Link href={backHref} className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900">
           <span aria-hidden="true">←</span> {backLabel}
         </Link>
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-teal-700">{eyebrow}</p>}
+          {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">{eyebrow}</p>}
           <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">{title}</h1>
           {description && <p className="mt-1 max-w-2xl text-sm text-slate-500">{description}</p>}
         </div>
@@ -68,7 +68,7 @@ export function Notice({ tone, children, onClose }: { tone: 'success' | 'error' 
   const styles = {
     success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
     error: 'border-rose-200 bg-rose-50 text-rose-700',
-    info: 'border-sky-200 bg-sky-50 text-sky-800',
+    info: 'border-slate-200 bg-slate-50 text-slate-800',
     warning: 'border-amber-300 bg-amber-50 text-amber-900',
   }[tone];
 
@@ -156,7 +156,7 @@ export function EmptyState({ title, description, action }: { title: string; desc
 export function Loading({ label = 'Chargement…' }: { label?: string }) {
   return (
     <div role="status" className="flex items-center justify-center gap-3 rounded-2xl bg-white px-6 py-12 text-sm text-slate-500">
-      <span className="h-2 w-2 animate-pulse rounded-full bg-teal-500" aria-hidden="true" />
+      <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" aria-hidden="true" />
       {label}
     </div>
   );
@@ -182,18 +182,33 @@ export function TableSkeleton({ rows = 6, columns = 4 }: { rows?: number; column
   );
 }
 
+/** Pastille colorée + libellé : l'état ne repose jamais sur la couleur seule. */
 export function StatusBadge({ label, tone = 'slate' }: { label: string; tone?: 'slate' | 'green' | 'amber' | 'red' | 'blue' | 'teal' | 'violet' }) {
   const styles = {
     slate: 'bg-slate-100 text-slate-700',
-    green: 'bg-emerald-50 text-emerald-700',
-    amber: 'bg-amber-50 text-amber-800',
-    red: 'bg-rose-50 text-rose-700',
-    blue: 'bg-sky-50 text-sky-700',
-    teal: 'bg-teal-50 text-teal-800',
-    violet: 'bg-violet-50 text-violet-700',
+    green: 'bg-emerald-50 text-emerald-800',
+    amber: 'bg-amber-50 text-amber-900',
+    red: 'bg-rose-50 text-rose-800 ring-1 ring-rose-300 font-bold',
+    blue: 'bg-slate-50 text-slate-700',
+    teal: 'bg-emerald-50 text-emerald-800',
+    violet: 'bg-slate-50 text-slate-700',
+  }[tone];
+  const dot = {
+    slate: 'bg-slate-400',
+    green: 'bg-emerald-600',
+    amber: 'bg-amber-500',
+    red: 'bg-rose-600',
+    blue: 'bg-slate-400',
+    teal: 'bg-emerald-600',
+    violet: 'bg-slate-400',
   }[tone];
 
-  return <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${styles}`}>{label}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${styles}`}>
+      <span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
 }
 
 export function ConfirmDialog({ open, title, message, confirmLabel = 'Confirmer', tone = 'danger', reasonLabel, busy, onConfirm, onCancel }: {

@@ -46,17 +46,17 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
-                className="mt-1.5 block h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15"
+                className="mt-1.5 block h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15"
               />
             </label>
             {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
-            <button type="submit" disabled={sending} className="h-12 w-full rounded-xl bg-teal-600 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">
+            <button type="submit" disabled={sending} className="h-12 w-full rounded-xl bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
               {sending ? 'Envoi…' : 'Envoyer le lien'}
             </button>
           </form>
         )}
 
-        <Link href="/login" className="mt-6 inline-block text-sm font-semibold text-teal-700 hover:text-teal-900">← Retour à la connexion</Link>
+        <Link href="/login" className="mt-6 inline-block text-sm font-semibold text-emerald-700 hover:text-emerald-900">← Retour à la connexion</Link>
       </div>
     </main>
   );

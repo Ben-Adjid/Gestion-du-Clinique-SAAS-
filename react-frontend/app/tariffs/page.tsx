@@ -156,7 +156,7 @@ function ExamForm({ kind, token, exam, onCancel, onSaved }: { kind: 'lab' | 'ima
   };
 
   return (
-    <form onSubmit={(event) => void submit(event)} className="mb-5 grid gap-3 rounded-xl border border-teal-200 bg-teal-50/40 p-4 sm:grid-cols-3">
+    <form onSubmit={(event) => void submit(event)} className="mb-5 grid gap-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 sm:grid-cols-3">
       <Field label="Nom de l’examen" required error={errors.name} className="sm:col-span-2"><input required value={form.name} maxLength={255} onChange={(event) => setForm({ ...form, name: event.target.value })} className={inputClass} /></Field>
       <Field label="Catégorie" required>
         <select value={form.exam_type} onChange={(event) => setForm({ ...form, exam_type: event.target.value })} className={inputClass}>

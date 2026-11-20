@@ -129,7 +129,7 @@ export function PatientRightsPanel({ base, token, fileName, canEdit, canExport, 
                   <label className="flex items-start gap-3 text-sm text-slate-800">
                     <input
                       type="checkbox"
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500 disabled:opacity-50"
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 disabled:opacity-50"
                       checked={valueOf(consent)}
                       disabled={!canEdit || isAnonymized || saving}
                       onChange={(event) => setDraft({ ...draft, [consent.type]: event.target.checked })}
