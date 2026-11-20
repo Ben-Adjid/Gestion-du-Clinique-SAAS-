@@ -127,13 +127,16 @@ export function PatientRightsPanel({ base, token, fileName, canEdit, canExport, 
               {consents.map((consent) => (
                 <li key={consent.type} className="flex items-start justify-between gap-4 py-3">
                   <label className="flex min-h-[44px] items-center gap-3 text-sm text-slate-800">
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 disabled:opacity-50"
-                      checked={valueOf(consent)}
-                      disabled={!canEdit || isAnonymized || saving}
-                      onChange={(event) => setDraft({ ...draft, [consent.type]: event.target.checked })}
-                    />
+                    {/* The touch area of the box is 44 px square; the box itself keeps its usual size. */}
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 disabled:opacity-50"
+                        checked={valueOf(consent)}
+                        disabled={!canEdit || isAnonymized || saving}
+                        onChange={(event) => setDraft({ ...draft, [consent.type]: event.target.checked })}
+                      />
+                    </span>
                     <span>{consent.label}</span>
                   </label>
                   <span className="shrink-0 text-xs text-slate-500">{consent.changed_at ? `Modifié le ${formatDate(consent.changed_at)}` : 'Jamais renseigné'}</span>
