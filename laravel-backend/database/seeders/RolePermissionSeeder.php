@@ -32,7 +32,8 @@ class RolePermissionSeeder extends Seeder
             'PHARMACIST' => ['read:patient', 'read:prescription', 'manage:pharmacy_stock', 'dispense:medication'],
             'LABORATORY_TECHNICIAN' => ['read:patient', 'create:lab_request', 'read:lab_request', 'collect:lab_sample', 'update:lab_request', 'submit:lab_results', 'sign:lab_results'],
             'RADIOLOGIST' => ['read:patient', 'read:imaging', 'upload:imaging', 'update:imaging', 'create:imaging_report'],
-            'HR_MANAGER' => ['manage:employees', 'manage:attendance', 'manage:payroll', 'manage:leaves'],
+            // Read-only view of the doctors' planning (presence and on-call duty), never of medical records.
+            'HR_MANAGER' => ['manage:employees', 'manage:attendance', 'manage:payroll', 'manage:leaves', 'read:doctor_planning'],
             'RECEPTIONIST' => ['create:patient', 'read:patient', 'update:patient', 'create:appointment', 'read:appointment', 'update:appointment', 'cancel:appointment', 'read:doctor_planning', 'read:beds'],
             'PATIENT' => ['read:patient', 'read:patient_clinical_profile', 'read:appointment', 'request:appointment', 'read:consultation', 'read:prescription', 'read:certificate', 'access:patient_portal'],
         ];
