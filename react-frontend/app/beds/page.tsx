@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { can, useAuth } from '@/app/context/AuthContext';
 import { ApiError, apiFetch } from '@/app/lib/api';
+import { openDocumentPdf } from '@/app/lib/documents';
 import { PatientPicker, type PickedPatient } from '@/app/components/PatientPicker';
 import { EmptyState, Field, Loading, Notice, PageHeader, Section, buttonClass, inputClass } from '@/app/components/ui';
 
@@ -503,6 +504,7 @@ interface StayFileData extends Stay {
 function StayFile({ token, stayId, onClose }: { token: string; stayId: number; onClose: () => void }) {
   const [stay, setStay] = useState<StayFileData | null>(null);
   const [error, setError] = useState('');
+  const [pdfError, setPdfError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -525,6 +527,14 @@ function StayFile({ token, stayId, onClose }: { token: string; stayId: number; o
             <p className="font-semibold text-slate-900">{stay.patient?.name} <span className="font-normal text-slate-500">· {stay.patient?.patient_unique_id}</span></p>
             <p className="mt-1 text-slate-700">{STAY_LABEL[stay.status]} · {SERVICE_LABELS[stay.service ?? ''] ?? '—'} · {stay.room} · Lit {stay.bed} · {stay.doctor ?? '—'}</p>
             {stay.reason && <p className="mt-1 text-slate-700">Motif : {stay.reason}</p>}
+            {pdfError && <div className="mt-3"><Notice tone="error">{pdfError}</Notice></div>}
+            <button
+              type="button"
+              onClick={() => openDocumentPdf(`/admissions/${stayId}/documents/hospital-file`, token).catch((err: Error) => setPdfError(err.message))}
+              className={`${buttonClass.secondary} mt-3`}
+            >
+              Fiche de séjour (PDF)
+            </button>
           </section>
           <section>
             <h3 className="font-semibold text-slate-900">Mouvements de lits</h3>

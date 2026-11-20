@@ -7,6 +7,7 @@ import { ApiError, apiFetch } from '@/app/lib/api';
 import { doctorName, formatDateTime } from '@/app/lib/format';
 import { ConfirmDialog, Field, Loading, Notice, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '@/app/components/ui';
 import { PreOpSection, SurgeryInvoice } from '@/app/components/SurgerySafety';
+import { openDocumentPdf } from '@/app/lib/documents';
 
 interface SurgeryDossier {
   id: number;
@@ -194,6 +195,12 @@ export default function SurgeryDossierPage() {
           )}
         </Section>
 
+        {token && (
+          <Section title="Documents imprimables" description="Le compte rendu se télécharge une fois signé ; le consentement une fois recueilli.">
+            <DocumentButtons token={token} surgeryId={dossier.id} />
+          </Section>
+        )}
+
         {token && dossier.can_invoice && <SurgeryInvoice token={token} dossier={dossier} onChanged={load} />}
 
         <ConfirmDialog
@@ -207,5 +214,37 @@ export default function SurgeryDossierPage() {
         />
       </div>
     </main>
+  );
+}
+
+/** PDF downloads of the operation. A refused download shows the reason in French (unsigned report, no consent yet). */
+function DocumentButtons({ token, surgeryId }: { token: string; surgeryId: number }) {
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const open = async (key: string, path: string) => {
+    setBusy(key);
+    setError('');
+    try {
+      await openDocumentPdf(path, token);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {error && <Notice tone="error">{error}</Notice>}
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={busy !== null} onClick={() => open('report', `/surgeries/${surgeryId}/documents/operative-report`)} className={buttonClass.secondary}>
+          {busy === 'report' ? 'Ouverture…' : 'Compte rendu opératoire (PDF)'}
+        </button>
+        <button type="button" disabled={busy !== null} onClick={() => open('consent', `/surgeries/${surgeryId}/documents/consent`)} className={buttonClass.secondary}>
+          {busy === 'consent' ? 'Ouverture…' : 'Consentement éclairé (PDF)'}
+        </button>
+      </div>
+    </div>
   );
 }

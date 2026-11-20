@@ -65,8 +65,8 @@ export interface BillableAct {
 
 export const INVOICE_STATUS: Record<InvoiceStatus, { label: string; tone: Tone }> = {
   DRAFT: { label: 'Brouillon', tone: 'slate' },
-  ISSUED: { label: 'À payer', tone: 'blue' },
-  PAID: { label: 'Payée', tone: 'green' },
+  ISSUED: { label: 'RESTE À PAYER', tone: 'blue' },
+  PAID: { label: 'SOLDÉ', tone: 'green' },
   OVERDUE: { label: 'En retard', tone: 'red' },
   CANCELLED: { label: 'Annulée', tone: 'slate' },
 };
