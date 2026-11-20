@@ -4,6 +4,7 @@ import { PageSkeleton } from '../components/ui';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiFetch } from '@/app/lib/api';
+import { downloadClinicDataExport } from '@/app/lib/documents';
 import { FinanceByMethod } from '@/app/components/FinanceByMethod';
 
 type Overview = {
@@ -23,9 +24,24 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function ReportsPage() {
-  const { token, loading, isAuthenticated } = useAuth();
+  const { token, user, loading, isAuthenticated } = useAuth();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+
+  const exportData = async () => {
+    if (!token) return;
+    setExporting(true);
+    setExportError('');
+    try {
+      await downloadClinicDataExport(token);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : 'Export indisponible pour le moment.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -40,6 +56,20 @@ export default function ReportsPage() {
     <div className="min-h-screen bg-slate-50 p-6 sm:p-10">
       <div className="mx-auto max-w-5xl">
         <h1 className="text-3xl font-bold text-slate-900">Rapports</h1>
+        {user?.role === 'ADMIN_CLINIC' && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={exportData}
+              disabled={exporting}
+              className="min-h-[44px] rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+            >
+              {exporting ? 'Préparation de l’export…' : 'Exporter les données de la clinique (ZIP)'}
+            </button>
+            <p className="mt-2 text-xs text-slate-500">Patients, rendez-vous, factures, lignes de facture et paiements, un fichier CSV par table. Les dossiers cliniques ne sont pas inclus.</p>
+            {exportError && <p role="alert" className="mt-2 text-sm text-rose-700">{exportError}</p>}
+          </div>
+        )}
         {overview && (
           <p className="mt-1 text-sm text-slate-500">
             Période du {overview.period.from} au {overview.period.to}

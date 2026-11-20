@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ReceiptPreview } from '../../components/ReceiptPreview';
 import { ConfirmDialog, Field, Loading, Notice, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '../../components/ui';
 import { ApiError, apiFetch, fieldErrors } from '../../lib/api';
-import { INVOICE_STATUS, METHODS_NEEDING_REFERENCE, PAYMENT_METHODS, receiverName, type Invoice, type PaymentMethod } from '../../lib/billing';
+import { CLINIC_PAYMENT_METHODS, INVOICE_STATUS, METHODS_NEEDING_REFERENCE, PAYMENT_METHODS, receiverName, type Invoice, type PaymentMethod } from '../../lib/billing';
 import { formatDate, formatDateTime, formatMoney } from '../../lib/format';
 
 export default function InvoicePage() {
@@ -17,6 +17,10 @@ export default function InvoicePage() {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<PaymentMethod>('CASH');
   const [reference, setReference] = useState('');
+  const [chequeNumber, setChequeNumber] = useState('');
+  const [chequeBank, setChequeBank] = useState('');
+  const [chequeDrawer, setChequeDrawer] = useState('');
+  const [chequeDate, setChequeDate] = useState('');
   const [insurer, setInsurer] = useState('');
   const [coverageRate, setCoverageRate] = useState('80');
   const [preview, setPreview] = useState<{ paymentId: number; receiptNumber: string } | null>(null);
@@ -67,12 +71,21 @@ export default function InvoicePage() {
           amount: Number(amount),
           payment_method: method,
           payment_reference: reference.trim() || null,
+          // A cheque is registered in full: number, bank, the drawer's name and the date written on it.
+          cheque_number: method === 'CHEQUE' ? chequeNumber.trim() || null : null,
+          cheque_bank: method === 'CHEQUE' ? chequeBank.trim() || null : null,
+          cheque_drawer: method === 'CHEQUE' ? chequeDrawer.trim() || null : null,
+          cheque_date: method === 'CHEQUE' ? chequeDate || null : null,
           insurer_name: method === 'INSURANCE' ? insurer.trim() || null : null,
           coverage_rate: method === 'INSURANCE' && coverageRate !== '' ? Number(coverageRate) : null,
         }),
       });
       setLastPaymentId(response.data.id);
       setReference('');
+      setChequeNumber('');
+      setChequeBank('');
+      setChequeDrawer('');
+      setChequeDate('');
       setNotice(`Paiement de ${formatMoney(amount)} enregistré.`);
       await load();
     } catch (requestError) {
@@ -165,7 +178,7 @@ export default function InvoicePage() {
               </Field>
               <Field label="Mode de paiement" required>
                 <div className="grid grid-cols-2 gap-2">
-                  {(['CASH', 'WAVE', 'ORANGE_MONEY', 'CARD', 'INSURANCE', 'BANK_TRANSFER'] as PaymentMethod[]).map((value) => (
+                  {CLINIC_PAYMENT_METHODS.map((value) => (
                     <button key={value} type="button" aria-pressed={method === value} onClick={() => setMethod(value)}
                       className={`rounded-xl border px-3 py-2 text-sm font-semibold ${method === value ? 'border-emerald-700 bg-emerald-50 text-emerald-800' : 'border-slate-300 text-slate-600'}`}>
                       {PAYMENT_METHODS[value]}
@@ -173,6 +186,23 @@ export default function InvoicePage() {
                   ))}
                 </div>
               </Field>
+              {method === 'CHEQUE' && (
+                <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+                  <p className="text-xs text-amber-900">Le chèque est enregistré au registre des chèques. Il reste « en attente » jusqu’à son encaissement ou son rejet par la banque.</p>
+                  <Field label="Numéro du chèque" required error={errors.cheque_number}>
+                    <input required value={chequeNumber} maxLength={50} onChange={(event) => setChequeNumber(event.target.value)} className={inputClass} />
+                  </Field>
+                  <Field label="Banque" required error={errors.cheque_bank}>
+                    <input required value={chequeBank} maxLength={120} onChange={(event) => setChequeBank(event.target.value)} className={inputClass} />
+                  </Field>
+                  <Field label="Titulaire du chèque" required error={errors.cheque_drawer}>
+                    <input required value={chequeDrawer} maxLength={150} onChange={(event) => setChequeDrawer(event.target.value)} className={inputClass} />
+                  </Field>
+                  <Field label="Date du chèque" required error={errors.cheque_date}>
+                    <input required type="date" max={new Date().toISOString().slice(0, 10)} value={chequeDate} onChange={(event) => setChequeDate(event.target.value)} className={inputClass} />
+                  </Field>
+                </div>
+              )}
               {method === 'INSURANCE' && (
                 <Field label="Assureur" required error={errors.insurer_name} hint="Le nom de la compagnie qui prend en charge les soins.">
                   <input required value={insurer} maxLength={120} onChange={(event) => setInsurer(event.target.value)} className={inputClass} />

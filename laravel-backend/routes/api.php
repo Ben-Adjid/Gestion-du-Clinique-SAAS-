@@ -124,6 +124,9 @@ Route::prefix('v1')->group(function () {
                 ->middleware(['permission:view:reports', 'plan:reports', 'audit']);
             Route::get('/exports/insurance-bordereau', [\App\Http\Controllers\Api\ExportController::class, 'insuranceBordereau'])
                 ->middleware(['permission:view:reports', 'plan:reports', 'audit']);
+            // Full export of the clinic's own records (one CSV per table in a ZIP), for leaving or moving to another system
+            Route::get('/clinic-data/export', \App\Http\Controllers\Api\ClinicDataExportController::class)
+                ->middleware('audit');
             Route::get('/users/roles', [\App\Http\Controllers\Api\UserController::class, 'roles'])
                 ->middleware('permission:manage:users');
             Route::apiResource('users', \App\Http\Controllers\Api\UserController::class)
@@ -289,6 +292,11 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:create:invoice');
             Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])
                 ->middleware(['permission:update:invoice', 'audit']);
+            // Cheque register: every cheque received, until it is cashed or rejected (one change only, nothing deleted)
+            Route::get('/cheques', [\App\Http\Controllers\Api\ChequeController::class, 'index'])
+                ->middleware('permission:manage:payment');
+            Route::patch('/cheques/{payment}/status', [\App\Http\Controllers\Api\ChequeController::class, 'updateStatus'])
+                ->middleware(['permission:manage:payment', 'audit']);
             Route::get('/cash/summary', [\App\Http\Controllers\Api\CashController::class, 'summary'])
                 ->middleware('permission:manage:payment');
             Route::get('/cash/closings', [\App\Http\Controllers\Api\CashController::class, 'closings'])

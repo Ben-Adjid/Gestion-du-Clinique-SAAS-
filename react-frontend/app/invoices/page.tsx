@@ -52,7 +52,12 @@ function Cashier() {
           description="Facturez les prestations reçues par les patients, encaissez les paiements et clôturez votre caisse en fin de journée."
           backHref="/dashboard"
           backLabel="Tableau de bord"
-          actions={canBill && <Link href="/invoices/new" className={buttonClass.primary}>+ Nouvelle facture</Link>}
+          actions={canBill && (
+            <div className="flex flex-wrap gap-2">
+              <Link href="/cheques" className="min-h-[44px] inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Registre des chèques</Link>
+              <Link href="/invoices/new" className={buttonClass.primary}>+ Nouvelle facture</Link>
+            </div>
+          )}
         />
         {notice && <Notice tone="success" onClose={() => setNotice('')}>{notice}</Notice>}
         <div role="tablist" className="mb-5 inline-flex flex-wrap gap-1 rounded-xl border border-slate-300 bg-white p-1">

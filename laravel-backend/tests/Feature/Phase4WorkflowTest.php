@@ -148,11 +148,15 @@ class Phase4WorkflowTest extends TestCase
         $this->actingAs($this->cashier, 'sanctum');
         $invoiceId = $this->postJson('/api/v1/invoices', ['patient_id' => $this->patient->id, 'items' => [['description' => 'Consultation', 'amount' => 10000]]])->json('data.id');
         $this->postJson("/api/v1/invoices/{$invoiceId}/payments", ['amount' => 6000, 'payment_method' => 'CASH'])->assertCreated();
-        $this->postJson("/api/v1/invoices/{$invoiceId}/payments", ['amount' => 3000, 'payment_method' => 'MOBILE_MONEY', 'payment_reference' => 'OM-1'])->assertCreated();
+        $this->postJson("/api/v1/invoices/{$invoiceId}/payments", [
+            'amount' => 3000, 'payment_method' => 'CHEQUE', 'cheque_number' => '0007001', 'cheque_bank' => 'Ecobank Tchad',
+            'cheque_drawer' => 'Test Caisse', 'cheque_date' => '2026-11-19',
+        ])->assertCreated();
 
+        // Cheques are counted apart from cash: the cash count stays at 6000.
         $this->getJson('/api/v1/cash/summary')->assertOk()
             ->assertJsonPath('data.totals.CASH', 6000)
-            ->assertJsonPath('data.totals.MOBILE_MONEY', 3000)
+            ->assertJsonPath('data.totals.CHEQUE', 3000)
             ->assertJsonPath('data.can_close', true);
         $this->postJson('/api/v1/cash/closings', ['counted_cash' => 5500])->assertStatus(422);
         $this->postJson('/api/v1/cash/closings', ['counted_cash' => 5500, 'notes' => 'Monnaie rendue en trop'])

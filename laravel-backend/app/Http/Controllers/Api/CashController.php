@@ -89,7 +89,8 @@ class CashController extends Controller
                 'payments_count' => $payments->count(),
                 'expected_cash' => $totals['CASH'],
                 'expected_mobile_money' => $totals['MOBILE_MONEY'],
-                'expected_other' => $totals['BANK_TRANSFER'] + $totals['STRIPE'],
+                // Cheques are not cash: they are recorded here, outside the cash count, until the bank cashes them.
+                'expected_other' => $totals['BANK_TRANSFER'] + $totals['STRIPE'] + $totals['CHEQUE'],
                 'counted_cash' => round((float) $validated['counted_cash'], 2),
                 'difference' => $difference,
                 'notes' => $validated['notes'] ?? null,
@@ -121,13 +122,14 @@ class CashController extends Controller
             ->paginate(30));
     }
 
-    /** @return array{CASH: float, MOBILE_MONEY: float, BANK_TRANSFER: float, STRIPE: float, total: float, count: int} */
+    /** @return array{CASH: float, CHEQUE: float, MOBILE_MONEY: float, BANK_TRANSFER: float, STRIPE: float, total: float, count: int} */
     private function totals($payments): array
     {
         $byMethod = $payments->groupBy('payment_method')->map(fn ($group) => round((float) $group->sum('amount'), 2));
 
         return [
             'CASH' => $byMethod->get('CASH', 0.0),
+            'CHEQUE' => $byMethod->get('CHEQUE', 0.0),
             'MOBILE_MONEY' => $byMethod->get('MOBILE_MONEY', 0.0),
             'BANK_TRANSFER' => $byMethod->get('BANK_TRANSFER', 0.0),
             'STRIPE' => $byMethod->get('STRIPE', 0.0),

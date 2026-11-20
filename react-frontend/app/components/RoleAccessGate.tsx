@@ -74,6 +74,8 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
     indications: ['surgery'],
     service: ['surgery'],
     certificates: ['consultations'],
+    // The cheque register belongs to the cashier's billing module (same right as the invoices).
+    cheques: ['invoices'],
   };
   const routeModules = ROUTE_MODULES[pathModule] ?? [pathModule];
   const isPrintView = pathname.endsWith('/print');

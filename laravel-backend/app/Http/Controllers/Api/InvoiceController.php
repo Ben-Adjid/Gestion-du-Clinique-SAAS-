@@ -253,14 +253,26 @@ class InvoiceController extends Controller
 
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:1', 'max:99999999.99'],
-            'payment_method' => ['required', Rule::in(array_keys(Payment::METHOD_LABELS))],
+            'payment_method' => ['required', Rule::in(Payment::CLINIC_METHODS)],
             'payment_reference' => ['nullable', 'required_if:payment_method,'.implode(',', Payment::METHODS_WITH_REFERENCE), 'string', 'max:255'],
             'insurer_name' => ['nullable', 'required_if:payment_method,INSURANCE', 'string', 'max:120'],
             // Insurance share of the invoice, editable by the cashier; 80 % when left empty.
             'coverage_rate' => ['nullable', 'numeric', 'between:0,100', 'prohibited_unless:payment_method,INSURANCE'],
+            // Cheque: registered in full so that it can be followed until the bank cashes it.
+            'cheque_number' => ['required_if:payment_method,CHEQUE', 'prohibited_unless:payment_method,CHEQUE', 'nullable', 'string', 'max:50'],
+            'cheque_bank' => ['required_if:payment_method,CHEQUE', 'prohibited_unless:payment_method,CHEQUE', 'nullable', 'string', 'max:120'],
+            'cheque_drawer' => ['required_if:payment_method,CHEQUE', 'prohibited_unless:payment_method,CHEQUE', 'nullable', 'string', 'max:150'],
+            'cheque_date' => ['required_if:payment_method,CHEQUE', 'prohibited_unless:payment_method,CHEQUE', 'nullable', 'date', 'before_or_equal:today'],
         ], [
+            'payment_method.in' => 'Mode de paiement non accepté : espèces, chèque ou prise en charge assurance.',
             'payment_reference.required_if' => 'La référence de la transaction est obligatoire pour ce mode de paiement.',
             'insurer_name.required_if' => 'Indiquez l’assureur qui prend en charge les soins.',
+            'cheque_number.required_if' => 'Indiquez le numéro du chèque.',
+            'cheque_bank.required_if' => 'Indiquez la banque du chèque.',
+            'cheque_drawer.required_if' => 'Indiquez le nom du titulaire du chèque.',
+            'cheque_date.required_if' => 'Indiquez la date du chèque.',
+            'cheque_date.before_or_equal' => 'La date du chèque ne peut pas être dans le futur.',
+            'cheque_number.prohibited_unless' => 'Les informations de chèque ne concernent que le paiement par chèque.',
         ]);
 
         $closed = CashClosing::query()
@@ -300,6 +312,11 @@ class InvoiceController extends Controller
                 'payment_datetime' => now(),
                 'received_by' => $request->user()->id,
                 'status' => 'CONFIRMED',
+                'cheque_number' => $validated['cheque_number'] ?? null,
+                'cheque_bank' => $validated['cheque_bank'] ?? null,
+                'cheque_drawer' => $validated['cheque_drawer'] ?? null,
+                'cheque_date' => $validated['cheque_date'] ?? null,
+                'cheque_status' => $validated['payment_method'] === 'CHEQUE' ? 'PENDING' : null,
             ]);
 
             if (round($paidAmount + $amount, 2) >= (float) $lockedInvoice->total_amount) {

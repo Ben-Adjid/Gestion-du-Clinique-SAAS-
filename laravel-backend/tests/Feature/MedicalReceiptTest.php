@@ -79,7 +79,7 @@ class MedicalReceiptTest extends TestCase
     public function test_the_patient_receives_the_receipt_as_a_pdf_attachment(): void
     {
         Mail::fake();
-        $payment = $this->pay(30000, 'WAVE', 'WAVE-778899');
+        $payment = $this->pay(30000, 'CASH');
 
         (new SendReceiptByEmail($payment->id))->handle();
 
@@ -118,7 +118,7 @@ class MedicalReceiptTest extends TestCase
     {
         Queue::fake();
         $this->pay(10000, 'CASH');
-        $last = $this->pay(20000, 'ORANGE_MONEY', 'OM-1');
+        $last = $this->pay(20000, 'CASH');
 
         $figures = \App\Services\Receipts\ReceiptPdf::figures($last);
         $this->assertTrue($figures['settled'], 'Une facture entièrement réglée est soldée.');
@@ -126,7 +126,7 @@ class MedicalReceiptTest extends TestCase
         $this->assertSame(30000.0, $figures['paidToDate']);
     }
 
-    public function test_insurance_requires_the_insurer_and_wave_requires_a_reference(): void
+    public function test_insurance_requires_the_insurer_and_wave_is_not_accepted_for_a_bill(): void
     {
         $this->actingAs($this->cashier, 'sanctum')->postJson("/api/v1/invoices/{$this->invoice->id}/payments", [
             'amount' => 10000, 'payment_method' => 'INSURANCE',
@@ -134,7 +134,7 @@ class MedicalReceiptTest extends TestCase
 
         $this->actingAs($this->cashier, 'sanctum')->postJson("/api/v1/invoices/{$this->invoice->id}/payments", [
             'amount' => 10000, 'payment_method' => 'WAVE',
-        ])->assertUnprocessable()->assertJsonValidationErrors('payment_reference');
+        ])->assertUnprocessable()->assertJsonValidationErrors('payment_method');
 
         $this->actingAs($this->cashier, 'sanctum')->postJson("/api/v1/invoices/{$this->invoice->id}/payments", [
             'amount' => 10000, 'payment_method' => 'BITCOIN',

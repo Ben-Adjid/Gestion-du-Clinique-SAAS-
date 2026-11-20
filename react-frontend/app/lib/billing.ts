@@ -1,7 +1,7 @@
 type Tone = 'slate' | 'green' | 'amber' | 'red' | 'blue' | 'teal' | 'violet';
 
 export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-export type PaymentMethod = 'CASH' | 'WAVE' | 'ORANGE_MONEY' | 'MOBILE_MONEY' | 'BANK_TRANSFER' | 'CARD' | 'STRIPE' | 'INSURANCE';
+export type PaymentMethod = 'CASH' | 'CHEQUE' | 'WAVE' | 'ORANGE_MONEY' | 'MOBILE_MONEY' | 'BANK_TRANSFER' | 'CARD' | 'STRIPE' | 'INSURANCE';
 
 export interface Payment {
   id: number;
@@ -73,6 +73,7 @@ export const INVOICE_STATUS: Record<InvoiceStatus, { label: string; tone: Tone }
 
 export const PAYMENT_METHODS: Record<PaymentMethod, string> = {
   CASH: 'Espèces',
+  CHEQUE: 'Chèque',
   WAVE: 'Wave',
   ORANGE_MONEY: 'Orange Money',
   MOBILE_MONEY: 'Mobile Money',
@@ -82,8 +83,11 @@ export const PAYMENT_METHODS: Record<PaymentMethod, string> = {
   INSURANCE: 'Prise en charge assurance',
 };
 
-/** Methods whose transaction needs a reference (phone transfer, bank transfer, insurance file). */
-export const METHODS_NEEDING_REFERENCE: PaymentMethod[] = ['WAVE', 'ORANGE_MONEY', 'BANK_TRANSFER', 'INSURANCE'];
+/** How a clinic takes money for a patient's bill: cash, cheque (registered), or the insurer's share. */
+export const CLINIC_PAYMENT_METHODS: PaymentMethod[] = ['CASH', 'CHEQUE', 'INSURANCE'];
+
+/** Methods whose transaction needs a reference (the insurance file). */
+export const METHODS_NEEDING_REFERENCE: PaymentMethod[] = ['INSURANCE'];
 
 export function receiverName(payment: Payment): string {
   return typeof payment.received_by === 'object' && payment.received_by ? payment.received_by.name : '—';

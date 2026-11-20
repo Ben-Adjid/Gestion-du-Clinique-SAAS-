@@ -70,15 +70,20 @@ class InvoiceWorkflowTest extends TestCase
             'payment_method' => 'CASH',
         ])->assertUnprocessable();
 
-        $this->postJson("/api/v1/invoices/{$invoiceId}/payments", [
-            'amount' => 600,
-            'payment_method' => 'MOBILE_MONEY',
-        ])->assertUnprocessable()->assertJsonValidationErrors('payment_reference');
-
+        // Mobile money is not taken for a clinic bill any more: only cash, cheque or the insurer's share.
         $this->postJson("/api/v1/invoices/{$invoiceId}/payments", [
             'amount' => 600,
             'payment_method' => 'MOBILE_MONEY',
             'payment_reference' => 'OM2610.1234',
+        ])->assertUnprocessable()->assertJsonValidationErrors('payment_method');
+
+        $this->postJson("/api/v1/invoices/{$invoiceId}/payments", [
+            'amount' => 600,
+            'payment_method' => 'CHEQUE',
+            'cheque_number' => '0001234',
+            'cheque_bank' => 'Ecobank Tchad',
+            'cheque_drawer' => 'Test Chèque',
+            'cheque_date' => '2026-11-19',
         ])->assertCreated()->assertJsonPath('invoice.status', 'PAID');
 
         $this->assertDatabaseHas('invoices', [
