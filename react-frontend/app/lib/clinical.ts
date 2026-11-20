@@ -84,14 +84,14 @@ export const LAB_STATUS: Record<LabStatus, { label: string; tone: Tone }> = {
   PENDING: { label: 'À prélever', tone: 'amber' },
   RECEIVED: { label: 'Prélevé', tone: 'blue' },
   IN_PROGRESS: { label: 'En analyse', tone: 'violet' },
-  READY: { label: 'À valider', tone: 'teal' },
+  READY: { label: 'Résultat prêt', tone: 'teal' },
   SIGNED: { label: 'Validé', tone: 'green' },
 };
 
 export const IMAGING_STATUS: Record<ImagingStatus, { label: string; tone: Tone }> = {
   PENDING: { label: 'À réaliser', tone: 'amber' },
   IN_PROGRESS: { label: 'Réalisé, à interpréter', tone: 'blue' },
-  READY: { label: 'Compte rendu à signer', tone: 'teal' },
+  READY: { label: 'Compte rendu prêt', tone: 'teal' },
   SIGNED: { label: 'Signé', tone: 'green' },
 };
 
