@@ -149,7 +149,7 @@ class Phase5WorkflowTest extends TestCase
     {
         $basic = $this->makeClinic('BASICCLI', 'BASIC');
         $this->actingAs($this->user('HR_MANAGER', $basic), 'sanctum')
-            ->getJson('/api/v1/hr/employees')->assertForbidden()->assertJsonPath('code', 'PLAN_MODULE_UNAVAILABLE');
+            ->getJson('/api/v1/hr/employees')->assertForbidden()->assertJsonPath('code', 'PLAN_UPGRADE_REQUIRED');
         $modules = $this->actingAs($this->user('NURSE', $basic), 'sanctum')->getJson('/api/v1/me')->json('data.modules');
         $this->assertNotContains('staff', $modules);
     }

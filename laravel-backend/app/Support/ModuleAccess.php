@@ -68,6 +68,17 @@ final class ModuleAccess
         return [...$modules, ...self::ALWAYS];
     }
 
+    /** Lowest subscription plan that includes each paid module: named in the upsell when a feature is refused. */
+    public const MODULE_PLAN = [
+        'beds' => 'PRO', 'lab' => 'PRO', 'imaging' => 'PRO', 'pharmacy' => 'PRO', 'surgery' => 'PRO',
+        'reports' => 'ENTERPRISE', 'hr' => 'ENTERPRISE', 'patient_portal' => 'ENTERPRISE', 'specialties' => 'ENTERPRISE',
+    ];
+
+    public static function upgradePlanFor(string $module): string
+    {
+        return self::MODULE_PLAN[$module] ?? 'PRO';
+    }
+
     public static function planAllows(User $user, string $module): bool
     {
         $plan = self::planOf($user);

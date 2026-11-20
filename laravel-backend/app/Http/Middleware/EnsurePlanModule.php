@@ -14,9 +14,15 @@ class EnsurePlanModule
         $user = $request->user();
 
         if ($user && !ModuleAccess::planAllows($user, $module)) {
+            $upgrade = ModuleAccess::upgradePlanFor($module);
+
+            // The browser shows the upsell from these fields: the feature, the plan that includes it and where to go.
             return response()->json([
-                'message' => 'Ce module n’est pas inclus dans la formule d’abonnement de votre clinique.',
-                'code' => 'PLAN_MODULE_UNAVAILABLE',
+                'message' => 'Cette fonctionnalité n’est pas incluse dans la formule actuelle de votre clinique. Passez à la formule '.$upgrade.' pour l’activer.',
+                'code' => 'PLAN_UPGRADE_REQUIRED',
+                'feature' => $module,
+                'upgrade_to' => $upgrade,
+                'upgrade_url' => '/subscription',
             ], 403);
         }
 

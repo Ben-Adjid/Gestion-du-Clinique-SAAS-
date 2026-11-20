@@ -10,7 +10,14 @@ use Illuminate\Support\Carbon;
 
 class SubscriptionPlanSeeder extends Seeder
 {
-    public const CORE_MODULES = ['patients', 'appointments', 'consultations', 'prescriptions', 'nursing', 'pharmacy', 'invoices'];
+    /** BASIC (Standard): patients, appointments, consultations and vitals, prescriptions, invoices and receipts. */
+    public const CORE_MODULES = ['patients', 'appointments', 'consultations', 'prescriptions', 'nursing', 'invoices'];
+
+    /** PRO (VIP): BASIC + hospitalisation and beds, laboratory and imaging, pharmacy, simple operating theatre. */
+    public const PRO_MODULES = [...self::CORE_MODULES, 'beds', 'lab', 'imaging', 'pharmacy', 'surgery'];
+
+    /** ENTERPRISE (large hospitals): PRO + specialties and the full surgical circuit, reports, HR, patient portal. */
+    public const ENTERPRISE_MODULES = [...self::PRO_MODULES, 'specialties', 'reports', 'hr', 'patient_portal'];
 
     public function run(): void
     {
@@ -29,23 +36,23 @@ class SubscriptionPlanSeeder extends Seeder
             [
                 'code' => 'PRO',
                 'name' => 'Pro',
-                'description' => 'Clinique avec laboratoire et imagerie, rapports d’activité.',
+                'description' => 'Clinique avec hospitalisation, lits et salles, laboratoire, imagerie, pharmacie et bloc opératoire simple.',
                 'monthly_price' => 150000,
                 'yearly_price' => 1500000,
                 'max_users' => 40,
                 'max_patients' => 20000,
-                'modules' => [...self::CORE_MODULES, 'lab', 'imaging', 'reports'],
+                'modules' => self::PRO_MODULES,
                 'trial_days' => 90,
             ],
             [
                 'code' => 'ENTERPRISE',
                 'name' => 'Enterprise',
-                'description' => 'Hôpital ou groupe : tous les modules, utilisateurs et patients illimités.',
+                'description' => 'Grand hôpital : multi-spécialités, chefs de service, circuit chirurgical complet, ressources humaines, portail patient.',
                 'monthly_price' => 400000,
                 'yearly_price' => 4000000,
                 'max_users' => null,
                 'max_patients' => null,
-                'modules' => [...self::CORE_MODULES, 'lab', 'imaging', 'reports', 'hr', 'patient_portal', 'surgery'],
+                'modules' => self::ENTERPRISE_MODULES,
                 'trial_days' => 90,
             ],
         ];

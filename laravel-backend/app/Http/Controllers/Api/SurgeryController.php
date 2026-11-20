@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\SurgicalConsent;
+use App\Support\ModuleAccess;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -65,9 +66,11 @@ class SurgeryController extends Controller
     public function store(Request $request): JsonResponse
     {
         $clinicId = (int) $request->user()->clinic_id;
+        // The full surgical circuit (indication, head validation, pre-anesthesia) is part of the Enterprise plan.
+        $circuit = $this->hasCircuit($request);
         $validated = $request->validate([
             'patient_id' => ['required', 'integer', Rule::exists('patients', 'id')->where('clinic_id', $clinicId)->whereNull('deleted_at')],
-            'indication_id' => ['required', 'integer', Rule::exists('surgical_indications', 'id')->where('clinic_id', $clinicId)],
+            'indication_id' => [$circuit ? 'required' : 'nullable', 'integer', Rule::exists('surgical_indications', 'id')->where('clinic_id', $clinicId)],
             'operation_type' => ['required', 'string', 'max:150'],
             'scheduled_at' => ['required', 'date_format:Y-m-d H:i', 'after:now'],
             'room' => ['nullable', 'string', 'max:60'],
@@ -82,15 +85,15 @@ class SurgeryController extends Controller
             $this->assertDoctor((int) $validated['anesthetist_id'], $clinicId, 'L’anesthésiste doit être un médecin de la clinique.');
         }
         $staff = $this->assertNursesOnly($validated['staff'] ?? [], $clinicId);
-        $indication = $this->assertSchedulable($validated, $clinicId);
+        $indication = $circuit ? $this->assertSchedulable($validated, $clinicId) : null;
         // The anesthesia who assessed the patient runs the operation unless another is named.
-        $validated['anesthetist_id'] ??= $indication->pre_anesthesia_by;
+        $validated['anesthetist_id'] ??= $indication?->pre_anesthesia_by;
 
         $surgery = DB::transaction(function () use ($validated, $clinicId, $request, $staff) {
             $surgery = Surgery::query()->create([
                 'clinic_id' => $clinicId,
                 'patient_id' => $validated['patient_id'],
-                'indication_id' => $validated['indication_id'],
+                'indication_id' => $validated['indication_id'] ?? null,
                 'operation_type' => $validated['operation_type'],
                 'scheduled_at' => $validated['scheduled_at'],
                 'room' => $validated['room'] ?? null,
@@ -130,7 +133,7 @@ class SurgeryController extends Controller
         }
         // An operation starts only with the informed consent and a complete pre-operative checklist.
         if (($validated['status'] ?? null) === 'IN_PROGRESS' && $surgery->status !== 'IN_PROGRESS') {
-            $missing = $this->missingBeforeStart($surgery);
+            $missing = $this->missingBeforeStart($surgery, $this->hasCircuit($request));
             if ($missing !== []) {
                 throw ValidationException::withMessages(['status' => 'Avant de démarrer l’intervention : '.implode(', ', $missing).'.']);
             }
@@ -296,8 +299,12 @@ class SurgeryController extends Controller
     }
 
     /** Pre-operative items still missing before the operation can start (empty list = ready). */
-    private function missingBeforeStart(Surgery $surgery): array
+    private function missingBeforeStart(Surgery $surgery, bool $circuit = true): array
     {
+        // Simple operating theatre (Pro plan): no consent or checklist gate.
+        if (!$circuit) {
+            return [];
+        }
         $missing = [];
         if (!$surgery->consent()->exists()) {
             $missing[] = 'consentement éclairé du patient';
@@ -310,6 +317,12 @@ class SurgeryController extends Controller
         }
 
         return $missing;
+    }
+
+    /** Whether the clinic's plan includes the full surgical circuit (Enterprise). */
+    private function hasCircuit(Request $request): bool
+    {
+        return ModuleAccess::planAllows($request->user(), 'specialties');
     }
 
     private function assertReportAuthor(Request $request, Surgery $surgery): void
@@ -366,8 +379,8 @@ class SurgeryController extends Controller
                 'signer_relation' => $surgery->consent->signer_relation,
                 'signed_at' => $surgery->consent->signed_at?->toIso8601String(),
             ] : null,
-            'ready_to_start' => $this->missingBeforeStart($surgery) === [],
-            'missing_before_start' => $inTeam ? $this->missingBeforeStart($surgery) : [],
+            'ready_to_start' => $this->missingBeforeStart($surgery, $this->hasCircuit($request)) === [],
+            'missing_before_start' => $inTeam ? $this->missingBeforeStart($surgery, $this->hasCircuit($request)) : [],
             'invoice_id' => $surgery->invoice_id,
             'can_invoice' => $surgery->isReportAuthor($user) || $user->role?->permissions()->where('permissions.name', 'create:invoice')->exists(),
         ];

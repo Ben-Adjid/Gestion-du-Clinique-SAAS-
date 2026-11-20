@@ -358,7 +358,7 @@ Route::prefix('v1')->group(function () {
             });
 
             // Hospital beds: occupancy, admission and discharge (nursing)
-            Route::controller(\App\Http\Controllers\Api\BedController::class)->group(function () {
+            Route::controller(\App\Http\Controllers\Api\BedController::class)->middleware('plan:beds')->group(function () {
                 Route::get('/beds', 'index')->middleware('permission:read:beds');
                 Route::post('/beds', 'store')->middleware(['permission:manage:beds', 'audit']);
                 Route::post('/beds/{bed}/assign', 'assign')->middleware(['permission:manage:beds', 'audit']);
@@ -369,7 +369,8 @@ Route::prefix('v1')->group(function () {
                 Route::post('/rooms', 'storeRoom')->middleware(['permission:manage:beds', 'audit']);
             });
 
-            // Medical specialties, heads of service, surgical indications and specialty records
+            // Medical specialties, heads of service, surgical indications and specialty records (Enterprise plan)
+            Route::middleware('plan:specialties')->group(function () {
             Route::get('/specialties', [\App\Http\Controllers\Api\SpecialtyController::class, 'index']);
             Route::put('/doctors/{doctor}/head', [\App\Http\Controllers\Api\SpecialtyController::class, 'setHead'])->middleware('audit');
             Route::get('/service/dashboard', [\App\Http\Controllers\Api\ServiceController::class, 'dashboard']);
@@ -383,9 +384,10 @@ Route::prefix('v1')->group(function () {
                 Route::get('/patients/{patient}/specialty-records', 'index')->middleware('audit');
                 Route::post('/patients/{patient}/specialty-records', 'store')->middleware('audit');
             });
+            });
 
             // Hospital stays: active admissions, search by patient, clinical file, moves and discharge
-            Route::controller(\App\Http\Controllers\Api\AdmissionController::class)->group(function () {
+            Route::controller(\App\Http\Controllers\Api\AdmissionController::class)->middleware('plan:beds')->group(function () {
                 Route::get('/admissions', 'index')->middleware('permission:read:beds');
                 Route::get('/admissions/search', 'search')->middleware('permission:read:beds');
                 Route::get('/admissions/{admission}', 'show')->middleware(['permission:read:beds', 'audit']);
@@ -403,8 +405,9 @@ Route::prefix('v1')->group(function () {
                 Route::patch('/surgeries/{surgery}', 'update')->middleware(['permission:manage:surgery', 'audit']);
                 Route::put('/surgeries/{surgery}/report', 'updateReport')->middleware(['permission:edit:surgery_report', 'audit']);
                 Route::post('/surgeries/{surgery}/sign-report', 'signReport')->middleware(['permission:edit:surgery_report', 'audit']);
-                Route::post('/surgeries/{surgery}/consent', 'consent')->middleware(['permission:edit:surgery_report', 'audit']);
-                Route::put('/surgeries/{surgery}/checklist', 'checklist')->middleware(['permission:read:surgery', 'audit']);
+                // Informed consent and pre-operative checklist: the full surgical circuit (Enterprise plan).
+                Route::post('/surgeries/{surgery}/consent', 'consent')->middleware(['plan:specialties', 'permission:edit:surgery_report', 'audit']);
+                Route::put('/surgeries/{surgery}/checklist', 'checklist')->middleware(['plan:specialties', 'permission:read:surgery', 'audit']);
                 // Who may bill is decided in the controller: the assigned surgeon or anesthetist, or invoicing staff.
                 Route::post('/surgeries/{surgery}/invoice', 'invoice')->middleware('audit');
             });

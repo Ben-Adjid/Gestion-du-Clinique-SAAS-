@@ -218,7 +218,7 @@ class SaasSubscriptionTest extends TestCase
 
         $this->assertNotContains('lab', $this->actingAs($doctor, 'sanctum')->getJson('/api/v1/me')->json('data.modules'));
         $this->actingAs($doctor, 'sanctum')->getJson('/api/v1/lab-requests')
-            ->assertForbidden()->assertJsonPath('code', 'PLAN_MODULE_UNAVAILABLE');
+            ->assertForbidden()->assertJsonPath('code', 'PLAN_UPGRADE_REQUIRED');
     }
 
     public function test_plan_user_limit_blocks_new_staff_accounts(): void
