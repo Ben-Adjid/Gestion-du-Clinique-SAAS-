@@ -20,6 +20,17 @@ export interface Payment {
 
 export interface Invoice {
   id: number;
+  coverage?: {
+    total: number;
+    rate: number | null;
+    insurer_share: number;
+    patient_share: number;
+    paid: number;
+    paid_insurer: number;
+    paid_patient: number;
+    remaining: number;
+    patient_remaining: number;
+  };
   invoice_number: string;
   patient_id: number;
   status: InvoiceStatus;

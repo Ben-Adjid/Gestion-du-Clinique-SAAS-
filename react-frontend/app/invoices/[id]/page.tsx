@@ -18,6 +18,7 @@ export default function InvoicePage() {
   const [method, setMethod] = useState<PaymentMethod>('CASH');
   const [reference, setReference] = useState('');
   const [insurer, setInsurer] = useState('');
+  const [coverageRate, setCoverageRate] = useState('80');
   const [preview, setPreview] = useState<{ paymentId: number; receiptNumber: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
@@ -67,6 +68,7 @@ export default function InvoicePage() {
           payment_method: method,
           payment_reference: reference.trim() || null,
           insurer_name: method === 'INSURANCE' ? insurer.trim() || null : null,
+          coverage_rate: method === 'INSURANCE' && coverageRate !== '' ? Number(coverageRate) : null,
         }),
       });
       setLastPaymentId(response.data.id);
@@ -127,9 +129,18 @@ export default function InvoicePage() {
                 ))}
               </tbody>
               <tfoot className="border-t-2 border-slate-200">
-                <tr><td className="py-2 font-semibold">Total</td><td className="py-2 text-right text-lg font-bold">{formatMoney(invoice.total_amount)}</td></tr>
-                <tr><td className="py-1 text-slate-500">Déjà payé</td><td className="py-1 text-right text-emerald-700">{formatMoney(invoice.paid_amount)}</td></tr>
-                <tr><td className="py-1 font-semibold">Reste à payer</td><td className="py-1 text-right font-bold">{formatMoney(invoice.outstanding_amount)}</td></tr>
+                <tr><td className="py-2 font-semibold">Total brut</td><td className="py-2 text-right text-lg font-bold tabular-nums">{formatMoney(invoice.total_amount)}</td></tr>
+                {invoice.coverage?.rate != null && (
+                  <>
+                    <tr><td className="py-1 text-slate-600">Part assurance ({invoice.coverage.rate} %)</td><td className="py-1 text-right tabular-nums">{formatMoney(invoice.coverage.insurer_share)}</td></tr>
+                    <tr><td className="py-1 text-slate-600">Ticket modérateur patient</td><td className="py-1 text-right tabular-nums">{formatMoney(invoice.coverage.patient_share)}</td></tr>
+                  </>
+                )}
+                <tr><td className="py-1 text-slate-500">Acomptes versés</td><td className="py-1 text-right tabular-nums text-emerald-700">{formatMoney(invoice.paid_amount)}</td></tr>
+                {invoice.coverage?.rate != null && (
+                  <tr><td className="py-1 text-slate-500">Dont ticket patient restant</td><td className="py-1 text-right tabular-nums">{formatMoney(invoice.coverage.patient_remaining)}</td></tr>
+                )}
+                <tr><td className="py-1 font-semibold">Reste dû</td><td className="py-1 text-right font-bold tabular-nums">{formatMoney(invoice.outstanding_amount)}</td></tr>
               </tfoot>
             </table>
 
@@ -165,6 +176,11 @@ export default function InvoicePage() {
               {method === 'INSURANCE' && (
                 <Field label="Assureur" required error={errors.insurer_name} hint="Le nom de la compagnie qui prend en charge les soins.">
                   <input required value={insurer} maxLength={120} onChange={(event) => setInsurer(event.target.value)} className={inputClass} />
+                </Field>
+              )}
+              {method === 'INSURANCE' && (
+                <Field label="Taux de prise en charge (%)" hint="80 % par défaut ; modifiable selon le contrat.">
+                  <input type="number" min={0} max={100} step={1} value={coverageRate} onChange={(event) => setCoverageRate(event.target.value)} className={inputClass} />
                 </Field>
               )}
               {METHODS_NEEDING_REFERENCE.includes(method) && (

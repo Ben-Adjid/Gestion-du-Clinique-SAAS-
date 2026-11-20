@@ -18,7 +18,8 @@ final class ReceiptPdf
         $paidToDate = ReceiptNumbering::paidToDate($payment);
         $remaining = max(0.0, round($total - $paidToDate, 2));
 
-        return ['total' => $total, 'paidToDate' => $paidToDate, 'remaining' => $remaining, 'settled' => $remaining <= 0.0];
+        return ['total' => $total, 'paidToDate' => $paidToDate, 'remaining' => $remaining, 'settled' => $remaining <= 0.0,
+            'coverage' => \App\Services\Billing\CoverageSplit::for($payment->invoice)];
     }
 
     public static function render(Payment $payment): string
@@ -31,6 +32,7 @@ final class ReceiptPdf
 
         $pdf = Pdf::loadView('pdf.receipt', [
             'clinic' => $clinic,
+            'logo' => \App\Services\ClinicLogo::pdfDataUri($clinic),
             'licence' => $clinic->settings['license_number'] ?? null,
             'patient' => $patient,
             'payment' => $payment,
@@ -40,6 +42,7 @@ final class ReceiptPdf
             'paidToDate' => $paidToDate,
             'remaining' => $remaining,
             'settled' => $settled,
+            'coverage' => self::figures($payment)['coverage'],
             'invoiceNumber' => $invoice->invoice_number,
         ])->setPaper('a5', 'portrait');
 

@@ -28,6 +28,9 @@
     <table>
       <tr>
         <td>
+          @if ($logo)
+            <img src="{{ $logo }}" alt="Logo {{ $clinic->name }}" style="height: 44px; margin-bottom: 4px;"><br>
+          @endif
           <div class="clinic">{{ $clinic->name }}</div>
           <div class="muted">{{ trim(($clinic->city ?? '').' '.($clinic->country ?? '')) }}</div>
           <div class="muted">{{ $clinic->settings['address'] ?? '' }}</div>
@@ -77,12 +80,19 @@
   </table>
 
   <table style="margin-top: 8px;">
-    <tr class="total"><td>Montant total</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($total) }}</td></tr>
+    <tr class="total"><td>Total brut</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($total) }}</td></tr>
+    @if ($coverage['rate'] !== null)
+      <tr><td>Part assurance ({{ rtrim(rtrim(number_format($coverage['rate'], 2, ',', ''), '0'), ',') }} %)</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['insurer_share']) }}</td></tr>
+      <tr><td>Ticket modérateur patient</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['patient_share']) }}</td></tr>
+    @endif
     <tr><td>Ce règlement</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money((float) $payment->amount) }}</td></tr>
-    <tr><td>Montant réglé à ce jour</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($paidToDate) }}</td></tr>
+    <tr><td>Acomptes versés</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($paidToDate) }}</td></tr>
     <tr><td>Mode de paiement</td><td class="right">{{ $method }}{{ $payment->payment_reference ? ' · réf. '.$payment->payment_reference : '' }}{{ $payment->insurer_name ? ' · '.$payment->insurer_name : '' }}</td></tr>
+    @if ($coverage['rate'] !== null)
+      <tr><td>Dont ticket modérateur patient restant</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['patient_remaining']) }}</td></tr>
+    @endif
     <tr>
-      <td>Reste à payer</td>
+      <td>Reste dû</td>
       <td class="right">
         {{ \App\Services\Receipts\ReceiptPdf::money($remaining) }}
         @if ($settled)

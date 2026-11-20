@@ -256,6 +256,8 @@ class InvoiceController extends Controller
             'payment_method' => ['required', Rule::in(array_keys(Payment::METHOD_LABELS))],
             'payment_reference' => ['nullable', 'required_if:payment_method,'.implode(',', Payment::METHODS_WITH_REFERENCE), 'string', 'max:255'],
             'insurer_name' => ['nullable', 'required_if:payment_method,INSURANCE', 'string', 'max:120'],
+            // Insurance share of the invoice, editable by the cashier; 80 % when left empty.
+            'coverage_rate' => ['nullable', 'numeric', 'between:0,100', 'prohibited_unless:payment_method,INSURANCE'],
         ], [
             'payment_reference.required_if' => 'La référence de la transaction est obligatoire pour ce mode de paiement.',
             'insurer_name.required_if' => 'Indiquez l’assureur qui prend en charge les soins.',
@@ -274,6 +276,10 @@ class InvoiceController extends Controller
             $lockedInvoice = Invoice::query()->whereKey($invoice->id)->lockForUpdate()->firstOrFail();
             if (!in_array($lockedInvoice->status, ['ISSUED', 'OVERDUE'], true)) {
                 abort(422, 'Only issued invoices can receive payments.');
+            }
+
+            if ($validated['payment_method'] === 'INSURANCE') {
+                $lockedInvoice->update(['insurance_rate' => $validated['coverage_rate'] ?? \App\Services\Billing\CoverageSplit::DEFAULT_RATE]);
             }
 
             $paidAmount = (float) $lockedInvoice->payments()->where('status', 'CONFIRMED')->sum('amount');
@@ -339,6 +345,7 @@ class InvoiceController extends Controller
         $invoice->setAttribute('paid_amount', round($paid, 2));
         $invoice->setAttribute('outstanding_amount', $invoice->status === 'CANCELLED' ? 0 : max(0, round((float) $invoice->total_amount - $paid, 2)));
         $invoice->setAttribute('status_label', Invoice::STATUS_LABELS[$invoice->status] ?? $invoice->status);
+        $invoice->setAttribute('coverage', \App\Services\Billing\CoverageSplit::for($invoice));
 
         return $invoice;
     }
