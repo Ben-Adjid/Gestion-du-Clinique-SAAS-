@@ -72,14 +72,13 @@ function InvoicesTab({ token, initialStatus, onMessage, onError }: { token: stri
     apiFetch<Paginated<SaasInvoice>>(`/saas/invoices?${query}`, token).then(setResult).catch((err: Error) => onError(err.message));
   }, [token, page, status, debouncedSearch, onError]);
 
-  useEffect(() => { setPage(1); }, [status, debouncedSearch]);
   useEffect(load, [load]);
 
   return (
     <>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <SearchInput value={search} onChange={setSearch} placeholder="Numéro de facture ou clinique…" label="Rechercher une facture" />
-        <select aria-label="Statut" value={status} onChange={(event) => setStatus(event.target.value)} className={`${inputClass} sm:w-48`}>
+        <SearchInput value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Numéro de facture ou clinique…" label="Rechercher une facture" />
+        <select aria-label="Statut" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className={`${inputClass} sm:w-48`}>
           <option value="">Tous les statuts</option>
           {(Object.keys(INVOICE_STATUS) as SaasInvoiceStatus[]).map((key) => <option key={key} value={key}>{INVOICE_STATUS[key].label}</option>)}
         </select>

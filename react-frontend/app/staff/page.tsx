@@ -37,7 +37,18 @@ export default function StaffSpacePage() {
     }
   }, [token]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    apiFetch<{ data: Space | null }>('/me/staff-space', token)
+      .then((response) => { if (active) setSpace(response.data); })
+      .catch((requestError: unknown) => {
+        if (!active) return;
+        setError(requestError instanceof Error ? requestError.message : 'Espace indisponible.');
+        setSpace(null);
+      });
+    return () => { active = false; };
+  }, [token]);
 
   if (space === undefined || !token) return <Loading />;
   if (space === null) {

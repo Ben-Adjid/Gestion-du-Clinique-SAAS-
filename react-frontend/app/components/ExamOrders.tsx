@@ -29,7 +29,18 @@ export function ExamOrders({ token, consultationId, canOrderLab, canOrderImaging
     setImagingRequests(imaging.data);
   }, [token, consultationId, canOrderLab, canOrderImaging]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      canOrderLab ? apiFetch<{ data: LabRequest[] }>(`/lab-requests?consultation_id=${consultationId}`, token).catch(() => ({ data: [] })) : { data: [] },
+      canOrderImaging ? apiFetch<{ data: ImagingRequest[] }>(`/imaging-requests?consultation_id=${consultationId}`, token).catch(() => ({ data: [] })) : { data: [] },
+    ]).then(([lab, imaging]) => {
+      if (!active) return;
+      setLabRequests(lab.data);
+      setImagingRequests(imaging.data);
+    });
+    return () => { active = false; };
+  }, [token, consultationId, canOrderLab, canOrderImaging]);
 
   if (!canOrderLab && !canOrderImaging) return null;
 

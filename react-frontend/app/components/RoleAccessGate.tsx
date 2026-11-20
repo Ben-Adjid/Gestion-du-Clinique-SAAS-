@@ -2,7 +2,7 @@
 
 import { ListSkeleton } from './ui';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
 import { SUBSCRIPTION_BLOCKED_EVENT, type SubscriptionBlockedDetail } from '@/lib/api';
@@ -52,15 +52,19 @@ function SubscriptionBlockedScreen({ detail, onPay, onLogout }: { detail: Subscr
 
 const PUBLIC_PATHS = ['/', '/login', '/forgot-password', '/reset-password', '/cgu'];
 
+function subscribeNothing(): () => void {
+  return () => {};
+}
+
 export default function RoleAccessGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  // false on the server and during hydration, true in the browser: no effect needed.
+  const mounted = useSyncExternalStore(subscribeNothing, () => true, () => false);
   const [blocked, setBlocked] = useState<SubscriptionBlockedDetail | null>(null);
   const { loading, isAuthenticated, modules, user, selectedClinicId, logout } = useAuth();
 
   useEffect(() => {
-    setMounted(true);
     const onBlocked = (event: Event) => setBlocked((event as CustomEvent<SubscriptionBlockedDetail>).detail);
     window.addEventListener(SUBSCRIPTION_BLOCKED_EVENT, onBlocked);
     return () => window.removeEventListener(SUBSCRIPTION_BLOCKED_EVENT, onBlocked);

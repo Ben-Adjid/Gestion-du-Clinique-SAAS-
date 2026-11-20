@@ -48,9 +48,6 @@ function ClinicsList() {
   const [error, setError] = useState('');
   const debouncedSearch = useDebouncedValue(search);
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, status, plan, subscriptionStatus]);
 
   useEffect(() => {
     if (!token) return;
@@ -83,23 +80,23 @@ function ClinicsList() {
         {error && <Notice tone="error" onClose={() => setError('')}>{error}</Notice>}
 
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <SearchInput value={search} onChange={setSearch} placeholder="Nom, code, ville ou e-mail…" label="Rechercher une clinique" />
-          <select aria-label="Statut de la clinique" value={status} onChange={(event) => setStatus(event.target.value)} className={`${inputClass} sm:w-44`}>
+          <SearchInput value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Nom, code, ville ou e-mail…" label="Rechercher une clinique" />
+          <select aria-label="Statut de la clinique" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className={`${inputClass} sm:w-44`}>
             <option value="">Tous les statuts</option>
             {(Object.keys(CLINIC_STATUS) as ClinicStatus[]).map((key) => <option key={key} value={key}>{CLINIC_STATUS[key].label}</option>)}
           </select>
-          <select aria-label="Formule" value={plan} onChange={(event) => setPlan(event.target.value)} className={`${inputClass} sm:w-44`}>
+          <select aria-label="Formule" value={plan} onChange={(event) => { setPlan(event.target.value); setPage(1); }} className={`${inputClass} sm:w-44`}>
             <option value="">Toutes les formules</option>
             <option value="BASIC">Basic</option>
             <option value="PRO">Pro</option>
             <option value="ENTERPRISE">Enterprise</option>
           </select>
-          <select aria-label="État de l’abonnement" value={subscriptionStatus} onChange={(event) => setSubscriptionStatus(event.target.value)} className={`${inputClass} sm:w-52`}>
+          <select aria-label="État de l’abonnement" value={subscriptionStatus} onChange={(event) => { setSubscriptionStatus(event.target.value); setPage(1); }} className={`${inputClass} sm:w-52`}>
             <option value="">Tous les abonnements</option>
             {Object.entries(SUBSCRIPTION_STATUS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
           </select>
           {filtered && (
-            <button type="button" onClick={() => { setSearch(''); setStatus(''); setPlan(''); setSubscriptionStatus(''); }} className="text-sm font-semibold text-emerald-700 hover:text-emerald-900">
+            <button type="button" onClick={() => { setSearch(''); setStatus(''); setPlan(''); setSubscriptionStatus(''); setPage(1); }} className="text-sm font-semibold text-emerald-700 hover:text-emerald-900">
               Effacer les filtres
             </button>
           )}

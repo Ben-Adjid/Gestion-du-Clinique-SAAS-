@@ -65,7 +65,15 @@ export default function ReceptionPage() {
     }
   }, [token, doctorFilter]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    const query = doctorFilter ? `?doctor_id=${doctorFilter}` : '';
+    apiFetch<{ data: QueueEntry[] }>(`/appointments/queue${query}`, token)
+      .then((response) => { if (active) setEntries(response.data); })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'File d’attente indisponible.'); });
+    return () => { active = false; };
+  }, [token, doctorFilter]);
   useEffect(() => {
     const timer = window.setInterval(() => { void load(); }, 30000);
     return () => window.clearInterval(timer);

@@ -80,7 +80,15 @@ function DispenseQueue({ token, onNotice }: { token: string; onNotice: (message:
     }
   }, [token, page, debounced]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    const query = new URLSearchParams({ page: String(page) });
+    if (debounced.trim()) query.set('search', debounced.trim());
+    apiFetch<NonNullable<typeof result>>(`/pharmacy/queue?${query.toString()}`, token)
+      .then((response) => { if (active) setResult(response); })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Liste indisponible.'); });
+    return () => { active = false; };
+  }, [token, page, debounced]);
 
   const expand = (prescription: QueuedPrescription) => {
     setOpen(open === prescription.id ? null : prescription.id);
@@ -186,7 +194,16 @@ function Stock({ token, onNotice }: { token: string; onNotice: (message: string)
     }
   }, [token, debounced, alert]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    const query = new URLSearchParams();
+    if (debounced.trim()) query.set('search', debounced.trim());
+    if (alert) query.set('alert', alert);
+    apiFetch<NonNullable<typeof data>>(`/pharmacy/stock?${query.toString()}`, token)
+      .then((response) => { if (active) setData(response); })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Stock indisponible.'); });
+    return () => { active = false; };
+  }, [token, debounced, alert]);
 
   const tiles: { key: string; label: string; value: string | number; tone: string }[] = data ? [
     { key: '', label: 'Références', value: data.summary.references, tone: 'text-slate-900' },

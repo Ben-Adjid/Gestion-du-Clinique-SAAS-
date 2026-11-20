@@ -28,9 +28,8 @@ export default function AuditPage() {
 
   useEffect(() => {
     if (!token) return;
-    setError('');
     apiFetch<Page>(`/audit-logs?page=${current}`, token)
-      .then(setPage)
+      .then((response) => { setPage(response); setError(''); })
       .catch((err: Error) => setError(err.message));
   }, [token, current]);
 

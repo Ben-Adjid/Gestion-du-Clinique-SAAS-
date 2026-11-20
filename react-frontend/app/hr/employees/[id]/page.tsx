@@ -24,7 +24,8 @@ export default function EmployeePage() {
   const [employee, setEmployee] = useState<Detail | null>(null);
   const [editing, setEditing] = useState(false);
   const [terminating, setTerminating] = useState(false);
-  const [notice, setNotice] = useState('');
+  // A notice left by the previous page (e.g. after a save), shown once.
+  const [notice, setNotice] = useState(() => (typeof window === 'undefined' ? '' : sessionStorage.getItem('hr_notice') ?? ''));
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -36,13 +37,16 @@ export default function EmployeePage() {
     }
   }, [token, id]);
 
-  useEffect(() => { void load(); }, [load]);
   useEffect(() => {
-    const stored = sessionStorage.getItem('hr_notice');
-    if (stored) {
-      setNotice(stored);
-      sessionStorage.removeItem('hr_notice');
-    }
+    if (!token) return;
+    let active = true;
+    apiFetch<{ data: Detail }>(`/hr/employees/${id}`, token)
+      .then((response) => { if (active) setEmployee(response.data); })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Dossier indisponible.'); });
+    return () => { active = false; };
+  }, [token, id]);
+  useEffect(() => {
+    sessionStorage.removeItem('hr_notice');
   }, []);
 
   if (error && !employee) return <main className="min-h-screen bg-[#f6f8fc] px-5 py-8 sm:px-8"><div className="mx-auto max-w-5xl"><PageHeader title="Dossier introuvable" backHref="/hr?tab=staff" backLabel="Personnel" /><Notice tone="error">{error}</Notice></div></main>;

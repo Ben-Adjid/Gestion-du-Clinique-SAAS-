@@ -29,7 +29,8 @@ function PatientDetailContent() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  // A notice left by the previous page (e.g. after an archive), shown once.
+  const [notice, setNotice] = useState(() => (typeof window === 'undefined' ? '' : sessionStorage.getItem('patient_notice') ?? ''));
   const [notFound, setNotFound] = useState(false);
   const [removingPhoto, setRemovingPhoto] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -53,13 +54,31 @@ function PatientDetailContent() {
     }
   }, [token, patientId]);
 
-  useEffect(() => { void load(); }, [load]);
   useEffect(() => {
-    const stored = sessionStorage.getItem('patient_notice');
-    if (stored) {
-      setNotice(stored);
-      sessionStorage.removeItem('patient_notice');
-    }
+    if (!token) return;
+    let active = true;
+    apiFetch<{ data: Patient }>(`/patients/${patientId}`, token)
+      .then(async (response) => {
+        if (!active) return;
+        setPatient(response.data);
+        setPhotoUrl((previous) => {
+          if (previous) URL.revokeObjectURL(previous);
+          return null;
+        });
+        if (response.data.has_photo) {
+          const url = await fetchObjectUrl(`/patients/${patientId}/photo`, token);
+          if (active) setPhotoUrl(url);
+        }
+      })
+      .catch((requestError: unknown) => {
+        if (!active) return;
+        if (requestError instanceof ApiError && requestError.status === 404) setNotFound(true);
+        else setError(requestError instanceof Error ? requestError.message : 'Dossier indisponible.');
+      });
+    return () => { active = false; };
+  }, [token, patientId]);
+  useEffect(() => {
+    sessionStorage.removeItem('patient_notice');
   }, []);
 
   const uploadPhoto = async (file: File) => {

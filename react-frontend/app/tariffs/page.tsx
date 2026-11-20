@@ -80,7 +80,13 @@ function ExamCatalogue({ kind, token, onNotice }: { kind: 'lab' | 'imaging'; tok
     setExams((await apiFetch<{ data: Exam[] }>(`${base}?all=1`, token)).data);
   }, [token, base]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    apiFetch<{ data: Exam[] }>(`${base}?all=1`, token)
+      .then((response) => { if (active) setExams(response.data); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [token, base]);
 
   const toggle = async (exam: Exam) => {
     await apiFetch(`${base}/${exam.id}`, token, { method: 'PATCH', body: JSON.stringify({ is_active: !exam.is_active }) });

@@ -40,7 +40,8 @@ export default function ClinicDetailsPage() {
   const [clinic, setClinic] = useState<ClinicDetails | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  // A notice left by the previous page (e.g. after a save), shown once.
+  const [message, setMessage] = useState(() => (typeof window === 'undefined' ? '' : sessionStorage.getItem('clinic_notice') ?? ''));
   const [editing, setEditing] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [busy, setBusy] = useState(false);
@@ -56,11 +57,7 @@ export default function ClinicDetailsPage() {
 
   useEffect(() => {
     load();
-    const notice = sessionStorage.getItem('clinic_notice');
-    if (notice) {
-      setMessage(notice);
-      sessionStorage.removeItem('clinic_notice');
-    }
+    sessionStorage.removeItem('clinic_notice');
   }, [load]);
 
   useEffect(() => {

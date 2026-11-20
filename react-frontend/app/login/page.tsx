@@ -29,8 +29,8 @@ export default function LoginPage() {
     try {
       const authenticated = await login(email, password);
       if (authenticated) router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'La connexion a échoué.');
+    } catch (err: unknown) {
+      setError((err instanceof Error && err.message) || 'La connexion a échoué.');
     } finally {
       setLoading(false);
     }
@@ -43,8 +43,8 @@ export default function LoginPage() {
     try {
       await verifyTotp(totpCode);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Le code de vérification est invalide.');
+    } catch (err: unknown) {
+      setError((err instanceof Error && err.message) || 'Le code de vérification est invalide.');
     } finally {
       setLoading(false);
     }

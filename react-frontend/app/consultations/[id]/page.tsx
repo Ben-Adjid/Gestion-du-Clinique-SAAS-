@@ -71,7 +71,41 @@ export default function ConsultationEditorPage() {
     }
   }, [token, id, user]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    apiFetch<{ data: Consultation }>(`/consultations/${id}`, token)
+      .then(async (response) => {
+        if (!active) return;
+        hydrate(response.data);
+        const patientId = response.data.patient_id;
+        const own = response.data.vital_signs ?? [];
+        if (own.length > 0) {
+          setLatestVitals(own[own.length - 1]);
+        } else if (can(user, 'read:vitals')) {
+          const vitals = await apiFetch<{ data: Vitals[] }>(`/patients/${patientId}/vitals`, token).catch(() => ({ data: [] as Vitals[] }));
+          if (!active) return;
+          const today = new Date().toDateString();
+          setLatestVitals(vitals.data.find((entry) => new Date(entry.recorded_at).toDateString() === today) ?? null);
+        }
+        if (can(user, 'read:patient_clinical_profile')) {
+          const profile = await apiFetch<{ data: { allergies: PatientAllergy[] } }>(`/patients/${patientId}/clinical-profile`, token).catch(() => null);
+          if (!active) return;
+          setAllergies(profile?.data.allergies ?? []);
+        }
+        if (can(user, 'read:prescription')) {
+          const list = await apiFetch<{ data: { id: number; consultation_id: number; status: string; items: { medication: { name: string }; quantity: number }[] }[] }>('/prescriptions', token).catch(() => ({ data: [] }));
+          if (!active) return;
+          setPrescriptions(list.data.filter((prescription) => prescription.consultation_id === response.data.id));
+        }
+      })
+      .catch((requestError: unknown) => {
+        if (!active) return;
+        if (requestError instanceof ApiError && requestError.status === 404) setNotFound(true);
+        else setError(requestError instanceof Error ? requestError.message : 'Consultation indisponible.');
+      });
+    return () => { active = false; };
+  }, [token, id, user]);
   useEffect(() => {
     if (!dirty) return;
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };

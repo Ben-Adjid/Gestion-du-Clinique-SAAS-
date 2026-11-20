@@ -36,16 +36,15 @@ function InvoiceBuilder() {
   }, [token, params]);
 
   useEffect(() => {
-    if (!token || !patient) {
-      setActs(null);
-      return;
-    }
+    if (!token || !patient) return;
     apiFetch<{ data: BillableAct[] }>(`/billing/pending?patient_id=${patient.id}`, token)
       .then((response) => { setActs(response.data); setSelected(response.data.map((act) => act.reference)); })
       .catch((requestError: Error) => setError(requestError.message));
   }, [token, patient]);
 
-  const chosen = (acts ?? []).filter((act) => selected.includes(act.reference));
+  // The acts belong to the selected patient only: none is shown until one is chosen.
+  const visibleActs = patient ? acts : null;
+  const chosen = (visibleActs ?? []).filter((act) => selected.includes(act.reference));
   const extraLines = extra.filter((line) => line.description.trim() && Number(line.amount) > 0);
   const subtotal = chosen.reduce((sum, act) => sum + act.amount, 0) + extraLines.reduce((sum, line) => sum + Number(line.amount), 0);
   const total = Math.max(0, subtotal - Number(discount || 0));
@@ -89,9 +88,9 @@ function InvoiceBuilder() {
             <>
               <div>
                 <h2 className="mb-2 text-sm font-semibold text-slate-700">Prestations non facturées</h2>
-                {acts === null ? <Loading /> : acts.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-500">Aucune prestation en attente pour ce patient. Vous pouvez ajouter une ligne libre ci-dessous.</p> : (
+                {visibleActs === null ? <Loading /> : visibleActs.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-500">Aucune prestation en attente pour ce patient. Vous pouvez ajouter une ligne libre ci-dessous.</p> : (
                   <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200">
-                    {acts.map((act) => (
+                    {visibleActs.map((act) => (
                       <li key={act.reference}>
                         <label className="flex cursor-pointer items-center gap-3 px-4 py-3">
                           <input type="checkbox" checked={selected.includes(act.reference)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, act.reference] : current.filter((reference) => reference !== act.reference))} />

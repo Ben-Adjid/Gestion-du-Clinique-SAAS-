@@ -60,7 +60,7 @@ export default function NursingPage() {
   const [tasks, setTasks] = useState<CareTask[]>([]);
   const [pickedPatient, setPickedPatient] = useState<PickedPatient | null>(null);
   const patientId = pickedPatient ? String(pickedPatient.id) : '';
-  const [vitals, setVitals] = useState<VitalSign[]>([]);
+  const [loadedVitals, setVitals] = useState<VitalSign[]>([]);
   const [form, setForm] = useState(emptyVitals);
   const [notes, setNotes] = useState('');
   const [loaded, setLoaded] = useState(false);
@@ -71,6 +71,8 @@ export default function NursingPage() {
   const canComplete = can(user, 'complete:care_task');
   const canRecord = can(user, 'record:vitals');
   const canReadVitals = can(user, 'read:vitals');
+  // Vitals only show for the selected patient, when the account may read them.
+  const vitals = token && patientId && canReadVitals ? loadedVitals : [];
 
   const loadTasks = useCallback(async () => {
     if (!token) return;
@@ -80,16 +82,16 @@ export default function NursingPage() {
 
   useEffect(() => {
     if (!token) return;
-    loadTasks()
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Chargement impossible.'))
-      .finally(() => setLoaded(true));
-  }, [token, loadTasks]);
+    let active = true;
+    apiRequest<{ data: CareTask[] }>('/care-tasks', token)
+      .then((response) => { if (active) setTasks(response.data); })
+      .catch((err: unknown) => { if (active) setError(err instanceof Error ? err.message : 'Chargement impossible.'); })
+      .finally(() => { if (active) setLoaded(true); });
+    return () => { active = false; };
+  }, [token]);
 
   useEffect(() => {
-    if (!token || !patientId || !canReadVitals) {
-      setVitals([]);
-      return;
-    }
+    if (!token || !patientId || !canReadVitals) return;
     apiRequest<{ data: VitalSign[] }>(`/patients/${patientId}/vitals`, token)
       .then((response) => setVitals(response.data))
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Chargement des constantes impossible.'));

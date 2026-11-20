@@ -3,7 +3,7 @@
 import { useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { EmptyState, Loading, Notice, PageHeader, Pagination, SearchInput, StatusBadge, useDebouncedValue } from '../components/ui';
 import { apiFetch } from '../lib/api';
 import { IMAGING_STATUS, LAB_STATUS, type ImagingRequest, type LabRequest } from '../lib/clinical';
@@ -68,23 +68,24 @@ function useWorklist<T>(path: string) {
   const [error, setError] = useState('');
   const debounced = useDebouncedValue(search);
 
-  const load = useCallback(async () => {
+
+  useEffect(() => {
     if (!token) return;
+    let active = true;
     const query = new URLSearchParams({ page: String(page) });
     if (status) query.set('status', status);
     if (debounced.trim()) query.set('search', debounced.trim());
-    try {
-      setResult(await apiFetch<Page<T>>(`${path}?${query.toString()}`, token));
-      setError('');
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Liste indisponible.');
-    }
+    apiFetch<Page<T>>(`${path}?${query.toString()}`, token)
+      .then((response) => { if (active) { setResult(response); setError(''); } })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Liste indisponible.'); });
+    return () => { active = false; };
   }, [token, path, page, status, debounced]);
 
-  useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setPage(1); }, [status, debounced]);
+  // Changing the status or the search starts again on the first page.
+  const changeStatus = (value: string) => { setStatus(value); setPage(1); };
+  const changeSearch = (value: string) => { setSearch(value); setPage(1); };
 
-  return { status, setStatus, search, setSearch, setPage, result, error };
+  return { status, setStatus: changeStatus, search, setSearch: changeSearch, setPage, result, error };
 }
 
 function StatusChips({ statuses, counts, value, onChange }: {

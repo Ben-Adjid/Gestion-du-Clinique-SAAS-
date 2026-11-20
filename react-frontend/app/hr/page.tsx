@@ -3,7 +3,7 @@
 import { can, useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { ConfirmDialog, EmptyState, Field, Loading, Notice, PageHeader, Pagination, SearchInput, StatusBadge, buttonClass, inputClass, useDebouncedValue } from '../components/ui';
 import { apiFetch, fieldErrors } from '../lib/api';
 import { formatDate, formatMoney } from '../lib/format';
@@ -31,14 +31,11 @@ function HrContent() {
   ];
   const visible = tabs.filter((item) => item.allowed);
   const tab = (visible.find((item) => item.key === params.get('tab'))?.key ?? visible[0]?.key ?? 'staff') as Tab;
-  const [notice, setNotice] = useState('');
+  // A notice left by the previous page (e.g. after a save), shown once.
+  const [notice, setNotice] = useState(() => (typeof window === 'undefined' ? '' : sessionStorage.getItem('hr_notice') ?? ''));
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('hr_notice');
-    if (stored) {
-      setNotice(stored);
-      sessionStorage.removeItem('hr_notice');
-    }
+    sessionStorage.removeItem('hr_notice');
   }, []);
 
   if (!token) return <Loading />;
@@ -130,11 +127,18 @@ function AttendanceTab({ token, onNotice }: { token: string; onNotice: (message:
   const [report, setReport] = useState<{ data: (Pick<Employee, 'id' | 'first_name' | 'last_name' | 'position'> & { present: number; late: number; absent: number; hours: number; overtime: number })[]; working_days: number } | null>(null);
   const [editing, setEditing] = useState<DayRow | null>(null);
 
-  const loadDay = useCallback(async () => {
-    setRows((await apiFetch<{ data: DayRow[] }>(`/hr/attendance?date=${date}`, token)).data);
-  }, [token, date]);
+  useEffect(() => {
+    if (view !== 'day') return;
+    let active = true;
+    apiFetch<{ data: DayRow[] }>(`/hr/attendance?date=${date}`, token)
+      .then((response) => { if (active) setRows(response.data); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [view, date, token]);
 
-  useEffect(() => { if (view === 'day') void loadDay(); }, [view, loadDay]);
+  const loadDay = async () => {
+    setRows((await apiFetch<{ data: DayRow[] }>(`/hr/attendance?date=${date}`, token)).data);
+  };
   useEffect(() => {
     if (view !== 'month') return;
     apiFetch<NonNullable<typeof report>>(`/hr/attendance/report?month=${month}`, token).then(setReport).catch(() => undefined);
@@ -265,11 +269,17 @@ function LeavesTab({ token, onNotice }: { token: string; onNotice: (message: str
   const [rejecting, setRejecting] = useState<Leave | null>(null);
   const [error, setError] = useState('');
 
-  const load = useCallback(async () => {
-    setResult(await apiFetch(`/hr/leaves${status ? `?status=${status}` : ''}`, token));
+  useEffect(() => {
+    let active = true;
+    apiFetch<{ data: Leave[] }>(`/hr/leaves${status ? `?status=${status}` : ''}`, token)
+      .then((response) => { if (active) setResult(response); })
+      .catch(() => undefined);
+    return () => { active = false; };
   }, [token, status]);
 
-  useEffect(() => { void load(); }, [load]);
+  const load = async () => {
+    setResult(await apiFetch<{ data: Leave[] }>(`/hr/leaves${status ? `?status=${status}` : ''}`, token));
+  };
 
   const review = async (leave: Leave, decision: 'APPROVED' | 'REJECTED', note?: string) => {
     setError('');
@@ -328,11 +338,17 @@ function PayrollTab({ token, canPrepare, canApprove, onNotice }: { token: string
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(async () => {
-    setData(await apiFetch(`/hr/payroll?month=${month}`, token));
+  useEffect(() => {
+    let active = true;
+    apiFetch<NonNullable<typeof data>>(`/hr/payroll?month=${month}`, token)
+      .then((response) => { if (active) setData(response); })
+      .catch(() => undefined);
+    return () => { active = false; };
   }, [token, month]);
 
-  useEffect(() => { void load(); }, [load]);
+  const load = async () => {
+    setData(await apiFetch<NonNullable<typeof data>>(`/hr/payroll?month=${month}`, token));
+  };
 
   const action = async (path: string, body: object, fallback: string) => {
     setBusy(true);

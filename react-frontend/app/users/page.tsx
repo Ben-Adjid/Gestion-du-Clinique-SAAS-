@@ -94,8 +94,28 @@ export default function UsersPage() {
   }, [token, page, search, isSuperAdmin]);
 
   useEffect(() => {
-    if (token && isAuthenticated) void fetchData();
-  }, [token, isAuthenticated, fetchData]);
+    if (!token || !isAuthenticated) return;
+    let active = true;
+    Promise.all([
+      apiRequest<PaginatedUsers>(`/users?page=${page}&search=${encodeURIComponent(search.trim())}`, token),
+      apiRequest<{ data: Role[] }>('/users/roles', token),
+      isSuperAdmin ? apiRequest<{ data: Clinic[] }>('/clinics', token) : Promise.resolve({ data: [] }),
+    ])
+      .then(([userResult, roleResult, clinicResult]) => {
+        if (!active) return;
+        setUsers(userResult.data);
+        setTotalUsers(userResult.total);
+        setLastPage(userResult.last_page);
+        setRoles(roleResult.data);
+        setClinics(clinicResult.data);
+        setError('');
+      })
+      .catch((requestError: unknown) => {
+        if (active) setError(requestError instanceof Error ? requestError.message : 'Impossible de charger les utilisateurs.');
+      })
+      .finally(() => { if (active) setLoadingData(false); });
+    return () => { active = false; };
+  }, [token, isAuthenticated, page, search, isSuperAdmin]);
 
   const filteredRoleName = useMemo(
     () => new Map(roles.map((role) => [role.id, role.display_name])),

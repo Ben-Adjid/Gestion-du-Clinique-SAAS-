@@ -26,7 +26,8 @@ export default function InvoicePage() {
   const [preview, setPreview] = useState<{ paymentId: number; receiptNumber: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  // A notice left by the previous page (e.g. after a save), shown once.
+  const [notice, setNotice] = useState(() => (typeof window === 'undefined' ? '' : sessionStorage.getItem('invoice_notice') ?? ''));
   const [busy, setBusy] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [lastPaymentId, setLastPaymentId] = useState<number | null>(null);
@@ -44,13 +45,24 @@ export default function InvoicePage() {
     }
   }, [token, id]);
 
-  useEffect(() => { void load(); }, [load]);
   useEffect(() => {
-    const stored = sessionStorage.getItem('invoice_notice');
-    if (stored) {
-      setNotice(stored);
-      sessionStorage.removeItem('invoice_notice');
-    }
+    if (!token) return;
+    let active = true;
+    apiFetch<{ data: Invoice }>(`/invoices/${id}`, token)
+      .then((response) => {
+        if (!active) return;
+        setInvoice(response.data);
+        setAmount(String(response.data.outstanding_amount || ''));
+      })
+      .catch((requestError: unknown) => {
+        if (!active) return;
+        if (requestError instanceof ApiError && requestError.status === 404) setNotFound(true);
+        else setError(requestError instanceof Error ? requestError.message : 'Facture indisponible.');
+      });
+    return () => { active = false; };
+  }, [token, id]);
+  useEffect(() => {
+    sessionStorage.removeItem('invoice_notice');
   }, []);
 
   if (notFound) return <main className="min-h-screen bg-[#f6f8fc] px-5 py-8 sm:px-8"><div className="mx-auto max-w-4xl"><PageHeader title="Facture introuvable" backHref="/invoices?tab=invoices" backLabel="Factures" /></div></main>;

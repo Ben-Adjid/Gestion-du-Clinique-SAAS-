@@ -69,15 +69,24 @@ export default function PrescriptionsPage() {
     }
   }, [token, page]);
 
-  useEffect(() => { void load(); }, [load]);
-  // Opened from a consultation ("Rédiger une ordonnance"): open the form on it.
   useEffect(() => {
+    if (!token) return;
+    let active = true;
+    apiFetch<NonNullable<typeof result>>(`/prescriptions?page=${page}`, token)
+      .then((response) => { if (active) setResult(response); })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Ordonnances indisponibles.'); });
+    return () => { active = false; };
+  }, [token, page]);
+  // Opened from a consultation ("Rédiger une ordonnance"): the form opens on it, once (during render).
+  const [presetHandled, setPresetHandled] = useState(false);
+  if (!presetHandled && canWrite) {
+    setPresetHandled(true);
     const preset = new URLSearchParams(window.location.search).get('consultation');
-    if (preset && canWrite) {
+    if (preset) {
       setPresetConsultation(preset);
       setShowForm(true);
     }
-  }, [canWrite]);
+  }
 
   const run = async (prescription: Prescription, path: string, init: RequestInit, success: string) => {
     if (!token) return;
@@ -183,7 +192,7 @@ function PrescriptionForm({ token, presetConsultation, onCancel, onSaved }: { to
   const [consultationId, setConsultationId] = useState(presetConsultation);
   const [items, setItems] = useState<DraftItem[]>([emptyItem()]);
   const [notes, setNotes] = useState('');
-  const [interactions, setInteractions] = useState<Interaction[]>([]);
+  const [loadedInteractions, setInteractions] = useState<Interaction[]>([]);
   const [acknowledge, setAcknowledge] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -199,11 +208,10 @@ function PrescriptionForm({ token, presetConsultation, onCancel, onSaved }: { to
     }).catch((requestError: Error) => setError(requestError.message));
   }, [token]);
 
+  // Interactions only show while a consultation and at least one medication are selected.
+  const interactions = consultationId && selectionKey !== '' ? loadedInteractions : [];
   useEffect(() => {
-    if (!consultationId || selectionKey === '') {
-      setInteractions([]);
-      return;
-    }
+    if (!consultationId || selectionKey === '') return;
     let active = true;
     apiFetch<{ data: Interaction[] }>('/prescriptions/check-interactions', token, {
       method: 'POST',

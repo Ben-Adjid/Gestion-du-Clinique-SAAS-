@@ -40,7 +40,18 @@ export default function LabRequestPage() {
     }
   }, [token, id]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    apiFetch<{ data: LabRequest }>(`/lab-requests/${id}`, token)
+      .then((response) => { if (active) hydrate(response.data); })
+      .catch((requestError: unknown) => {
+        if (!active) return;
+        if (requestError instanceof ApiError && requestError.status === 404) setNotFound(true);
+        else setError(requestError instanceof Error ? requestError.message : 'Demande indisponible.');
+      });
+    return () => { active = false; };
+  }, [token, id]);
 
   const run = async (path: string, init: RequestInit, success: string) => {
     if (!token) return;

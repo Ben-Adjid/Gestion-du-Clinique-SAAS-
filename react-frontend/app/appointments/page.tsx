@@ -127,7 +127,32 @@ function AppointmentsContent() {
     }
   }, [token, view, from, to, doctorFilter, isPatient]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    const query = new URLSearchParams();
+    if (view === 'week') {
+      query.set('from', from);
+      query.set('to', to);
+    } else if (!isPatient) {
+      query.set('from', isoDate(new Date()));
+      query.set('to', isoDate(new Date(Date.now() + 60 * 86400000)));
+    }
+    if (doctorFilter) query.set('doctor_id', doctorFilter);
+    Promise.all([
+      apiFetch<{ data: Appointment[] }>(`/appointments?${query.toString()}`, token),
+      apiFetch<{ data: AppointmentRequest[] }>('/appointment-requests', token),
+    ])
+      .then(([appointmentResponse, requestResponse]) => {
+        if (!active) return;
+        setAppointments(appointmentResponse.data);
+        setRequests(requestResponse.data);
+      })
+      .catch((requestError: unknown) => {
+        if (active) setError(requestError instanceof Error ? requestError.message : 'Impossible de charger l’agenda.');
+      });
+    return () => { active = false; };
+  }, [token, view, from, to, doctorFilter, isPatient]);
   useEffect(() => {
     if (!token) return;
     apiFetch<{ data: Doctor[] }>('/appointments/doctors', token).then((response) => setDoctors(response.data)).catch(() => undefined);

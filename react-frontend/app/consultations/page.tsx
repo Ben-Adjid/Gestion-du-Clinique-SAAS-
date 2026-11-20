@@ -3,7 +3,7 @@
 import { can, useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EmptyState, Loading, Notice, PageHeader, Pagination, SearchInput, StatusBadge, buttonClass, inputClass, useDebouncedValue } from '../components/ui';
 import { apiFetch } from '../lib/api';
 import { STATUS_LABELS, type Consultation, type ConsultationStatus } from '../lib/consultations';
@@ -22,20 +22,18 @@ export default function ConsultationsPage() {
   const [error, setError] = useState('');
   const debouncedSearch = useDebouncedValue(search);
 
-  const load = useCallback(async () => {
+
+  useEffect(() => {
     if (!token) return;
+    let active = true;
     const query = new URLSearchParams({ page: String(page) });
     if (debouncedSearch.trim()) query.set('search', debouncedSearch.trim());
     if (status) query.set('status', status);
-    try {
-      setResult(await apiFetch<Page>(`/consultations?${query.toString()}`, token));
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Impossible de charger les consultations.');
-    }
+    apiFetch<Page>(`/consultations?${query.toString()}`, token)
+      .then((response) => { if (active) { setResult(response); setError(''); } })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Impossible de charger les consultations.'); });
+    return () => { active = false; };
   }, [token, page, debouncedSearch, status]);
-
-  useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setPage(1); }, [debouncedSearch, status]);
 
   return (
     <main className="min-h-screen bg-[#f6f8fc] px-5 py-8 sm:px-8">
@@ -52,8 +50,8 @@ export default function ConsultationsPage() {
 
         {!isPatient && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <SearchInput value={search} onChange={setSearch} placeholder="Nom ou n° de dossier du patient…" label="Rechercher une consultation" />
-            <select aria-label="Filtrer par statut" value={status} onChange={(event) => setStatus(event.target.value)} className={`${inputClass} w-auto`}>
+            <SearchInput value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Nom ou n° de dossier du patient…" label="Rechercher une consultation" />
+            <select aria-label="Filtrer par statut" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className={`${inputClass} w-auto`}>
               <option value="">Tous les statuts</option>
               {(Object.keys(STATUS_LABELS) as ConsultationStatus[]).map((value) => <option key={value} value={value}>{STATUS_LABELS[value].label}</option>)}
             </select>

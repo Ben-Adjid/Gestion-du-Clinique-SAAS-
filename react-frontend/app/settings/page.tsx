@@ -12,18 +12,19 @@ const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8100/ap
 
 export default function SettingsPage() {
   const { token, user, updateUser, loading, isAuthenticated, logout } = useAuth();
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(user?.name ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      setName(user.name ?? '');
-      setPhone(user.phone ?? '');
-    }
-  }, [user]);
+  // The form follows the signed-in user: when it changes, the fields are reset during render (no effect).
+  const [formUser, setFormUser] = useState(user);
+  if (user !== formUser) {
+    setFormUser(user);
+    setName(user?.name ?? '');
+    setPhone(user?.phone ?? '');
+  }
 
   if (loading || !isAuthenticated || !user) return <PageSkeleton />;
 

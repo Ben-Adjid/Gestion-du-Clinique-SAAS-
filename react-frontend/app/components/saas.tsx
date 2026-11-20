@@ -25,11 +25,19 @@ export function PaymentDialog({ invoice, token, mode, onClose, onDone }: {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Each new invoice starts the payment form afresh (during render, not in an effect).
+  const [formInvoice, setFormInvoice] = useState<typeof invoice | undefined>(undefined);
+  if (invoice !== formInvoice) {
+    setFormInvoice(invoice);
+    if (invoice) {
+      setForm({ amount: String(invoice.balance), method: 'ORANGE_MONEY', reference: '', paid_on: today, notes: '' });
+      setErrors({});
+      setError('');
+    }
+  }
+
   useEffect(() => {
     if (!invoice) return;
-    setForm({ amount: String(invoice.balance), method: 'ORANGE_MONEY', reference: '', paid_on: today, notes: '' });
-    setErrors({});
-    setError('');
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

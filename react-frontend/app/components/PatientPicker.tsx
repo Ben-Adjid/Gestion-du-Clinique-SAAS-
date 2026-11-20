@@ -45,8 +45,6 @@ export function PatientPicker({ token, value, onChange, query = '', placeholder 
     const params = new URLSearchParams(query);
     params.set('per_page', '10');
     if (search.trim()) params.set('search', search.trim());
-    setLoading(true);
-    setFailed('');
     apiRequest<{ data: PickedPatient[] }>(`/patients?${params.toString()}`, token)
       .then((response) => {
         if (cancelled) return;
@@ -101,7 +99,7 @@ export function PatientPicker({ token, value, onChange, query = '', placeholder 
         disabled={disabled}
         placeholder={placeholder}
         onFocus={() => setOpen(true)}
-        onChange={(event) => { setText(event.target.value); setOpen(true); }}
+        onChange={(event) => { setText(event.target.value); setOpen(true); setLoading(true); setFailed(''); }}
         onKeyDown={(event) => {
           if (event.key === 'ArrowDown') { event.preventDefault(); setActive((index) => Math.min(index + 1, results.length - 1)); }
           if (event.key === 'ArrowUp') { event.preventDefault(); setActive((index) => Math.max(index - 1, 0)); }

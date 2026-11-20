@@ -261,9 +261,15 @@ export function ConfirmDialog({ open, title, message, confirmLabel = 'Confirmer'
     onCancelRef.current = onCancel;
   });
 
+  // The reason is cleared each time the dialog opens (during render, not in an effect).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setReason('');
+  }
+
   useEffect(() => {
     if (!open) return;
-    setReason('');
     firstFieldRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onCancelRef.current();

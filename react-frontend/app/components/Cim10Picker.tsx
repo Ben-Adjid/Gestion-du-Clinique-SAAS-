@@ -10,17 +10,16 @@ type Code = { code: string; label: string; chapter: string };
 export function Cim10Picker({ token, onPick }: { token: string; onPick: (code: string, label: string) => void }) {
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
-  const [results, setResults] = useState<Code[]>([]);
+  const [fetched, setResults] = useState<Code[]>([]);
   const [active, setActive] = useState(0);
   const search = useDebouncedValue(text, 200);
+  // Suggestions only show while the list is open and the search has at least two letters.
+  const results = open && search.trim().length >= 2 ? fetched : [];
   const listId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open || search.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    if (!open || search.trim().length < 2) return;
     let cancelled = false;
     apiFetch<{ data: Code[] }>(`/cim10?search=${encodeURIComponent(search.trim())}`, token)
       .then((response) => { if (!cancelled) { setResults(response.data); setActive(0); } })

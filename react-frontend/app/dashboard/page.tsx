@@ -58,7 +58,6 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!token) return;
     const controller = new AbortController();
-    setWidgetsError(false);
     clinicScopedFetch(`${API_ROOT}/dashboard`, {
       headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
       signal: controller.signal,
@@ -67,6 +66,7 @@ export default function DashboardPage() {
         if (!response.ok) throw new Error('dashboard');
         const body = await response.json();
         setWidgets(body.data.widgets as Widget[]);
+        setWidgetsError(false);
       })
       .catch((error) => {
         if (error.name !== 'AbortError') setWidgetsError(true);

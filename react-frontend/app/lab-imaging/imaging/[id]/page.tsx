@@ -36,7 +36,22 @@ export default function ImagingRequestPage() {
     }
   }, [token, id]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    apiFetch<{ data: ImagingRequest }>(`/imaging-requests/${id}`, token)
+      .then((response) => {
+        if (!active) return;
+        setRequest(response.data);
+        setReport((current) => current || response.data.reports[0]?.report_text || TEMPLATE);
+      })
+      .catch((requestError: unknown) => {
+        if (!active) return;
+        if (requestError instanceof ApiError && requestError.status === 404) setNotFound(true);
+        else setError(requestError instanceof Error ? requestError.message : 'Examen indisponible.');
+      });
+    return () => { active = false; };
+  }, [token, id]);
 
   const run = async (path: string, init: RequestInit, success: string) => {
     if (!token) return;

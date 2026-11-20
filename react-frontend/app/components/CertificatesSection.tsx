@@ -77,7 +77,13 @@ export function CertificatesSection({ token, patientId, consultationId, canCreat
     }
   }, [token, patientId]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    apiFetch<{ data: Certificate[] }>(`/certificates?patient_id=${patientId}`, token)
+      .then((response) => { if (active) setCertificates(response.data); })
+      .catch((requestError: unknown) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Certificats indisponibles.'); });
+    return () => { active = false; };
+  }, [token, patientId]);
 
   const chooseType = (value: Certificate['type']) => {
     setType(value);

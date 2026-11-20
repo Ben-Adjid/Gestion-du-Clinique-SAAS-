@@ -66,16 +66,25 @@ export function InteractionManager({ token }: { token: string }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  const fetchLists = useCallback(() => Promise.all([
+    apiFetch<{ data: { id: number; name: string; dosage: string }[] }>('/medications', token),
+    apiFetch<{ data: DeclaredInteraction[] }>('/drug-interactions', token),
+  ]), [token]);
+
   const load = useCallback(async () => {
-    const [medicationList, interactionList] = await Promise.all([
-      apiFetch<{ data: { id: number; name: string; dosage: string }[] }>('/medications', token),
-      apiFetch<{ data: DeclaredInteraction[] }>('/drug-interactions', token),
-    ]);
+    const [medicationList, interactionList] = await fetchLists();
     setMedications(medicationList.data);
     setInteractions(interactionList.data);
-  }, [token]);
+  }, [fetchLists]);
 
-  useEffect(() => { load().catch((requestError: Error) => setError(requestError.message)); }, [load]);
+  useEffect(() => {
+    fetchLists()
+      .then(([medicationList, interactionList]) => {
+        setMedications(medicationList.data);
+        setInteractions(interactionList.data);
+      })
+      .catch((requestError: Error) => setError(requestError.message));
+  }, [fetchLists]);
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     setBusy(true);
