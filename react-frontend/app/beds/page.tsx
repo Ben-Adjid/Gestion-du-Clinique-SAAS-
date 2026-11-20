@@ -74,6 +74,8 @@ const STAY_LABEL: Record<Stay['status'], string> = { ADMIS: 'Admis', TRANSFERE: 
 export default function BedsPage() {
   const { token, user } = useAuth();
   const canManage = can(user, 'manage:beds');
+  // The responsible doctor and the nurses sign the discharge (the server checks it); they do not manage beds.
+  const canDischarge = canManage || user?.role === 'DOCTOR' || user?.role === 'NURSE';
   const [board, setBoard] = useState<BedBoard | null>(null);
   const [services, setServices] = useState<ServiceOccupancy[]>([]);
   const [error, setError] = useState('');
@@ -188,6 +190,11 @@ export default function BedsPage() {
                   )}
                   {bed.status === 'OCCUPIED' && bed.admitted_at && <p className="mt-1 text-xs text-slate-600 tabular-nums">Depuis le {new Date(bed.admitted_at).toLocaleString('fr-FR')}</p>}
                   {bed.note && <p className="mt-1 text-xs text-slate-600">{bed.note}</p>}
+                  {!canManage && canDischarge && bed.status === 'OCCUPIED' && bed.admission_id && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button type="button" onClick={() => setDischarging({ bed, stayId: bed.admission_id as number })} className={buttonClass.smallDanger}>Sortie du patient</button>
+                    </div>
+                  )}
                   {canManage && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {bed.status === 'AVAILABLE' && <button type="button" onClick={() => setAssigning(bed)} className={buttonClass.small}>Installer un patient</button>}
