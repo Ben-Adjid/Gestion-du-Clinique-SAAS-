@@ -45,7 +45,7 @@ function PharmacyContent() {
         <div role="tablist" className="mb-5 flex flex-wrap gap-1 rounded-xl border border-slate-300 bg-white p-1">
           {tabs.map((item) => (
             <button key={item.key} type="button" role="tab" aria-selected={tab === item.key} onClick={() => { setNotice(''); router.replace(`/pharmacy?tab=${item.key}`); }}
-              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === item.key ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+              className={`min-h-[44px] rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === item.key ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
               {item.label}
             </button>
           ))}

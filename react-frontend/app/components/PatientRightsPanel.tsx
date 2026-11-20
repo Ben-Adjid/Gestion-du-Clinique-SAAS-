@@ -126,7 +126,7 @@ export function PatientRightsPanel({ base, token, fileName, canEdit, canExport, 
             <ul className="mt-3 divide-y divide-slate-100">
               {consents.map((consent) => (
                 <li key={consent.type} className="flex items-start justify-between gap-4 py-3">
-                  <label className="flex items-start gap-3 text-sm text-slate-800">
+                  <label className="flex min-h-[44px] items-center gap-3 text-sm text-slate-800">
                     <input
                       type="checkbox"
                       className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 disabled:opacity-50"

@@ -223,16 +223,16 @@ function AppointmentsContent() {
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <div className="inline-flex rounded-xl border border-slate-300 bg-white p-1" role="group" aria-label="Affichage">
               {(['week', 'list'] as const).map((mode) => (
-                <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${view === mode ? 'bg-emerald-700 text-white' : 'text-slate-600'}`}>
+                <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`min-h-[44px] rounded-lg px-3 py-1.5 text-sm font-semibold ${view === mode ? 'bg-emerald-700 text-white' : 'text-slate-600'}`}>
                   {mode === 'week' ? 'Semaine' : 'Liste à venir'}
                 </button>
               ))}
             </div>
             {view === 'week' && (
               <div className="flex items-center gap-1">
-                <button type="button" aria-label="Semaine précédente" onClick={() => setWeekStart((current) => { const next = new Date(current); next.setDate(next.getDate() - 7); return next; })} className={buttonClass.small}>←</button>
-                <button type="button" onClick={() => setWeekStart(mondayOf(new Date()))} className={buttonClass.small}>Cette semaine</button>
-                <button type="button" aria-label="Semaine suivante" onClick={() => setWeekStart((current) => { const next = new Date(current); next.setDate(next.getDate() + 7); return next; })} className={buttonClass.small}>→</button>
+                <button type="button" aria-label="Semaine précédente" onClick={() => setWeekStart((current) => { const next = new Date(current); next.setDate(next.getDate() - 7); return next; })} className={`${buttonClass.small} min-h-[44px] min-w-[44px]`}>←</button>
+                <button type="button" onClick={() => setWeekStart(mondayOf(new Date()))} className={`${buttonClass.small} min-h-[44px]`}>Cette semaine</button>
+                <button type="button" aria-label="Semaine suivante" onClick={() => setWeekStart((current) => { const next = new Date(current); next.setDate(next.getDate() + 7); return next; })} className={`${buttonClass.small} min-h-[44px] min-w-[44px]`}>→</button>
                 <span className="ml-2 text-sm font-semibold text-slate-700">du {formatDate(from)} au {formatDate(to)}</span>
               </div>
             )}
@@ -280,7 +280,7 @@ function AppointmentsContent() {
                           {cell.length === 0 && future && canCreate && (
                             <button type="button" aria-label={`Programmer le ${formatDate(date)} à ${slot}`}
                               onClick={() => setBooking({ date, time: slot, doctorId: doctorFilter, patient: null })}
-                              className="h-full min-h-8 w-full rounded-md text-transparent transition hover:bg-emerald-50 hover:text-emerald-700 focus:bg-emerald-50 focus:text-emerald-700">
+                              className="h-full min-h-[44px] w-full rounded-md text-transparent transition hover:bg-emerald-50 hover:text-emerald-700 focus:bg-emerald-50 focus:text-emerald-700">
                               +
                             </button>
                           )}

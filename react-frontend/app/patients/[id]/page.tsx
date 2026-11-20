@@ -148,7 +148,7 @@ function PatientDetailContent() {
                 <div className="flex gap-1">
                   <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Choisir une photo"
                     onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void uploadPhoto(file); }} />
-                  <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} className={buttonClass.small}>{uploading ? 'Envoi…' : patient.has_photo ? 'Changer' : 'Ajouter une photo'}</button>
+                  <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} className={`${buttonClass.small} min-h-[44px]`}>{uploading ? 'Envoi…' : patient.has_photo ? 'Changer' : 'Ajouter une photo'}</button>
                   {patient.has_photo && <button type="button" onClick={() => setRemovingPhoto(true)} className={buttonClass.smallDanger}>Retirer</button>}
                 </div>
               )}
