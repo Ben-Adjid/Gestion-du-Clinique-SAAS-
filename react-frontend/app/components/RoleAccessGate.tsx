@@ -71,6 +71,8 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
   const ROUTE_MODULES: Record<string, string[]> = {
     'lab-imaging': ['lab', 'imaging'],
     surgeries: ['surgery'],
+    indications: ['surgery'],
+    service: ['surgery'],
     certificates: ['consultations'],
   };
   const routeModules = ROUTE_MODULES[pathModule] ?? [pathModule];

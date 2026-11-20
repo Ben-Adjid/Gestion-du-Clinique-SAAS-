@@ -3,7 +3,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+
+/** False on the server and during hydration, true once the browser has mounted: keeps the first render identical on both sides. */
+const subscribeNothing = () => () => {};
+const isBrowser = () => true;
+const isServer = () => false;
 
 const highlights = [
   { number: '01', title: 'Un parcours clair', description: 'Patients, rendez-vous, consultations et prescriptions sont organisés par activité.' },
@@ -14,12 +19,13 @@ const highlights = [
 export default function HomePage() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
+  const mounted = useSyncExternalStore(subscribeNothing, isBrowser, isServer);
 
   useEffect(() => {
     if (!loading && isAuthenticated) router.replace('/dashboard');
   }, [isAuthenticated, loading, router]);
 
-  if (loading || isAuthenticated) {
+  if (!mounted || loading || isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f6f8fc] text-sm font-medium text-slate-500">
         <span className="mr-3 h-2 w-2 animate-pulse rounded-full bg-emerald-500" />

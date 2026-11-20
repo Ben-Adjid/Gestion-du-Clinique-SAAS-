@@ -26,6 +26,8 @@ export const moduleGroups: { id: string; title: string; description: string; mod
       { title: 'Planning des médecins', description: 'Présents, de garde et indisponibilités', href: '/planning', icon: 'calendar', tone: 'teal' },
       { title: 'Lits et hospitalisation', description: 'Occupation des lits et installation des patients', href: '/beds', icon: 'history', tone: 'teal', requiredModule: 'beds' },
       { title: 'Bloc opératoire', description: 'Interventions, équipes et comptes rendus', href: '/surgeries', icon: 'clipboard', tone: 'rose', requiredModule: 'surgery' },
+      { title: 'Indications opératoires', description: 'Demandes, validation par le chef et pré-anesthésie', href: '/indications', icon: 'clipboard', tone: 'rose', requiredModule: 'surgery' },
+      { title: 'Mon service', description: 'Lits, opérations à suivre et gardes du chef de service', href: '/service', icon: 'chart', tone: 'teal', requiredModule: 'surgery' },
       { title: 'Consultations', description: 'Notes et historique des soins', href: '/consultations', icon: 'clipboard', tone: 'teal' },
       { title: 'Soins infirmiers', description: 'Tâches de soins et signes vitaux', href: '/nursing', icon: 'clipboard', tone: 'rose' },
       { title: 'Prescriptions', description: 'Ordonnances et traitements', href: '/prescriptions', icon: 'prescription', tone: 'rose' },

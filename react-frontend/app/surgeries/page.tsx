@@ -6,7 +6,7 @@ import { can, useAuth } from '@/app/context/AuthContext';
 import { ApiError, apiFetch } from '@/app/lib/api';
 import { doctorName, formatDateTime } from '@/app/lib/format';
 import { PatientPicker, type PickedPatient } from '@/app/components/PatientPicker';
-import { EmptyState, Field, Loading, Notice, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '@/app/components/ui';
+import { EmptyState, Field, ListSkeleton, Notice, PageHeader, Section, StatusBadge, buttonClass, inputClass } from '@/app/components/ui';
 
 type SurgeryStatus = 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
@@ -20,6 +20,15 @@ interface SurgeryRow {
   patient: { first_name: string; last_name: string; patient_unique_id: string } | null;
   surgeon: { id: number; name: string } | null;
   anesthetist: { id: number; name: string } | null;
+}
+
+interface ReadyIndication {
+  id: number;
+  status: string;
+  operation_type: string;
+  asa: number | null;
+  pre_anesthesia_at: string | null;
+  patient: { id: number; name: string; patient_unique_id: string } | null;
 }
 
 interface TeamOptions {
@@ -81,7 +90,7 @@ export default function SurgeriesPage() {
         )}
 
         <Section title="Programme">
-          {rows === null ? <Loading /> : rows.length === 0 ? <EmptyState title="Aucune intervention" description="Les interventions planifiées apparaîtront ici." /> : (
+          {rows === null ? <ListSkeleton rows={4} label="Chargement des interventions…" /> : rows.length === 0 ? <EmptyState title="Aucune intervention" description="Les interventions planifiées apparaîtront ici." /> : (
             <ul className="divide-y divide-slate-100">
               {rows.map((surgery) => (
                 <li key={surgery.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -118,6 +127,8 @@ function PlanSurgery({ token, onCreated }: { token: string; onCreated: (message:
   const [surgeonId, setSurgeonId] = useState('');
   const [anesthetistId, setAnesthetistId] = useState('');
   const [staff, setStaff] = useState<string[]>([]);
+  const [indicationId, setIndicationId] = useState('');
+  const [readyIndications, setReadyIndications] = useState<ReadyIndication[]>([]);
   const [options, setOptions] = useState<TeamOptions | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
@@ -128,11 +139,16 @@ function PlanSurgery({ token, onCreated }: { token: string; onCreated: (message:
     apiFetch<{ data: TeamOptions }>('/surgeries/team-options', token)
       .then((response) => active && setOptions(response.data))
       .catch((err: Error) => active && setError(err.message));
+    apiFetch<{ data: ReadyIndication[] }>('/indications', token)
+      .then((response) => active && setReadyIndications(response.data.filter((item) => item.status === 'APPROVED' && item.asa !== null && item.pre_anesthesia_at !== null)))
+      .catch(() => active && setReadyIndications([]));
 
     return () => {
       active = false;
     };
   }, [token]);
+
+  const patientIndications = readyIndications.filter((item) => patient !== null && item.patient?.id === patient.id);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -144,6 +160,7 @@ function PlanSurgery({ token, onCreated }: { token: string; onCreated: (message:
         method: 'POST',
         body: JSON.stringify({
           patient_id: patient?.id,
+          indication_id: Number(indicationId),
           operation_type: operationType.trim(),
           scheduled_at: scheduledAt.replace('T', ' '),
           room: room.trim() || null,
@@ -167,10 +184,16 @@ function PlanSurgery({ token, onCreated }: { token: string; onCreated: (message:
   return (
     <Section title="Planifier une intervention">
       {error && <Notice tone="error">{error}</Notice>}
-      {options === null ? <Loading /> : (
+      {options === null ? <ListSkeleton rows={3} label="Chargement de l’équipe…" /> : (
         <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
           <Field label="Patient" required className="sm:col-span-2" error={errors.patient_id}>
             <PatientPicker token={token} value={patient} onChange={setPatient} />
+          </Field>
+          <Field label="Indication validée" required error={errors.indication_id} hint={patient && patientIndications.length === 0 ? 'Aucune indication validée et évaluée pour ce patient. Demandez-la dans « Indications opératoires ».' : 'Validée par le chef de service et évaluée par l’anesthésie.'} className="sm:col-span-2">
+            <select value={indicationId} onChange={(event) => setIndicationId(event.target.value)} className={inputClass} disabled={!patient}>
+              <option value="">{patient ? 'Choisir l’indication' : 'Choisissez d’abord le patient'}</option>
+              {patientIndications.map((item) => <option key={item.id} value={item.id}>{item.operation_type} · ASA {item.asa}</option>)}
+            </select>
           </Field>
           <Field label="Type d’opération" required error={errors.operation_type}>
             <input value={operationType} onChange={(event) => setOperationType(event.target.value)} maxLength={150} className={inputClass} placeholder="Ex. : appendicectomie" />
@@ -202,7 +225,7 @@ function PlanSurgery({ token, onCreated }: { token: string; onCreated: (message:
             </select>
           </Field>
           <div className="flex justify-end gap-2 sm:col-span-2">
-            <button type="submit" disabled={saving || !patient || !operationType || !scheduledAt || !surgeonId} className={buttonClass.primary}>
+            <button type="submit" disabled={saving || !patient || !indicationId || !operationType || !scheduledAt || !surgeonId} className={buttonClass.primary}>
               {saving ? 'Planification…' : 'Planifier'}
             </button>
           </div>
