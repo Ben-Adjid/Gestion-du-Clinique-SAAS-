@@ -127,6 +127,10 @@ Route::prefix('v1')->group(function () {
             // Full export of the clinic's own records (one CSV per table in a ZIP), for leaving or moving to another system
             Route::get('/clinic-data/export', \App\Http\Controllers\Api\ClinicDataExportController::class)
                 ->middleware('audit');
+            // Takeover of a clinic's data from an archive: upload, check, confirm (background import)
+            Route::post('/clinic-imports', [\App\Http\Controllers\Api\ClinicImportController::class, 'store'])->middleware('audit');
+            Route::get('/clinic-imports/{import}', [\App\Http\Controllers\Api\ClinicImportController::class, 'show']);
+            Route::post('/clinic-imports/{import}/confirm', [\App\Http\Controllers\Api\ClinicImportController::class, 'confirm'])->middleware('audit');
             Route::get('/users/roles', [\App\Http\Controllers\Api\UserController::class, 'roles'])
                 ->middleware('permission:manage:users');
             Route::apiResource('users', \App\Http\Controllers\Api\UserController::class)
