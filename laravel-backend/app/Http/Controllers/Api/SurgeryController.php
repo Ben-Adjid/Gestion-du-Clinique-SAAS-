@@ -20,7 +20,7 @@ use Illuminate\Validation\ValidationException;
  */
 class SurgeryController extends Controller
 {
-    private const RELATIONS = ['patient:id,first_name,last_name,patient_unique_id,date_of_birth', 'surgeon:id,name', 'anesthetist:id,name', 'staff:id,name'];
+    private const RELATIONS = ['patient:id,first_name,last_name,patient_unique_id,date_of_birth', 'surgeon:id,name', 'anesthetist:id,name', 'staff:id,name', 'consent:id,surgery_id,signer_name,signer_relation,signed_at'];
 
     /** Pre-operative checklist: every item must be ticked before the operation starts. */
     public const CHECKLIST = [

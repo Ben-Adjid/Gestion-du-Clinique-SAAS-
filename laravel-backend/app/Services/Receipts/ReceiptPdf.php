@@ -3,7 +3,7 @@
 namespace App\Services\Receipts;
 
 use App\Models\Payment;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\Documents\OfficialPdf;
 
 /**
  * Official receipt (quittance) of a medical payment, as a light A5 PDF.
@@ -24,16 +24,24 @@ final class ReceiptPdf
 
     public static function render(Payment $payment): string
     {
-        $payment->loadMissing(['invoice.clinic', 'invoice.patient', 'invoice.items', 'invoice.payments']);
+        $payment->loadMissing(['invoice.clinic', 'invoice.patient', 'invoice.items', 'invoice.payments', 'invoice.creator.doctorProfile']);
         $invoice = $payment->invoice;
         $clinic = $invoice->clinic;
         $patient = $invoice->patient;
         ['total' => $total, 'paidToDate' => $paidToDate, 'remaining' => $remaining, 'settled' => $settled] = self::figures($payment);
 
-        $pdf = Pdf::loadView('pdf.receipt', [
+        $doctor = $invoice->creator;
+        $doctorName = trim((string) $doctor?->name);
+        // "Dr Fatimé ..." already carries the title: never print "Dr Dr".
+        $doctorLabel = $doctorName === '' ? null : (preg_match('/^Dr\b/u', $doctorName) ? $doctorName : 'Dr '.$doctorName);
+
+        return OfficialPdf::render('pdf.receipt', [
             'clinic' => $clinic,
             'logo' => \App\Services\ClinicLogo::pdfDataUri($clinic),
             'licence' => $clinic->settings['license_number'] ?? null,
+            'doctorLabel' => $doctorLabel,
+            'doctorLicence' => $doctor?->doctorProfile?->license_number,
+            'verification' => $payment->verification_code,
             'patient' => $patient,
             'payment' => $payment,
             'method' => Payment::METHOD_LABELS[$payment->payment_method] ?? $payment->payment_method,
@@ -44,9 +52,7 @@ final class ReceiptPdf
             'settled' => $settled,
             'coverage' => self::figures($payment)['coverage'],
             'invoiceNumber' => $invoice->invoice_number,
-        ])->setPaper('a5', 'portrait');
-
-        return $pdf->output();
+        ]);
     }
 
     /** "12 500 FCFA" with a space as thousands separator, as written in West Africa. */

@@ -58,4 +58,10 @@ class Payment extends Model
     {
         return $this->belongsTo(User::class, 'received_by');
     }
+
+    /** Verification code printed on the receipt and shown with it (same value on screen and on the PDF). */
+    public function getVerificationCodeAttribute(): string
+    {
+        return \App\Services\Documents\VerificationCode::for('RECEIPT', (string) $this->id, (string) $this->receipt_number, number_format((float) $this->amount, 2, '.', ''));
+    }
 }

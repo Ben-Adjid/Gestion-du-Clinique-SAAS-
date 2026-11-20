@@ -4,7 +4,7 @@ namespace App\Services\Prescriptions;
 
 use App\Models\Prescription;
 use App\Services\ClinicLogo;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\Documents\OfficialPdf;
 
 /**
  * Medical prescription (ordonnance) as a PDF: clinic header and logo, the prescriber's registration
@@ -31,25 +31,34 @@ final class PrescriptionPdf
         ]), (string) config('app.key')), 0, 16));
     }
 
-    /** The prescription as HTML, before the PDF engine runs. */
-    public static function html(Prescription $prescription): string
+    /** Figures of the page: the same for the PDF and for any HTML preview. */
+    private static function data(Prescription $prescription): array
     {
         $prescription->loadMissing(['consultation.patient', 'doctor.doctorProfile', 'items.medication', 'clinic']);
+        $name = trim((string) $prescription->doctor->name);
+        // "Dr Fatimé ..." already carries the title: never print "Dr Dr".
+        $doctorName = preg_match('/^Dr\b/u', $name) ? $name : 'Dr '.$name;
 
-        return view('pdf.prescription', [
+        return [
             'clinic' => $prescription->clinic,
             'logo' => ClinicLogo::pdfDataUri($prescription->clinic),
             'licence' => $prescription->clinic->settings['license_number'] ?? null,
             'prescription' => $prescription,
             'patient' => $prescription->consultation->patient,
-            'doctorName' => $prescription->doctor->name,
+            'doctorName' => $doctorName,
             'doctorLicence' => $prescription->doctor->doctorProfile?->license_number,
             'verification' => self::verificationCode($prescription),
-        ])->render();
+        ];
+    }
+
+    /** The prescription as HTML, before the PDF engine runs. */
+    public static function html(Prescription $prescription): string
+    {
+        return view('pdf.prescription', self::data($prescription))->render();
     }
 
     public static function render(Prescription $prescription): string
     {
-        return Pdf::loadHTML(self::html($prescription))->setPaper('a5', 'portrait')->output();
+        return OfficialPdf::render('pdf.prescription', self::data($prescription));
     }
 }

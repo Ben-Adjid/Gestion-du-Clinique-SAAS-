@@ -25,3 +25,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Logos de clinique stockés localement (tests inclus) : jamais versionnés
+/laravel-backend/storage/app/public/clinics/

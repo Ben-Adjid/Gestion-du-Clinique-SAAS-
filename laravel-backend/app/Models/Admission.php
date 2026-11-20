@@ -29,6 +29,7 @@ class Admission extends Model
         'discharge_summary' => 'encrypted',
     ];
 
+    public function clinic(): BelongsTo { return $this->belongsTo(Clinic::class); }
     public function patient(): BelongsTo { return $this->belongsTo(Patient::class); }
     public function bed(): BelongsTo { return $this->belongsTo(Bed::class); }
     public function room(): BelongsTo { return $this->belongsTo(Room::class); }

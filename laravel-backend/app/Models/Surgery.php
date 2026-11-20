@@ -32,6 +32,7 @@ class Surgery extends Model
     public function consent(): \Illuminate\Database\Eloquent\Relations\HasOne { return $this->hasOne(SurgicalConsent::class); }
     public function invoice(): BelongsTo { return $this->belongsTo(Invoice::class); }
 
+    public function clinic(): BelongsTo { return $this->belongsTo(Clinic::class); }
     public function patient(): BelongsTo { return $this->belongsTo(Patient::class); }
     public function surgeon(): BelongsTo { return $this->belongsTo(User::class, 'surgeon_id'); }
     public function anesthetist(): BelongsTo { return $this->belongsTo(User::class, 'anesthetist_id'); }

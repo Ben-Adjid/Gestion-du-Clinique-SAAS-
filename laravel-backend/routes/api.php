@@ -408,6 +408,10 @@ Route::prefix('v1')->group(function () {
                 // Who may bill is decided in the controller: the assigned surgeon or anesthetist, or invoicing staff.
                 Route::post('/surgeries/{surgery}/invoice', 'invoice')->middleware('audit');
             });
+            // Printable PDFs: signed operative report, surgical consent, hospital stay file
+            Route::get('/surgeries/{surgery}/documents/operative-report', [\App\Http\Controllers\Api\ClinicalDocumentController::class, 'operativeReport'])->middleware(['plan:surgery', 'permission:read:surgery', 'audit']);
+            Route::get('/surgeries/{surgery}/documents/consent', [\App\Http\Controllers\Api\ClinicalDocumentController::class, 'consent'])->middleware(['plan:surgery', 'permission:read:surgery', 'audit']);
+            Route::get('/admissions/{admission}/documents/hospital-file', [\App\Http\Controllers\Api\ClinicalDocumentController::class, 'hospitalFile'])->middleware(['permission:read:beds', 'audit']);
 
             // Traceability of printed documents: the browser prints only after this call succeeds
             Route::post('/prints', [\App\Http\Controllers\Api\PrintLogController::class, 'store'])->middleware('throttle:60,1');

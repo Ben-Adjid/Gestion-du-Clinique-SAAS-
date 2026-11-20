@@ -2,50 +2,13 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<style>
-  body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #0f172a; margin: 0; }
-  .head { border-bottom: 2px solid #047857; padding-bottom: 8px; }
-  .clinic { font-size: 14px; font-weight: bold; color: #065f46; }
-  .muted { color: #64748b; font-size: 9px; }
-  .title { text-align: center; font-size: 13px; font-weight: bold; letter-spacing: 1px; margin: 12px 0 6px; }
-  .ref { text-align: center; font-size: 9px; color: #475569; margin-bottom: 10px; }
-  table { width: 100%; border-collapse: collapse; }
-  td, th { padding: 4px 3px; vertical-align: top; }
-  .box { border: 1px solid #cbd5e1; padding: 6px; }
-  .items th { text-align: left; font-size: 9px; color: #475569; border-bottom: 1px solid #cbd5e1; }
-  .items td { border-bottom: 1px solid #f1f5f9; }
-  .right { text-align: right; }
-  .total td { font-size: 11px; font-weight: bold; padding-top: 6px; }
-  .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 9px; }
-  .solde { background: #d1fae5; color: #065f46; }
-  .reste { background: #fef3c7; color: #92400e; }
-  .sign { margin-top: 18px; height: 60px; border: 1px dashed #94a3b8; }
-  .foot { margin-top: 6px; font-size: 8px; color: #64748b; text-align: center; }
-</style>
+<title>Quittance {{ $payment->receipt_number }}</title>
 </head>
 <body>
-  <div class="head">
-    <table>
-      <tr>
-        <td>
-          @if ($logo)
-            <img src="{{ $logo }}" alt="Logo {{ $clinic->name }}" style="height: 44px; margin-bottom: 4px;"><br>
-          @endif
-          <div class="clinic">{{ $clinic->name }}</div>
-          <div class="muted">{{ trim(($clinic->city ?? '').' '.($clinic->country ?? '')) }}</div>
-          <div class="muted">{{ $clinic->settings['address'] ?? '' }}</div>
-          <div class="muted">Tél. {{ $clinic->settings['phone'] ?? $clinic->admin_phone ?? '—' }}{{ $clinic->admin_email ? ' · '.$clinic->admin_email : '' }}</div>
-        </td>
-        <td class="right muted">
-          Numéro d’agrément<br>
-          <strong>{{ $licence ?: 'Non renseigné' }}</strong>
-        </td>
-      </tr>
-    </table>
-  </div>
+  @include('pdf.partials.frame')
 
   <div class="title">QUITTANCE DE PAIEMENT DE SOINS</div>
-  <div class="ref">Référence <strong>{{ $payment->receipt_number }}</strong> · Facture {{ $invoiceNumber }} · le {{ $payment->payment_datetime->format('d/m/Y à H:i') }}</div>
+  <div class="ref">N° <strong>{{ $payment->receipt_number }}</strong> · Facture {{ $invoiceNumber }} · le {{ $payment->payment_datetime->format('d/m/Y à H:i') }}</div>
 
   <table class="box">
     <tr>
@@ -56,6 +19,15 @@
       </td>
       <td class="right">
         <span class="muted">Téléphone</span><br>{{ $patient->phone ?? '—' }}
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <span class="muted">Médecin traitant</span><br>
+        {{ $doctorLabel ?? 'Non précisé' }}
+      </td>
+      <td class="right">
+        <span class="muted">N° d’ordre</span><br>{{ $doctorLicence ?? 'à renseigner dans le profil du médecin' }}
       </td>
     </tr>
   </table>
@@ -71,7 +43,7 @@
       @forelse ($items as $item)
         <tr>
           <td>{{ $item->description }}</td>
-          <td class="right">{{ \App\Services\Receipts\ReceiptPdf::money((float) $item->amount) }}</td>
+          <td class="num">{{ \App\Services\Receipts\ReceiptPdf::money((float) $item->amount) }}</td>
         </tr>
       @empty
         <tr><td colspan="2" class="muted">Aucun acte détaillé.</td></tr>
@@ -80,21 +52,21 @@
   </table>
 
   <table style="margin-top: 8px;">
-    <tr class="total"><td>Total brut</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($total) }}</td></tr>
+    <tr class="total"><td>Total brut</td><td class="num">{{ \App\Services\Receipts\ReceiptPdf::money($total) }}</td></tr>
     @if ($coverage['rate'] !== null)
-      <tr><td>Part assurance ({{ rtrim(rtrim(number_format($coverage['rate'], 2, ',', ''), '0'), ',') }} %)</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['insurer_share']) }}</td></tr>
-      <tr><td>Ticket modérateur patient</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['patient_share']) }}</td></tr>
+      <tr><td>Part assurance ({{ rtrim(rtrim(number_format($coverage['rate'], 2, ',', ''), '0'), ',') }} %)</td><td class="num">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['insurer_share']) }}</td></tr>
+      <tr><td>Ticket modérateur patient</td><td class="num">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['patient_share']) }}</td></tr>
     @endif
-    <tr><td>Ce règlement</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money((float) $payment->amount) }}</td></tr>
-    <tr><td>Acomptes versés</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($paidToDate) }}</td></tr>
+    <tr><td>Ce règlement</td><td class="num">{{ \App\Services\Receipts\ReceiptPdf::money((float) $payment->amount) }}</td></tr>
+    <tr><td>Acomptes versés</td><td class="num">{{ \App\Services\Receipts\ReceiptPdf::money($paidToDate) }}</td></tr>
     <tr><td>Mode de paiement</td><td class="right">{{ $method }}{{ $payment->payment_reference ? ' · réf. '.$payment->payment_reference : '' }}{{ $payment->insurer_name ? ' · '.$payment->insurer_name : '' }}</td></tr>
     @if ($coverage['rate'] !== null)
-      <tr><td>Dont ticket modérateur patient restant</td><td class="right">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['patient_remaining']) }}</td></tr>
+      <tr><td>Dont ticket modérateur patient restant</td><td class="num">{{ \App\Services\Receipts\ReceiptPdf::money($coverage['patient_remaining']) }}</td></tr>
     @endif
     <tr>
-      <td>Reste dû</td>
-      <td class="right">
-        {{ \App\Services\Receipts\ReceiptPdf::money($remaining) }}
+      <td><strong>Reste à payer</strong></td>
+      <td class="num">
+        <strong>{{ \App\Services\Receipts\ReceiptPdf::money($remaining) }}</strong>
         @if ($settled)
           <span class="badge solde">SOLDÉ</span>
         @else
@@ -104,7 +76,7 @@
     </tr>
   </table>
 
-  <table style="margin-top: 14px;">
+  <table style="margin-top: 12px;">
     <tr>
       <td class="muted" style="width: 55%;">Le présent reçu atteste du règlement des soins ci-dessus. Il ne vaut pas prescription médicale.</td>
       <td>
@@ -113,7 +85,5 @@
       </td>
     </tr>
   </table>
-
-  <div class="foot">Document généré par Clinique+ · {{ $clinic->name }}</div>
 </body>
 </html>
