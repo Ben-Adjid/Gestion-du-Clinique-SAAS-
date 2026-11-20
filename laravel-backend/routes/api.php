@@ -108,6 +108,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/notifications', [NotificationController::class, 'index']);
             Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
             Route::get('/dashboard', [\App\Http\Controllers\Api\DashboardController::class, 'show']);
+            Route::get('/reports/payments-by-method', [\App\Http\Controllers\Api\FinanceReportController::class, 'paymentsByMethod'])
+                ->middleware(['permission:view:reports', 'plan:reports']);
             Route::get('/reports/overview', [ReportController::class, 'overview'])
                 ->middleware(['permission:view:reports', 'plan:reports']);
             Route::get('/users/roles', [\App\Http\Controllers\Api\UserController::class, 'roles'])
@@ -352,6 +354,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('/beds', 'store')->middleware(['permission:manage:beds', 'audit']);
                 Route::post('/beds/{bed}/assign', 'assign')->middleware(['permission:manage:beds', 'audit']);
                 Route::post('/beds/{bed}/release', 'release')->middleware(['permission:manage:beds', 'audit']);
+                Route::post('/beds/{bed}/ready', 'ready')->middleware(['permission:manage:beds', 'audit']);
                 Route::post('/beds/{bed}/maintenance', 'maintenance')->middleware(['permission:manage:beds', 'audit']);
             });
 

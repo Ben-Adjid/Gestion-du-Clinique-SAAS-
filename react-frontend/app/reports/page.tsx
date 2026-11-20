@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiFetch } from '@/app/lib/api';
+import { FinanceByMethod } from '@/app/components/FinanceByMethod';
 
 type Overview = {
   period: { from: string; to: string };
@@ -49,6 +50,7 @@ export default function ReportsPage() {
 
         {overview && (
           <>
+            <div className="mt-8">{token && <FinanceByMethod token={token} />}</div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Stat label="Patients (total)" value={overview.patients.total} />
               <Stat label="Nouveaux patients" value={overview.patients.new} />

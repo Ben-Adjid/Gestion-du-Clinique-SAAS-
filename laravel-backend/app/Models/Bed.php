@@ -10,7 +10,8 @@ class Bed extends Model
 {
     use BelongsToClinic;
 
-    public const STATUSES = ['AVAILABLE', 'OCCUPIED', 'MAINTENANCE'];
+    /** AVAILABLE (free), OCCUPIED (patient), CLEANING (being disinfected after discharge), MAINTENANCE (out of service). */
+    public const STATUSES = ['AVAILABLE', 'OCCUPIED', 'CLEANING', 'MAINTENANCE'];
 
     protected $fillable = ['clinic_id', 'code', 'ward', 'status', 'patient_id', 'admitted_at', 'note', 'updated_by'];
 

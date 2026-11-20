@@ -90,9 +90,21 @@ class BedController extends Controller
         if ($bed->status !== 'OCCUPIED') {
             throw ValidationException::withMessages(['bed' => 'Ce lit n’est pas occupé.']);
         }
-        $bed->update(['status' => 'AVAILABLE', 'patient_id' => null, 'admitted_at' => null, 'updated_by' => $request->user()->id]);
+        // The bed is disinfected before any new admission: it goes to CLEANING, not straight to AVAILABLE.
+        $bed->update(['status' => 'CLEANING', 'patient_id' => null, 'admitted_at' => null, 'updated_by' => $request->user()->id]);
 
-        return response()->json(['data' => $bed->fresh(), 'message' => 'Lit libéré.']);
+        return response()->json(['data' => $bed->fresh(), 'message' => 'Lit libéré : en désinfection.']);
+    }
+
+    /** Puts a disinfected bed back at the disposal of the ward. */
+    public function ready(Request $request, Bed $bed): JsonResponse
+    {
+        if ($bed->status !== 'CLEANING') {
+            throw ValidationException::withMessages(['bed' => 'Ce lit n’est pas en désinfection.']);
+        }
+        $bed->update(['status' => 'AVAILABLE', 'updated_by' => $request->user()->id]);
+
+        return response()->json(['data' => $bed->fresh(), 'message' => 'Lit prêt à l’admission.']);
     }
 
     /** Puts a free bed out of service, or back into service. */

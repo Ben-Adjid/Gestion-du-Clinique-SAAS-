@@ -66,8 +66,11 @@ class BedManagementTest extends TestCase
         $this->actingAs($this->nurse, 'sanctum')->postJson("/api/v1/beds/{$bed->id}/assign", ['patient_id' => $this->patient->id])->assertOk();
 
         $this->actingAs($this->nurse, 'sanctum')->postJson("/api/v1/beds/{$bed->id}/maintenance", ['out_of_service' => true])->assertUnprocessable();
-        $this->actingAs($this->nurse, 'sanctum')->postJson("/api/v1/beds/{$bed->id}/release")->assertOk()->assertJsonPath('data.status', 'AVAILABLE');
+        $this->actingAs($this->nurse, 'sanctum')->postJson("/api/v1/beds/{$bed->id}/release")->assertOk()->assertJsonPath('data.status', 'CLEANING');
         $this->assertNull($bed->fresh()->patient_id);
+        // A bed in disinfection cannot take a patient until it is ready.
+        $this->actingAs($this->nurse, 'sanctum')->postJson("/api/v1/beds/{$bed->id}/assign", ['patient_id' => $this->patient->id])->assertUnprocessable();
+        $this->actingAs($this->nurse, 'sanctum')->postJson("/api/v1/beds/{$bed->id}/ready")->assertOk()->assertJsonPath('data.status', 'AVAILABLE');
     }
 
     public function test_only_nursing_and_administration_manage_beds_and_doctors_only_read_them(): void

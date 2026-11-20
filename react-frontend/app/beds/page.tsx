@@ -9,7 +9,7 @@ import { EmptyState, Field, Loading, Notice, PageHeader, Section, buttonClass, i
 interface Bed {
   id: number;
   code: string;
-  status: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE';
+  status: 'AVAILABLE' | 'OCCUPIED' | 'CLEANING' | 'MAINTENANCE';
   note: string | null;
   admitted_at: string | null;
   patient: { id: number; name: string; patient_unique_id: string } | null;
@@ -27,7 +27,8 @@ interface BedBoard {
 
 const STATUS_STYLE: Record<Bed['status'], { label: string; box: string; dot: string }> = {
   AVAILABLE: { label: 'Libre', box: 'border-emerald-200 bg-emerald-50', dot: 'bg-emerald-500' },
-  OCCUPIED: { label: 'Occupé', box: 'border-sky-200 bg-sky-50', dot: 'bg-sky-600' },
+  OCCUPIED: { label: 'Occupé', box: 'border-rose-200 bg-rose-50', dot: 'bg-rose-600' },
+  CLEANING: { label: 'En désinfection', box: 'border-amber-200 bg-amber-50', dot: 'bg-amber-500' },
   MAINTENANCE: { label: 'Hors service', box: 'border-slate-300 bg-slate-100', dot: 'bg-slate-500' },
 };
 
@@ -112,7 +113,8 @@ export default function BedsPage() {
                   {canManage && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {bed.status === 'AVAILABLE' && <button type="button" onClick={() => setAssigning(bed)} className={buttonClass.small}>Installer un patient</button>}
-                      {bed.status === 'OCCUPIED' && <button type="button" onClick={() => act(`/beds/${bed.id}/release`, undefined, 'Lit libéré.')} className={buttonClass.small}>Libérer le lit</button>}
+                      {bed.status === 'OCCUPIED' && <button type="button" onClick={() => act(`/beds/${bed.id}/release`, undefined, 'Lit libéré : en désinfection.')} className={buttonClass.small}>Libérer le lit</button>}
+                      {bed.status === 'CLEANING' && <button type="button" onClick={() => act(`/beds/${bed.id}/ready`, undefined, 'Lit prêt à l’admission.')} className={buttonClass.small}>Désinfecté, lit prêt</button>}
                       {bed.status !== 'OCCUPIED' && (
                         <button type="button" onClick={() => act(`/beds/${bed.id}/maintenance`, { out_of_service: bed.status === 'AVAILABLE' }, bed.status === 'AVAILABLE' ? 'Lit mis hors service.' : 'Lit remis en service.')} className={buttonClass.small}>
                           {bed.status === 'AVAILABLE' ? 'Hors service' : 'Remettre en service'}
