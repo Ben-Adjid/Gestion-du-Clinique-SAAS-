@@ -129,6 +129,7 @@ Route::prefix('v1')->group(function () {
                 ->middleware('audit');
             // Takeover of a clinic's data from an archive: upload, check, confirm (background import)
             Route::post('/clinic-imports', [\App\Http\Controllers\Api\ClinicImportController::class, 'store'])->middleware('audit');
+            Route::get('/clinic-imports', [\App\Http\Controllers\Api\ClinicImportController::class, 'latest']);
             Route::get('/clinic-imports/{import}', [\App\Http\Controllers\Api\ClinicImportController::class, 'show']);
             Route::post('/clinic-imports/{import}/confirm', [\App\Http\Controllers\Api\ClinicImportController::class, 'confirm'])->middleware('audit');
             Route::get('/users/roles', [\App\Http\Controllers\Api\UserController::class, 'roles'])

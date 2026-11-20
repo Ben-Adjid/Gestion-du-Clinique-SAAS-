@@ -37,6 +37,15 @@ class ClinicImportController extends Controller
         return response()->json(['data' => $import->fresh(), 'message' => 'Vérification du fichier en cours.'], 202);
     }
 
+    /** The latest takeover of this clinic, so that the page shows where the last one stands. */
+    public function latest(Request $request): JsonResponse
+    {
+        $this->onlyAdministrator($request);
+        $import = ClinicImport::query()->where('clinic_id', $request->user()->clinic_id)->latest('id')->first();
+
+        return response()->json(['data' => $import]);
+    }
+
     public function show(Request $request, ClinicImport $import): JsonResponse
     {
         $this->onlyAdministrator($request);

@@ -2,6 +2,7 @@
 
 import { PageSkeleton } from '../components/ui';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiFetch } from '@/app/lib/api';
 import { downloadClinicDataExport } from '@/app/lib/documents';
@@ -57,7 +58,8 @@ export default function ReportsPage() {
       <div className="mx-auto max-w-5xl">
         <h1 className="text-3xl font-bold text-slate-900">Rapports</h1>
         {user?.role === 'ADMIN_CLINIC' && (
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/reprise" className="min-h-[44px] inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50">Reprendre les données d’une autre base</Link>
             <button
               type="button"
               onClick={exportData}

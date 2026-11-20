@@ -78,6 +78,8 @@ export default function RoleAccessGate({ children }: { children: React.ReactNode
     indications: ['surgery'],
     service: ['surgery'],
     certificates: ['consultations'],
+    // Takeover of another system's data: the clinic administrator's reports module.
+    reprise: ['reports'],
     // The cheque register belongs to the cashier's billing module (same right as the invoices).
     cheques: ['invoices'],
   };
