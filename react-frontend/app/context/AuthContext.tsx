@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 interface AuthContextType {
   token: string | null;
@@ -45,63 +45,106 @@ interface AuthResponse {
   user: AuthUser;
 }
 
+interface Session {
+  token: string | null;
+  user: AuthUser | null;
+  selectedClinicId: string | null;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [challengeToken, setChallengeToken] = useState<string | null>(null);
-  const [modules, setModules] = useState<string[] | null>(null);
-  const [selectedClinicId, setSelectedClinicId] = useState<string | null>(null);
+const STORAGE_EVENT = 'clinique-auth-change';
+const NO_SESSION_SNAPSHOT = '';
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('auth_token');
-    const savedUser = localStorage.getItem('auth_user');
+/**
+ * The session lives in localStorage. Its raw values are read as one string (stable between two reads, so
+ * React can compare snapshots). Every write goes through notifyChange(), so all readers update together.
+ */
+function readRaw(): string {
+  return [
+    localStorage.getItem('auth_token') ?? '',
+    localStorage.getItem('auth_user') ?? '',
+    localStorage.getItem('selected_clinic_id') ?? '',
+  ].join('\u0000');
+}
 
-    if (savedToken) {
-      try {
-        const parsedUser = savedUser ? JSON.parse(savedUser) as AuthUser : null;
-        if (parsedUser && typeof parsedUser.id === 'number' && typeof parsedUser.email === 'string') {
-          setToken(savedToken);
-          setUser(parsedUser);
-          const clinicId = localStorage.getItem('selected_clinic_id');
-          if (parsedUser.role === 'SUPER_ADMIN' && clinicId) {
-            setSelectedClinicId(clinicId);
-          } else {
-            localStorage.removeItem('selected_clinic_id');
-          }
-        } else {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('auth_user');
-        }
-      } catch {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-      }
+function parseSession(raw: string): Session {
+  const [savedToken = '', savedUser = '', clinicId = ''] = raw.split('\u0000');
+  if (!savedToken) return { token: null, user: null, selectedClinicId: null };
+  try {
+    const parsed = savedUser ? (JSON.parse(savedUser) as AuthUser) : null;
+    if (parsed && typeof parsed.id === 'number' && typeof parsed.email === 'string') {
+      return {
+        token: savedToken,
+        user: parsed,
+        selectedClinicId: parsed.role === 'SUPER_ADMIN' && clinicId ? clinicId : null,
+      };
     }
+  } catch {
+    // An unreadable stored user is dropped by the cleanup effect below.
+  }
+  return { token: null, user: null, selectedClinicId: null };
+}
 
-    setLoading(false);
-  }, []);
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener('storage', onChange);
+  window.addEventListener(STORAGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener(STORAGE_EVENT, onChange);
+  };
+}
+
+function notifyChange(): void {
+  window.dispatchEvent(new Event(STORAGE_EVENT));
+}
+
+function subscribeNothing(): () => void {
+  return () => {};
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const raw = useSyncExternalStore(subscribe, readRaw, () => NO_SESSION_SNAPSHOT);
+  // false on the server and during hydration, true once the browser has rendered: replaces a "loaded" effect.
+  const hydrated = useSyncExternalStore(subscribeNothing, () => true, () => false);
+  const session = useMemo(() => parseSession(raw), [raw]);
+  const { token, user, selectedClinicId } = session;
+
+  const [challengeToken, setChallengeToken] = useState<string | null>(null);
+  // Modules are kept with the token they were loaded for, so a logout clears them without an effect.
+  const [modulesFor, setModulesFor] = useState<{ token: string; modules: string[] } | null>(null);
+  const modules = token && modulesFor?.token === token ? modulesFor.modules : null;
+
+  // Remove what cannot be used: a token without a valid user, or a clinic choice for a non-super-admin.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (localStorage.getItem('auth_token') && !token) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('selected_clinic_id');
+      notifyChange();
+      return;
+    }
+    if (token && user?.role !== 'SUPER_ADMIN' && localStorage.getItem('selected_clinic_id')) {
+      localStorage.removeItem('selected_clinic_id');
+      notifyChange();
+    }
+  }, [hydrated, token, user]);
 
   const saveSession = (data: AuthResponse) => {
-    setToken(data.access_token);
-    setUser(data.user);
-    setChallengeToken(null);
     localStorage.setItem('auth_token', data.access_token);
     localStorage.setItem('auth_user', JSON.stringify(data.user));
     if (data.user.role !== 'SUPER_ADMIN') {
       localStorage.removeItem('selected_clinic_id');
-      setSelectedClinicId(null);
-    } else {
-      setSelectedClinicId(localStorage.getItem('selected_clinic_id'));
     }
+    setChallengeToken(null);
+    notifyChange();
   };
 
   const selectClinic = (clinicId: string | null) => {
-    setSelectedClinicId(clinicId);
     if (clinicId) localStorage.setItem('selected_clinic_id', clinicId);
     else localStorage.removeItem('selected_clinic_id');
+    notifyChange();
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -147,30 +190,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUser = (updates: Partial<AuthUser>) => {
-    setUser((currentUser) => {
-      if (!currentUser) return currentUser;
-      const updatedUser = { ...currentUser, ...updates };
-      localStorage.setItem('auth_user', JSON.stringify(updatedUser));
-      return updatedUser;
-    });
+    const current = parseSession(readRaw()).user;
+    if (!current) return;
+    localStorage.setItem('auth_user', JSON.stringify({ ...current, ...updates }));
+    notifyChange();
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
-    setModules(null);
-    setChallengeToken(null);
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
     localStorage.removeItem('selected_clinic_id');
-    setSelectedClinicId(null);
+    setChallengeToken(null);
+    setModulesFor(null);
+    notifyChange();
   };
 
+  // The permissions and modules come from the API each time the token changes.
   useEffect(() => {
-    if (!token) {
-      setModules(null);
-      return;
-    }
+    if (!token) return;
     const apiRoot = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8100/api/v1').replace(/\/$/, '');
     const controller = new AbortController();
     fetch(`${apiRoot}/me`, {
@@ -184,19 +221,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         if (!response.ok) return;
         const body = await response.json();
-        setModules(body.data.modules as string[]);
+        setModulesFor({ token, modules: body.data.modules as string[] });
         updateUser(body.data);
       })
       .catch(() => {});
     return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
     <AuthContext.Provider value={{
       token,
       user,
-      loading,
+      loading: !hydrated,
       pendingTotp: challengeToken !== null,
       login,
       verifyTotp,
