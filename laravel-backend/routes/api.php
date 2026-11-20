@@ -48,6 +48,8 @@ Route::prefix('v1')->group(function () {
 
         // Clinic subscription: reachable even when the clinic is suspended, so it can pay and be reactivated.
         Route::middleware(['clinic.ensure:allow-suspended', 'totp.enrolled'])->group(function () {
+            // The director accepts the current terms of use (CGU) of the clinic.
+            Route::post('/clinic/terms', [\App\Http\Controllers\Api\ClinicController::class, 'acceptTerms'])->middleware('audit');
             Route::get('/subscription', [\App\Http\Controllers\Api\MySubscriptionController::class, 'show'])
                 ->middleware('permission:view:subscription');
             Route::post('/subscription/payments', [\App\Http\Controllers\Api\MySubscriptionController::class, 'declarePayment'])
@@ -103,7 +105,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Clinic routes: tenant isolation, 2FA and an active subscription
-        Route::middleware(['clinic.ensure', 'totp.enrolled', 'subscription.active'])->group(function () {
+        Route::middleware(['clinic.ensure', 'totp.enrolled', 'subscription.active', 'terms.accepted'])->group(function () {
             Route::apiResource('clinics', ClinicController::class, ['only' => ['index', 'store', 'show', 'update']]);
             // Logo of the director's own clinic (printed on receipts and prescriptions)
             Route::post('/clinic/logo', [\App\Http\Controllers\Api\ClinicLogoController::class, 'store'])->middleware(['audit', 'throttle:20,1']);

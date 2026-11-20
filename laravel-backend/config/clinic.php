@@ -6,7 +6,7 @@ return [
     // Version of the terms of use (CGU) the clinic accepts at creation.
     'terms_version' => env('CLINIC_TERMS_VERSION', '2026-11'),
 
-    // SaaS billing: days to pay an invoice, then days of tolerance before the clinic is suspended.
+    // Blocks the clinical records until the clinic accepts the current terms (false only in automated tests)./n    /x27terms_enforced/x27 => (bool) env(/x27CLINIC_TERMS_ENFORCED/x27, true),/n/n    // SaaS billing: days to pay an invoice, then days of tolerance before the clinic is suspended.
     'saas_payment_terms_days' => (int) env('SAAS_PAYMENT_TERMS_DAYS', 7),
     'saas_suspend_after_days' => (int) env('SAAS_SUSPEND_AFTER_DAYS', 7),
     // true: block the clinic as soon as a subscription invoice is overdue (no grace period).

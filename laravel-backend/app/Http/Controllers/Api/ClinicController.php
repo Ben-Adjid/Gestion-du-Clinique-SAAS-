@@ -58,7 +58,25 @@ class ClinicController extends Controller
             return response()->json(['message' => 'Accès refusé.'], 403);
         }
 
+        // The version the clinic must accept now, so that the director sees what he is accepting.
+        $clinic->setAttribute('terms_current_version', config('clinic.terms_version'));
+        $clinic->setAttribute('terms_accepted', $clinic->terms_accepted_at !== null && $clinic->terms_version === config('clinic.terms_version'));
+
         return response()->json(['data' => $clinic], 200);
+    }
+
+    /** The clinic director accepts the current version of the terms of use (CGU). */
+    public function acceptTerms(Request $request): \Illuminate\Http\JsonResponse
+    {
+        if ($request->user()->role?->name !== 'ADMIN_CLINIC') {
+            return response()->json(['message' => 'Seul le directeur de la clinique peut accepter les conditions générales.'], 403);
+        }
+        $version = (string) config('clinic.terms_version');
+        $request->validate(['terms_version' => ['required', 'in:'.$version], 'accepted' => ['required', 'accepted']]);
+        $clinic = Clinic::query()->findOrFail($request->user()->clinic_id);
+        $clinic->update(['terms_version' => $version, 'terms_accepted_at' => now()]);
+
+        return response()->json(['message' => 'Conditions générales acceptées (version '.$version.').', 'data' => ['terms_version' => $version, 'terms_accepted_at' => $clinic->terms_accepted_at?->toIso8601String()]]);
     }
 
     public function update(Request $request, string $id)

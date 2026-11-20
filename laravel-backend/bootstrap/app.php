@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'audit' => \App\Http\Middleware\LogAuditActivity::class,
             'totp.enrolled' => \App\Http\Middleware\EnsureTotpEnrolled::class,
             'plan' => \App\Http\Middleware\EnsurePlanModule::class,
+            'terms.accepted' => \App\Http\Middleware\EnsureTermsAccepted::class,
         ]);
         // The clinic context must exist before route models are resolved, so they are clinic-scoped too.
         $middleware->prependToPriorityList(
