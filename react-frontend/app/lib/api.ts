@@ -2,6 +2,17 @@ import { clinicScopeHeader, reportSubscriptionBlocked } from '@/lib/api';
 
 export const API_ROOT = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8100/api/v1').replace(/\/$/, '');
 
+/** Fired when a feature is outside the clinic's subscription plan: the banner offers the plan that includes it. */
+export const PLAN_UPGRADE_EVENT = 'clinic:plan-upgrade';
+
+export interface PlanUpgradeDetail {
+  message: string;
+  code: 'PLAN_UPGRADE_REQUIRED';
+  feature: string;
+  upgrade_to: 'PRO' | 'ENTERPRISE';
+  upgrade_url: string;
+}
+
 export class ApiError extends Error {
   status: number;
   errors?: Record<string, string[]>;
@@ -31,6 +42,9 @@ export async function apiFetch<T>(path: string, token: string, init: RequestInit
 
   if (!response.ok) {
     reportSubscriptionBlocked(response.status, body);
+    if (body.code === 'PLAN_UPGRADE_REQUIRED' && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent<PlanUpgradeDetail>(PLAN_UPGRADE_EVENT, { detail: body as unknown as PlanUpgradeDetail }));
+    }
     throw new ApiError(body.message || `Erreur ${response.status}`, response.status, body.errors, body);
   }
   return body as T;

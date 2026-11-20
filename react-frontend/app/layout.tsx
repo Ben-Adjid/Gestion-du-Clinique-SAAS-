@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "./context/AuthContext";
 import RoleAccessGate from "./components/RoleAccessGate";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
+import { PlanUpgradeBanner } from "./components/PlanUpgradeBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="fr" className={className} data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegistration />
+        <PlanUpgradeBanner />
         <AuthProvider>
           <Suspense fallback={<PageSkeleton />}>
             <RoleAccessGate>{children}</RoleAccessGate>
