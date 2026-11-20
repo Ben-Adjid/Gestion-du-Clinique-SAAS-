@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // This API has no web login page: a guest is refused with an AuthenticationException (answered as 401 below),
+        // never redirected to a route that does not exist.
+        $middleware->redirectGuestsTo(fn () => null);
         $middleware->alias([
             'clinic.ensure' => \App\Http\Middleware\EnsureUserClinicMatch::class,
             'subscription.active' => \App\Http\Middleware\EnsureSubscriptionIsActive::class,
@@ -35,6 +38,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Users never see the framework's English text, a model class name or a stack trace.
         $isApi = fn (Request $request): bool => $request->is('api/*') || $request->expectsJson();
+
+        // An API call without a valid token is a 401 with a French message, whatever the Accept header:
+        // without this, the framework tries to redirect to a web login route that does not exist (500).
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) use ($isApi) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Connectez-vous pour accéder à cette ressource.'], 401);
+            }
+        });
 
         // A patient account without a linked record: a clear French notice, with a stable code for the portal.
         $exceptions->render(function (\App\Exceptions\NoPatientRecordException $e) {
